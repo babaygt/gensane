@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { isBlank, leadingIndent, splitLines } from "./lines.ts";
+import { isBlank, leadingIndent, sliceLine, splitLines, stripColumns } from "./lines.ts";
 
 describe("splitLines", () => {
   it("returns no lines for empty input", () => {
@@ -8,8 +8,8 @@ describe("splitLines", () => {
 
   it("records each line's text, offsets and 1-based number", () => {
     expect(splitLines("ab\ncd")).toEqual([
-      { text: "ab", start: 0, end: 2, number: 1 },
-      { text: "cd", start: 3, end: 5, number: 2 },
+      { text: "ab", start: 0, end: 2, number: 1, lineStart: 0 },
+      { text: "cd", start: 3, end: 5, number: 2, lineStart: 3 },
     ]);
   });
 
@@ -52,5 +52,24 @@ describe("isBlank", () => {
 
   it("treats any other character as content", () => {
     expect(isBlank("  x ")).toBe(false);
+  });
+});
+
+describe("sliceLine and stripColumns", () => {
+  // Line 2 of "x\n  > abc".
+  const line = { text: "  > abc", start: 2, end: 9, number: 2, lineStart: 2 };
+
+  it("keep offsets pointing into the original source", () => {
+    expect(sliceLine(line, 4)).toEqual({ text: "abc", start: 6, end: 9, number: 2, lineStart: 2 });
+  });
+
+  it("strip at most the requested width of whitespace", () => {
+    expect(stripColumns(line, 1).text).toBe(" > abc");
+    expect(stripColumns(line, 10).text).toBe("> abc");
+  });
+
+  it("count a tab as reaching the next tab stop", () => {
+    const tabbed = { text: "\tabc", start: 0, end: 4, number: 1, lineStart: 0 };
+    expect(stripColumns(tabbed, 2).text).toBe("abc");
   });
 });

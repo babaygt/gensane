@@ -12,6 +12,8 @@
  * `---`. Gensane supports only ATX headings.
  */
 
+import { leadingIndent } from "./lines.ts";
+
 export type HeadingLevel = 1 | 2 | 3 | 4 | 5 | 6;
 
 export interface AtxHeadingMatch {
@@ -84,4 +86,62 @@ export function isSetextUnderline(text: string): "=" | "-" | undefined {
   const underline = SETEXT_UNDERLINE.exec(text)?.[1];
   if (underline === undefined) return undefined;
   return underline[0] === "=" ? "=" : "-";
+}
+
+// `>` plus one optional space or tab. The result is how many characters to strip.
+const BLOCK_QUOTE = /^ {0,3}>[ \t]?/;
+
+export function matchBlockQuote(text: string): number | undefined {
+  return BLOCK_QUOTE.exec(text)?.[0].length;
+}
+
+export type ListType =
+  | { readonly kind: "bullet"; readonly char: "-" | "+" | "*" }
+  | { readonly kind: "ordered"; readonly start: number; readonly delimiter: "." | ")" };
+
+export interface ListMarkerMatch {
+  readonly type: ListType;
+  /** Column where the item's content starts; continuation lines must be indented this far. */
+  readonly contentColumn: number;
+  /** Index in the line where the content of the first line starts. */
+  readonly contentStart: number;
+  /** True when nothing follows the marker on this line. */
+  readonly empty: boolean;
+}
+
+// A bullet (`-` `+` `*`) or 1-9 digits followed by `.` or `)`, then a space, tab or end of line.
+const LIST_MARKER = /^( {0,3})(?:([-+*])|(\d{1,9})([.)]))(?=[ \t]|$)/;
+
+/** Spaces after the marker that still belong to it; more means the content is indented code. */
+const MAX_MARKER_SPACES = 4;
+
+export function matchListMarker(text: string): ListMarkerMatch | undefined {
+  const match = LIST_MARKER.exec(text);
+  if (match === null) return undefined;
+  const type: ListType =
+    match[2] === undefined
+      ? { kind: "ordered", start: Number(match[3]), delimiter: match[4] === ")" ? ")" : "." }
+      : { kind: "bullet", char: match[2] as "-" | "+" | "*" };
+
+  const markerEnd = match[0].length;
+  const spaces = leadingIndent(text.slice(markerEnd));
+  if (markerEnd + spaces.length === text.length) {
+    return { type, contentColumn: markerEnd + 1, contentStart: text.length, empty: true };
+  }
+  if (spaces.width > MAX_MARKER_SPACES) {
+    return { type, contentColumn: markerEnd + 1, contentStart: markerEnd + 1, empty: false };
+  }
+  return {
+    type,
+    contentColumn: markerEnd + spaces.width,
+    contentStart: markerEnd + spaces.length,
+    empty: false,
+  };
+}
+
+/** Items belong to the same list only if they use the same bullet or the same number delimiter. */
+export function isSameListType(a: ListType, b: ListType): boolean {
+  if (a.kind === "bullet" && b.kind === "bullet") return a.char === b.char;
+  if (a.kind === "ordered" && b.kind === "ordered") return a.delimiter === b.delimiter;
+  return false;
 }

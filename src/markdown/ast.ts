@@ -5,6 +5,8 @@
  * that switches over it gets a compile error if a kind is forgotten. Nodes are
  * readonly; later stages build new trees instead of changing this one.
  *
+ * The type is recursive: block quotes and list items contain blocks themselves.
+ *
  * Headings and paragraphs keep their raw inline text for now. Inline syntax
  * (emphasis, links, code spans) is parsed in a later stage.
  */
@@ -42,7 +44,32 @@ export interface ThematicBreak {
   readonly span: SourceSpan;
 }
 
-export type Block = Heading | Paragraph | CodeBlock | ThematicBreak;
+export interface BlockQuote {
+  readonly kind: "block-quote";
+  readonly children: readonly Block[];
+  readonly span: SourceSpan;
+}
+
+interface ListBase {
+  readonly kind: "list";
+  /** Tight lists have no blank lines between items; their paragraphs render without `<p>`. */
+  readonly tight: boolean;
+  readonly items: readonly ListItem[];
+  readonly span: SourceSpan;
+}
+
+/** `ordered` is the discriminant: only ordered lists have a start number. */
+export type List =
+  | (ListBase & { readonly ordered: false })
+  | (ListBase & { readonly ordered: true; readonly start: number });
+
+export interface ListItem {
+  readonly kind: "list-item";
+  readonly children: readonly Block[];
+  readonly span: SourceSpan;
+}
+
+export type Block = Heading | Paragraph | CodeBlock | ThematicBreak | BlockQuote | List;
 
 export interface Document {
   readonly kind: "document";

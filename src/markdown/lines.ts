@@ -15,6 +15,17 @@ export interface SourceLine {
   readonly end: number;
   /** 1-based line number. */
   readonly number: number;
+  /**
+   * Offset where the physical line begins. Differs from `start` once container
+   * markers such as `> ` have been stripped; columns are counted from here.
+   */
+  readonly lineStart: number;
+  /**
+   * Set by a container (block quote, list item) on a line that may continue a
+   * paragraph inside it without repeating the container's marker or indentation.
+   * The nested parser accepts it only as paragraph text, and otherwise stops there.
+   */
+  readonly lazy?: boolean;
 }
 
 /** Splits on `\n`, `\r\n` or `\r`. A trailing line ending does not start a new line. */
@@ -25,7 +36,13 @@ export function splitLines(source: string): SourceLine[] {
   while (i < source.length) {
     const ch = source[i];
     if (ch === "\n" || ch === "\r") {
-      lines.push({ text: source.slice(start, i), start, end: i, number: lines.length + 1 });
+      lines.push({
+        text: source.slice(start, i),
+        start,
+        end: i,
+        number: lines.length + 1,
+        lineStart: start,
+      });
       i += ch === "\r" && source[i + 1] === "\n" ? 2 : 1;
       start = i;
     } else {
@@ -33,7 +50,13 @@ export function splitLines(source: string): SourceLine[] {
     }
   }
   if (start < source.length) {
-    lines.push({ text: source.slice(start), start, end: source.length, number: lines.length + 1 });
+    lines.push({
+      text: source.slice(start),
+      start,
+      end: source.length,
+      number: lines.length + 1,
+      lineStart: start,
+    });
   }
   return lines;
 }
@@ -62,4 +85,23 @@ export function leadingIndent(text: string): Indent {
 
 export function isBlank(text: string): boolean {
   return leadingIndent(text).length === text.length;
+}
+
+/** Drops the first `count` characters, keeping offsets pointing into the original source. */
+export function sliceLine(line: SourceLine, count: number): SourceLine {
+  return { ...line, text: line.text.slice(count), start: line.start + count };
+}
+
+/** Removes leading whitespace up to `columns` wide (used for content inside list items). */
+export function stripColumns(line: SourceLine, columns: number): SourceLine {
+  let width = 0;
+  let i = 0;
+  for (const ch of line.text) {
+    if (width >= columns) break;
+    if (ch === " ") width += 1;
+    else if (ch === "\t") width += TAB_STOP - (width % TAB_STOP);
+    else break;
+    i++;
+  }
+  return sliceLine(line, i);
 }

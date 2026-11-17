@@ -6,10 +6,14 @@
  * CommonMark reference renderer, which lets us compare against its examples.
  */
 import { assertNever } from "../diagnostics/index.ts";
-import type { Block, Document } from "./ast.ts";
+import type { Block, Document, ListItem } from "./ast.ts";
 
 export function renderHtml(document: Document): string {
-  return document.children.map(renderBlock).join("");
+  return renderBlocks(document.children);
+}
+
+function renderBlocks(blocks: readonly Block[]): string {
+  return blocks.map(renderBlock).join("");
 }
 
 function renderBlock(block: Block): string {
@@ -24,9 +28,31 @@ function renderBlock(block: Block): string {
     }
     case "thematic-break":
       return "<hr />\n";
+    case "block-quote":
+      return `<blockquote>\n${renderBlocks(block.children)}</blockquote>\n`;
+    case "list": {
+      const tag = block.ordered ? "ol" : "ul";
+      const start = block.ordered && block.start !== 1 ? ` start="${block.start}"` : "";
+      const items = block.items.map((item) => renderListItem(item, block.tight)).join("");
+      return `<${tag}${start}>\n${items}</${tag}>\n`;
+    }
     default:
       return assertNever(block);
   }
+}
+
+/** In a tight list, paragraphs are written without `<p>`; other blocks start on a new line. */
+function renderListItem(item: ListItem, tight: boolean): string {
+  let html = "<li>";
+  for (const child of item.children) {
+    if (tight && child.kind === "paragraph") {
+      html += escapeHtml(child.text);
+    } else {
+      if (!html.endsWith("\n")) html += "\n";
+      html += renderBlock(child);
+    }
+  }
+  return `${html}</li>\n`;
 }
 
 const ESCAPES: Readonly<Record<string, string>> = {

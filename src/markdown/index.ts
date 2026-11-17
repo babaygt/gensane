@@ -4,10 +4,13 @@ import { renderHtml } from "./render-html.ts";
 
 export type {
   Block,
+  BlockQuote,
   CodeBlock,
   Document,
   Heading,
   HeadingLevel,
+  List,
+  ListItem,
   Paragraph,
   ThematicBreak,
 } from "./ast.ts";
