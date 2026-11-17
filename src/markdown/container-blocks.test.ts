@@ -68,6 +68,29 @@ describe("block quotes", () => {
     it("does not apply to lines that start a new block", () => {
       expect(blocks("> a\n---")).toEqual([quote(p("a")), { kind: "thematic-break" }]);
     });
+
+    it("ends the quote at a lazy line that can't continue a paragraph", () => {
+      expect(blocks("> ```\n> x\nb\n> y")).toEqual([
+        quote({ kind: "code", info: "", text: "x\n" }),
+        p("b"),
+        quote(p("y")),
+      ]);
+    });
+
+    // Regression: an earlier version re-parsed a container's content for every lazy
+    // line, which took minutes at this depth. No timing assertion (that would be flaky);
+    // Vitest's 5 second test timeout fails the test if the slow behaviour comes back.
+    it("handles deep nesting with many lazy lines", () => {
+      const source = `${"> ".repeat(200)}a\n${"b\n".repeat(200)}`;
+      let node = blocks(source)[0] as { kind: string; children: unknown[] };
+      let depth = 0;
+      while (node.kind === "block-quote") {
+        depth++;
+        node = node.children[0] as typeof node;
+      }
+      expect(depth).toBe(200);
+      expect(node).toEqual(p(`a${"\nb".repeat(200)}`));
+    });
   });
 });
 
