@@ -1,0 +1,87 @@
+// Property-based tests: instead of hand-picked examples, fast-check generates
+// thousands of random Markdown-like documents and checks rules that must hold
+// for every input. When one fails, it shrinks the input to a minimal example.
+import * as fc from "fast-check";
+import { describe, expect, it } from "vitest";
+import { positionAt } from "../diagnostics/index.ts";
+import { markdownToHtml, parseMarkdown } from "./index.ts";
+
+/** Random documents built from the pieces that matter to the block parser. */
+const markdownLike = fc.string({
+  unit: fc.constantFrom(
+    "\n",
+    "\r\n",
+    "\r",
+    " ",
+    "    ",
+    "\t",
+    "#",
+    "## ",
+    "```",
+    "~~~",
+    "````",
+    "---",
+    "***",
+    "___",
+    "===",
+    "- - -",
+    "a",
+    "word",
+    "<",
+    ">",
+    "&",
+    '"',
+    "`",
+    "\\",
+  ),
+  maxLength: 60,
+});
+
+describe("Markdown parser properties", () => {
+  it("never throws, whatever the input", () => {
+    fc.assert(
+      fc.property(fc.oneof(markdownLike, fc.string({ unit: "binary" })), (source) => {
+        expect(() => markdownToHtml(source, "x.md")).not.toThrow();
+      }),
+    );
+  });
+
+  it("gives every block a span inside the source, in document order", () => {
+    fc.assert(
+      fc.property(markdownLike, (source) => {
+        const { document } = parseMarkdown(source, "x.md");
+        let previousEnd = 0;
+        for (const block of document.children) {
+          const { start, end } = block.span;
+          expect(start.offset).toBeGreaterThanOrEqual(previousEnd);
+          expect(end.offset).toBeGreaterThanOrEqual(start.offset);
+          expect(end.offset).toBeLessThanOrEqual(source.length);
+          previousEnd = end.offset;
+        }
+      }),
+    );
+  });
+
+  it("computes the same line:column as an independent, simpler implementation", () => {
+    fc.assert(
+      fc.property(markdownLike, (source) => {
+        const { document, diagnostics } = parseMarkdown(source, "x.md");
+        const spans = [...document.children.map((b) => b.span), ...diagnostics.map((d) => d.span)];
+        for (const span of spans) {
+          expect(span.start).toEqual(positionAt(source, span.start.offset));
+          expect(span.end).toEqual(positionAt(source, span.end.offset));
+        }
+      }),
+    );
+  });
+
+  it("never lets user text produce HTML tags", () => {
+    const ourTags = /<\/?(?:h[1-6]|p|pre|code|hr)(?: class="language-[^"<>]*")? ?\/?>/g;
+    fc.assert(
+      fc.property(markdownLike, (source) => {
+        const withoutOurTags = markdownToHtml(source, "x.md").html.replace(ourTags, "");
+        expect(withoutOurTags).not.toMatch(/[<>]/);
+      }),
+    );
+  });
+});
