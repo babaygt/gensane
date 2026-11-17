@@ -20,6 +20,16 @@ describe("positionAt", () => {
     expect(positionAt(text, 999)).toEqual({ line: 4, column: 2, offset: 9 });
   });
 
+  // Found by a property test in the Markdown parser: the parser treats \r and \r\n as
+  // line breaks, so positions must agree or error messages point at the wrong line.
+  it.each([
+    { name: "\\r\\n", source: "ab\r\ncd", offset: 4, line: 2, column: 1 },
+    { name: "a lone \\r", source: "ab\rcd", offset: 3, line: 2, column: 1 },
+    { name: "\\r\\n counted once", source: "a\r\n\r\nb", offset: 5, line: 3, column: 1 },
+  ])("treats $name as a line break", ({ source, offset, line, column }) => {
+    expect(positionAt(source, offset)).toEqual({ line, column, offset });
+  });
+
   it("handles empty text", () => {
     expect(positionAt("", 0)).toEqual({ line: 1, column: 1, offset: 0 });
   });

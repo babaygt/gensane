@@ -13,7 +13,8 @@ export interface SourceSpan {
 }
 
 /**
- * Converts a 0-based offset into a position, counting `\n` as the line break.
+ * Converts a 0-based offset into a position. Line breaks are `\n`, `\r\n` or a lone
+ * `\r`, the same rule the Markdown parser uses to split lines.
  * Offsets past the end of the text are clamped to the end.
  */
 export function positionAt(text: string, offset: number): SourcePosition {
@@ -21,7 +22,10 @@ export function positionAt(text: string, offset: number): SourcePosition {
   let line = 1;
   let lineStart = 0;
   for (let i = 0; i < clamped; i++) {
-    if (text.charCodeAt(i) === 10) {
+    const ch = text[i];
+    // In `\r\n` only the `\n` counts, so the pair is one line break.
+    const isBreak = ch === "\n" || (ch === "\r" && text[i + 1] !== "\n");
+    if (isBreak) {
       line++;
       lineStart = i + 1;
     }
