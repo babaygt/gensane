@@ -5,6 +5,7 @@ import * as fc from "fast-check";
 import { describe, expect, it } from "vitest";
 import { positionAt } from "../diagnostics/index.ts";
 import { markdownToHtml, parseMarkdown } from "./index.ts";
+import { allSpans } from "./test-helpers.ts";
 
 /** Random documents built from the pieces that matter to the block parser. */
 const markdownLike = fc.string({
@@ -25,6 +26,13 @@ const markdownLike = fc.string({
     "___",
     "===",
     "- - -",
+    ">",
+    "> ",
+    "- ",
+    "* ",
+    "1. ",
+    "2) ",
+    "  ",
     "a",
     "word",
     "<",
@@ -62,11 +70,11 @@ describe("Markdown parser properties", () => {
     );
   });
 
-  it("computes the same line:column as an independent, simpler implementation", () => {
+  it("computes the same line:column as an independent, simpler implementation, at any depth", () => {
     fc.assert(
       fc.property(markdownLike, (source) => {
         const { document, diagnostics } = parseMarkdown(source, "x.md");
-        const spans = [...document.children.map((b) => b.span), ...diagnostics.map((d) => d.span)];
+        const spans = [...allSpans(document.children), ...diagnostics.map((d) => d.span)];
         for (const span of spans) {
           expect(span.start).toEqual(positionAt(source, span.start.offset));
           expect(span.end).toEqual(positionAt(source, span.end.offset));
@@ -76,11 +84,31 @@ describe("Markdown parser properties", () => {
   });
 
   it("never lets user text produce HTML tags", () => {
-    const ourTags = /<\/?(?:h[1-6]|p|pre|code|hr)(?: class="language-[^"<>]*")? ?\/?>/g;
+    const ourTags =
+      /<\/?(?:h[1-6]|p|pre|code|hr|blockquote|ul|ol|li)(?: class="language-[^"<>]*"| start="\d+")? ?\/?>/g;
     fc.assert(
       fc.property(markdownLike, (source) => {
         const withoutOurTags = markdownToHtml(source, "x.md").html.replace(ourTags, "");
         expect(withoutOurTags).not.toMatch(/[<>]/);
+      }),
+    );
+  });
+
+  it("always produces properly nested HTML", () => {
+    const tag = /<(\/?)([a-z0-9]+)[^>]*?(\/?)>/g;
+    fc.assert(
+      fc.property(markdownLike, (source) => {
+        const open: string[] = [];
+        const mismatches: string[] = [];
+        for (const [, closing, name = "", selfClosing] of markdownToHtml(
+          source,
+          "x.md",
+        ).html.matchAll(tag)) {
+          if (selfClosing) continue;
+          if (!closing) open.push(name);
+          else if (open.pop() !== name) mismatches.push(name);
+        }
+        expect({ mismatches, unclosed: open }).toEqual({ mismatches: [], unclosed: [] });
       }),
     );
   });

@@ -32,6 +32,42 @@ describe("markdownToHtml", () => {
     expect(html(source)).toBe(expected);
   });
 
+  describe("containers", () => {
+    it.each([
+      { name: "block quote", source: "> a", expected: "<blockquote>\n<p>a</p>\n</blockquote>\n" },
+      { name: "empty block quote", source: ">", expected: "<blockquote>\n</blockquote>\n" },
+      {
+        name: "tight list (no <p> in items)",
+        source: "- a\n- b",
+        expected: "<ul>\n<li>a</li>\n<li>b</li>\n</ul>\n",
+      },
+      {
+        name: "loose list (<p> in items)",
+        source: "- a\n\n- b",
+        expected: "<ul>\n<li>\n<p>a</p>\n</li>\n<li>\n<p>b</p>\n</li>\n</ul>\n",
+      },
+      { name: "ordered list from 1", source: "1. a", expected: "<ol>\n<li>a</li>\n</ol>\n" },
+      {
+        name: "ordered list with a start number",
+        source: "3. a",
+        expected: '<ol start="3">\n<li>a</li>\n</ol>\n',
+      },
+      {
+        name: "nested list",
+        source: "- a\n  - b",
+        expected: "<ul>\n<li>a\n<ul>\n<li>b</li>\n</ul>\n</li>\n</ul>\n",
+      },
+      { name: "empty item", source: "-", expected: "<ul>\n<li></li>\n</ul>\n" },
+      {
+        name: "code block in a tight item",
+        source: "- ```\n  x\n  ```",
+        expected: "<ul>\n<li>\n<pre><code>x\n</code></pre>\n</li>\n</ul>\n",
+      },
+    ])("renders $name", ({ source, expected }) => {
+      expect(html(source)).toBe(expected);
+    });
+  });
+
   describe("escaping", () => {
     it("escapes HTML special characters in text", () => {
       expect(html(`5 < 6 & "quotes" > 'x'`)).toBe(

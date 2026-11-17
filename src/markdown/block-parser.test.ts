@@ -1,17 +1,7 @@
 import { describe, expect, it } from "vitest";
-import type { Block } from "./ast.ts";
 import { parseBlocks } from "./block-parser.ts";
 import { DiagnosticCodes } from "./diagnostic-codes.ts";
-
-/** Parses and drops source spans, so tests can compare structure only. */
-function blocks(source: string): unknown[] {
-  return parseBlocks(source, "test.md").document.children.map(withoutSpan);
-}
-
-function withoutSpan(block: Block): unknown {
-  const { span: _, ...rest } = block;
-  return rest;
-}
+import { blocks, withoutSpans } from "./test-helpers.ts";
 
 function codes(source: string): string[] {
   return parseBlocks(source, "test.md").diagnostics.map((d) => d.code);
@@ -102,7 +92,7 @@ describe("parseBlocks: warnings for unsupported or risky syntax", () => {
   describe("unclosed code fence", () => {
     it("closes the block at the end of the document and warns", () => {
       const { document, diagnostics } = parseBlocks("text\n\n```ts\nlet x;\n\nmore", "post.md");
-      expect(document.children.map(withoutSpan)).toEqual([
+      expect(document.children.map(withoutSpans)).toEqual([
         { kind: "paragraph", text: "text" },
         { kind: "code", info: "ts", lang: "ts", text: "let x;\n\nmore\n" },
       ]);
