@@ -5,6 +5,15 @@
  * failing, the parser always returns a document, plus warnings for input that is
  * probably a mistake (an unclosed code fence) or uses syntax gensane deliberately
  * does not support. One run reports every warning in the file.
+ *
+ * Block quotes and list items are parsed recursively: the parser collects the lines
+ * that belong to the container, strips the `>` markers or the indentation, and runs
+ * a new parser on those lines. Stripped lines keep their original offsets, so spans
+ * at any depth point into the original file.
+ *
+ * Lazy lines (`> a` followed by `b`) are only provisionally part of a container. The
+ * nested parser accepts them as paragraph text, or stops at the first one it can't
+ * use and reports how many lines it consumed; the container then ends there.
  */
 import {
   type Diagnostic,
@@ -14,17 +23,28 @@ import {
   type SourceSpan,
   positionAt,
 } from "../diagnostics/index.ts";
-import type { Block, CodeBlock, Document, Paragraph } from "./ast.ts";
+import type { Block, BlockQuote, CodeBlock, Document, List, ListItem, Paragraph } from "./ast.ts";
 import {
   type FenceOpen,
+  type ListMarkerMatch,
   isFenceClose,
+  isSameListType,
   isSetextUnderline,
   isThematicBreak,
   matchAtxHeading,
+  matchBlockQuote,
   matchFenceOpen,
+  matchListMarker,
 } from "./block-rules.ts";
 import { DiagnosticCodes } from "./diagnostic-codes.ts";
-import { type SourceLine, isBlank, leadingIndent, splitLines } from "./lines.ts";
+import {
+  type SourceLine,
+  isBlank,
+  leadingIndent,
+  sliceLine,
+  splitLines,
+  stripColumns,
+} from "./lines.ts";
 
 export interface BlockParseResult {
   readonly document: Document;
@@ -33,7 +53,24 @@ export interface BlockParseResult {
 
 /** Parses the block structure of a Markdown file. `file` is only used in source spans. */
 export function parseBlocks(source: string, file: string): BlockParseResult {
-  return new BlockParser(source, file).parse();
+  const { blocks, diagnostics } = parseLines(splitLines(source), file);
+  const document: Document = {
+    kind: "document",
+    children: blocks,
+    span: { file, start: positionAt(source, 0), end: positionAt(source, source.length) },
+  };
+  return { document, diagnostics };
+}
+
+interface LinesParseResult {
+  readonly blocks: readonly Block[];
+  readonly diagnostics: readonly Diagnostic[];
+  /** Lines used. Fewer than given when parsing stopped at a lazy line it could not use. */
+  readonly consumed: number;
+}
+
+function parseLines(lines: readonly SourceLine[], file: string): LinesParseResult {
+  return new BlockParser(lines, file).parse();
 }
 
 /** Indentation at which CommonMark would start an indented code block. */
@@ -41,41 +78,32 @@ const CODE_INDENT = 4;
 
 /**
  * Single-use parser. The cursor and output lists are private mutable state, but they
- * never escape: `parseBlocks` creates a parser, runs it once and returns plain data.
+ * never escape: `parseLines` creates a parser, runs it once and returns plain data.
  */
 class BlockParser {
-  readonly #source: string;
   readonly #file: string;
   readonly #lines: readonly SourceLine[];
   readonly #blocks: Block[] = [];
   readonly #diagnostics: Diagnostic[] = [];
   #index = 0;
 
-  constructor(source: string, file: string) {
-    this.#source = source;
+  constructor(lines: readonly SourceLine[], file: string) {
+    this.#lines = lines;
     this.#file = file;
-    this.#lines = splitLines(source);
   }
 
-  parse(): BlockParseResult {
+  parse(): LinesParseResult {
     while (this.#index < this.#lines.length) {
       const line = this.#current();
+      // A lazy line here would start a new block, so it doesn't belong to this container.
+      if (line.lazy) break;
       if (isBlank(line.text)) {
         this.#index++;
       } else {
         this.#blocks.push(this.#parseBlock(line));
       }
     }
-    const document: Document = {
-      kind: "document",
-      children: this.#blocks,
-      span: {
-        file: this.#file,
-        start: positionAt(this.#source, 0),
-        end: positionAt(this.#source, this.#source.length),
-      },
-    };
-    return { document, diagnostics: this.#diagnostics };
+    return { blocks: this.#blocks, diagnostics: this.#diagnostics, consumed: this.#index };
   }
 
   #parseBlock(line: SourceLine): Block {
@@ -93,10 +121,16 @@ class BlockParser {
       };
     }
 
+    // Before lists: `* * *` is a thematic break, not a list item.
     if (isThematicBreak(line.text)) {
       this.#index++;
       return { kind: "thematic-break", span: this.#span(line, line) };
     }
+
+    if (matchBlockQuote(line.text) !== undefined) return this.#parseBlockQuote();
+
+    const marker = matchListMarker(line.text);
+    if (marker !== undefined) return this.#parseList(marker);
 
     return this.#parseParagraph();
   }
@@ -110,6 +144,7 @@ class BlockParser {
 
     while (this.#index < this.#lines.length) {
       const line = this.#current();
+      if (line.lazy) break;
       this.#index++;
       last = line;
       if (isFenceClose(line.text, open)) {
@@ -125,7 +160,7 @@ class BlockParser {
         DiagnosticCodes.unclosedCodeFence,
         first,
         "code block is never closed",
-        `add a line with ${fence} after the last line of code; until then, the rest of the file is treated as code`,
+        `add a line with ${fence} after the last line of code; until then, everything after it is treated as code`,
       );
     }
 
@@ -159,7 +194,7 @@ class BlockParser {
       if (isBlank(line.text)) break;
 
       const underline = isSetextUnderline(line.text);
-      const interrupts = this.#startsBlock(line);
+      const interrupts = interruptsParagraph(line.text);
       if (underline !== undefined) this.#warnSetext(line, interrupts);
       if (interrupts) break;
 
@@ -171,13 +206,120 @@ class BlockParser {
     return { kind: "paragraph", text: texts.join("\n").trimEnd(), span: this.#span(first, last) };
   }
 
-  /** Lines that end a paragraph even without a blank line before them. */
-  #startsBlock(line: SourceLine): boolean {
-    return (
-      matchFenceOpen(line.text) !== undefined ||
-      matchAtxHeading(line.text) !== undefined ||
-      isThematicBreak(line.text)
-    );
+  #parseBlockQuote(): BlockQuote {
+    const outer: SourceLine[] = [];
+    const inner: SourceLine[] = [];
+
+    while (this.#index < this.#lines.length) {
+      const line = this.#current();
+      const marker = matchBlockQuote(line.text);
+      if (marker !== undefined) inner.push(sliceLine(line, marker));
+      else if (isLazyCandidate(line, inner)) inner.push({ ...line, lazy: true });
+      else break;
+      outer.push(line);
+      this.#index++;
+    }
+
+    const { children, last } = this.#parseContainer(outer, inner);
+    return { kind: "block-quote", children, span: this.#span(this.#first(outer), last) };
+  }
+
+  #parseList(firstMarker: ListMarkerMatch): List {
+    const first = this.#current();
+    const items: ListItem[] = [];
+    let marker = firstMarker;
+    let tight = true;
+    let last = first;
+
+    while (true) {
+      const parsed = this.#parseListItem(marker);
+      items.push(parsed.item);
+      last = parsed.last;
+      if (hasBlankLineBetweenChildren(parsed.item)) tight = false;
+
+      // The next item may follow after blank lines; those make the list loose.
+      let next = this.#index;
+      while (next < this.#lines.length && isBlank(this.#lineAt(next).text)) next++;
+      if (next >= this.#lines.length) break;
+      const nextLine = this.#lineAt(next);
+      const nextMarker = isThematicBreak(nextLine.text)
+        ? undefined
+        : matchListMarker(nextLine.text);
+      if (nextMarker === undefined || !isSameListType(nextMarker.type, marker.type)) break;
+
+      if (next > this.#index) tight = false;
+      this.#index = next;
+      marker = nextMarker;
+    }
+
+    const span = this.#span(first, last);
+    return firstMarker.type.kind === "ordered"
+      ? { kind: "list", ordered: true, start: firstMarker.type.start, tight, items, span }
+      : { kind: "list", ordered: false, tight, items, span };
+  }
+
+  /**
+   * A list item owns the lines indented at least to its content column, blank lines
+   * between them, and lazy continuation lines of an open paragraph.
+   */
+  #parseListItem(marker: ListMarkerMatch): { item: ListItem; last: SourceLine } {
+    const first = this.#current();
+    const outer: SourceLine[] = [first];
+    const inner: SourceLine[] = [sliceLine(first, marker.contentStart)];
+    this.#index++;
+
+    // An item may start with at most one blank line: "-" followed by a blank is empty.
+    const startsEmpty =
+      marker.empty && (this.#index >= this.#lines.length || isBlank(this.#current().text));
+    if (!startsEmpty) this.#collectItemLines(marker, outer, inner);
+
+    const { children, last } = this.#parseContainer(outer, inner);
+    return { item: { kind: "list-item", children, span: this.#span(first, last) }, last };
+  }
+
+  /** Appends the item's continuation lines to `outer` (original) and `inner` (stripped). */
+  #collectItemLines(marker: ListMarkerMatch, outer: SourceLine[], inner: SourceLine[]): void {
+    let blanks: SourceLine[] = [];
+    while (this.#index < this.#lines.length) {
+      const line = this.#current();
+      if (isBlank(line.text)) {
+        blanks.push(line);
+      } else if (leadingIndent(line.text).width >= marker.contentColumn) {
+        outer.push(...blanks, line);
+        inner.push(...blanks, stripColumns(line, marker.contentColumn));
+        blanks = [];
+      } else if (blanks.length === 0 && isLazyCandidate(line, inner)) {
+        outer.push(line);
+        inner.push({ ...line, lazy: true });
+      } else {
+        break;
+      }
+      this.#index++;
+    }
+    // Trailing blank lines belong to whatever comes after the item.
+    this.#index -= blanks.length;
+  }
+
+  /**
+   * Parses a container's content. `outer[i]` is the original line for `inner[i]`. If the
+   * nested parser stops early at a lazy line, the container ends before it and the
+   * cursor moves back so that line is parsed again out here.
+   */
+  #parseContainer(
+    outer: readonly SourceLine[],
+    inner: readonly SourceLine[],
+  ): { children: Block[]; last: SourceLine } {
+    const { blocks, diagnostics, consumed } = parseLines(inner, this.#file);
+    this.#diagnostics.push(...diagnostics);
+    this.#index -= inner.length - consumed;
+    const last = outer[consumed - 1] ?? this.#first(outer);
+    return { children: [...blocks], last };
+  }
+
+  #first(lines: readonly SourceLine[]): SourceLine {
+    const first = lines[0];
+    if (first === undefined) throw new InternalError("container without lines");
+    return first;
   }
 
   /** `Title` followed by `===` or `---` is a heading in CommonMark, but not in gensane. */
@@ -202,8 +344,12 @@ class BlockParser {
   }
 
   #current(): SourceLine {
-    const line = this.#lines[this.#index];
-    if (line === undefined) throw new InternalError(`no line at index ${this.#index}`);
+    return this.#lineAt(this.#index);
+  }
+
+  #lineAt(index: number): SourceLine {
+    const line = this.#lines[index];
+    if (line === undefined) throw new InternalError(`no line at index ${index}`);
     return line;
   }
 
@@ -213,8 +359,51 @@ class BlockParser {
   }
 }
 
+/** Lines that end a paragraph even without a blank line before them. */
+function interruptsParagraph(text: string): boolean {
+  if (
+    matchFenceOpen(text) !== undefined ||
+    matchAtxHeading(text) !== undefined ||
+    isThematicBreak(text) ||
+    matchBlockQuote(text) !== undefined
+  ) {
+    return true;
+  }
+  // So that "in 2024. we..." wrapped onto a new line doesn't become a list:
+  // only bullets and lists starting at 1 may interrupt, and never an empty item.
+  const marker = matchListMarker(text);
+  return (
+    marker !== undefined &&
+    !marker.empty &&
+    (marker.type.kind === "bullet" || marker.type.start === 1)
+  );
+}
+
+/**
+ * A line that might continue a paragraph inside a container without the container's
+ * marker or indentation. Cheap check only; the nested parser makes the final decision.
+ */
+function isLazyCandidate(line: SourceLine, inner: readonly SourceLine[]): boolean {
+  const previous = inner.at(-1);
+  return (
+    previous !== undefined &&
+    !isBlank(previous.text) &&
+    !isBlank(line.text) &&
+    !interruptsParagraph(line.text) &&
+    matchListMarker(line.text) === undefined
+  );
+}
+
+/** A list is loose if any item has a blank line between two of its blocks. */
+function hasBlankLineBetweenChildren(item: ListItem): boolean {
+  return item.children.some((child, i) => {
+    const previous = item.children[i - 1];
+    return previous !== undefined && child.span.start.line > previous.span.end.line + 1;
+  });
+}
+
 function position(line: SourceLine, offset: number): SourcePosition {
-  return { line: line.number, column: offset - line.start + 1, offset };
+  return { line: line.number, column: offset - line.lineStart + 1, offset };
 }
 
 function withoutIndent(text: string): string {
