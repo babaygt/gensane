@@ -12,6 +12,10 @@ export type {
   List,
   ListItem,
   Paragraph,
+  Table,
+  TableAlignment,
+  TableCell,
+  TableRow,
   ThematicBreak,
 } from "./ast.ts";
 export { DiagnosticCodes } from "./diagnostic-codes.ts";

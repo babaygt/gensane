@@ -8,4 +8,5 @@ export const DiagnosticCodes = {
   unclosedCodeFence: "GS101",
   setextHeading: "GS102",
   indentedCode: "GS103",
+  tableColumnMismatch: "GS104",
 } as const satisfies Record<string, DiagnosticCode>;

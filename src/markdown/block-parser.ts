@@ -23,7 +23,18 @@ import {
   type SourceSpan,
   positionAt,
 } from "../diagnostics/index.ts";
-import type { Block, BlockQuote, CodeBlock, Document, List, ListItem, Paragraph } from "./ast.ts";
+import type {
+  Block,
+  BlockQuote,
+  CodeBlock,
+  Document,
+  List,
+  ListItem,
+  Paragraph,
+  Table,
+  TableCell,
+  TableRow,
+} from "./ast.ts";
 import {
   type FenceOpen,
   type ListMarkerMatch,
@@ -45,6 +56,7 @@ import {
   splitLines,
   stripColumns,
 } from "./lines.ts";
+import { type TableAlignment, matchDelimiterRow, splitTableRow } from "./table-rules.ts";
 
 export interface BlockParseResult {
   readonly document: Document;
@@ -132,6 +144,9 @@ class BlockParser {
     const marker = matchListMarker(line.text);
     if (marker !== undefined) return this.#parseList(marker);
 
+    const alignments = this.#tableAlignmentsAt(this.#index);
+    if (alignments !== undefined) return this.#parseTable(alignments);
+
     return this.#parseParagraph();
   }
 
@@ -185,6 +200,7 @@ class BlockParser {
       );
     }
 
+    this.#warnIfColumnsDiffer(this.#index);
     const texts = [withoutIndent(first.text)];
     let last = first;
     this.#index++;
@@ -196,14 +212,80 @@ class BlockParser {
       const underline = isSetextUnderline(line.text);
       const interrupts = interruptsParagraph(line.text);
       if (underline !== undefined) this.#warnSetext(line, interrupts);
-      if (interrupts) break;
+      if (interrupts || this.#tableAlignmentsAt(this.#index) !== undefined) break;
 
+      this.#warnIfColumnsDiffer(this.#index);
       texts.push(withoutIndent(line.text));
       last = line;
       this.#index++;
     }
 
     return { kind: "paragraph", text: texts.join("\n").trimEnd(), span: this.#span(first, last) };
+  }
+
+  #parseTable(alignments: readonly TableAlignment[]): Table {
+    const first = this.#current();
+    const header = this.#parseTableRow(first, alignments.length);
+    let last = this.#lineAt(this.#index + 1);
+    this.#index += 2;
+
+    const rows: TableRow[] = [];
+    while (this.#index < this.#lines.length) {
+      const line = this.#current();
+      if (line.lazy || isBlank(line.text) || startsBlock(line.text)) break;
+      rows.push(this.#parseTableRow(line, alignments.length));
+      last = line;
+      this.#index++;
+    }
+    return { kind: "table", alignments, header, rows, span: this.#span(first, last) };
+  }
+
+  #parseTableRow(line: SourceLine, columns: number): TableRow {
+    const parsed = splitTableRow(line.text);
+    const cells = Array.from({ length: columns }, (_, column): TableCell => {
+      const cell = parsed[column];
+      const start = cell === undefined ? line.end : line.start + cell.start;
+      const end = cell === undefined ? line.end : line.start + cell.end;
+      return {
+        kind: "table-cell",
+        text: cell?.text ?? "",
+        span: { file: this.#file, start: position(line, start), end: position(line, end) },
+      };
+    });
+    return { kind: "table-row", cells, span: this.#span(line, line) };
+  }
+
+  /** The delimiter row after the line at `index`, if the two could start a table. */
+  #delimiterAfter(
+    index: number,
+  ): { line: SourceLine; alignments: TableAlignment[]; headerCells: number } | undefined {
+    const header = this.#lines[index];
+    const line = this.#lines[index + 1];
+    if (header === undefined || line === undefined || header.lazy || line.lazy) return undefined;
+    if (leadingIndent(header.text).width >= CODE_INDENT || interruptsParagraph(line.text)) {
+      return undefined;
+    }
+    const alignments = matchDelimiterRow(line.text);
+    if (alignments === undefined) return undefined;
+    return { line, alignments, headerCells: splitTableRow(header.text).length };
+  }
+
+  /** A table starts here only if the header has exactly one cell per delimiter cell. */
+  #tableAlignmentsAt(index: number): TableAlignment[] | undefined {
+    const delimiter = this.#delimiterAfter(index);
+    if (delimiter === undefined) return undefined;
+    return delimiter.headerCells === delimiter.alignments.length ? delimiter.alignments : undefined;
+  }
+
+  #warnIfColumnsDiffer(index: number): void {
+    const delimiter = this.#delimiterAfter(index);
+    if (delimiter === undefined || delimiter.headerCells === delimiter.alignments.length) return;
+    this.#warn(
+      DiagnosticCodes.tableColumnMismatch,
+      delimiter.line,
+      `table header has ${delimiter.headerCells} columns but this row has ${delimiter.alignments.length}; this is read as text`,
+      "give the header row and the row of dashes the same number of columns",
+    );
   }
 
   #parseBlockQuote(): BlockQuote {
@@ -389,9 +471,13 @@ function isLazyCandidate(line: SourceLine, inner: readonly SourceLine[]): boolea
     previous !== undefined &&
     !isBlank(previous.text) &&
     !isBlank(line.text) &&
-    !interruptsParagraph(line.text) &&
-    matchListMarker(line.text) === undefined
+    !startsBlock(line.text)
   );
+}
+
+/** Any block start at all, including list items that could not interrupt a paragraph. */
+function startsBlock(text: string): boolean {
+  return interruptsParagraph(text) || matchListMarker(text) !== undefined;
 }
 
 /** A list is loose if any item has a blank line between two of its blocks. */
