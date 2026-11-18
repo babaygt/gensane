@@ -33,6 +33,12 @@ describe("splitTableRow", () => {
   });
 });
 
+describe("splitTableRow with a whitespace-only cell", () => {
+  it("gives the empty cell an empty range", () => {
+    expect(splitTableRow("|   | b |")[0]).toEqual({ text: "", start: 4, end: 4 });
+  });
+});
+
 describe("matchDelimiterRow", () => {
   it.each([
     { text: "| --- | --- |", alignments: ["none", "none"] },
