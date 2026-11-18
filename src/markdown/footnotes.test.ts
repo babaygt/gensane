@@ -97,6 +97,42 @@ describe("footnotes", () => {
     expect(html("![a[^n]](/u)\n\n[^n]: Note")).toContain('alt="a"');
   });
 
+  it("finds a reference inside emphasis", () => {
+    expect(html("*a[^a]*\n\n[^a]: Note")).toContain(`<em>a${reference(1)}</em>`);
+  });
+
+  it("finds a definition inside a list", () => {
+    expect(codes("A[^a]\n\n- [^a]: Note")).toEqual([]);
+  });
+
+  it("finds a definition inside another note", () => {
+    expect(codes("A[^a] B[^b]\n\n[^a]: One\n\n    [^b]: Two")).toEqual([]);
+  });
+
+  it("supports task lists inside a note", () => {
+    expect(html("A[^a]\n\n[^a]: - [x] done")).toContain('type="checkbox"');
+  });
+
+  it("allows several spaces before the text of a note", () => {
+    expect(codes("A[^a]\n\n[^a]:      Note")).toEqual([]);
+  });
+
+  it("ends a note at a line indented by less than four spaces", () => {
+    expect(html("A[^a]\n\n[^a]: One\n\n  Two")).toContain("<p>Two</p>\n<section");
+  });
+
+  it("does not crash on thousands of nested notes", () => {
+    expect(() => html("[^a]: ".repeat(50_000))).not.toThrow();
+  });
+
+  it.each(["[^a b]", "[^a b]: Note"])(
+    "%j has a space in its label, so it is plain text",
+    (source) => {
+      expect(html(source)).toBe(`<p>${source}</p>\n`);
+      expect(codes(source)).toEqual([]);
+    },
+  );
+
   it("renders nothing extra without footnotes", () => {
     expect(html("Text")).toBe("<p>Text</p>\n");
   });
@@ -163,6 +199,11 @@ describe("footnote warnings", () => {
 });
 
 describe("footnotes in the syntax tree", () => {
+  it("turns a reference without a definition into text", () => {
+    const [paragraph] = parseMarkdown("[^x]", "a.md").document.children;
+    expect(paragraph).toMatchObject({ inlines: [{ kind: "text", text: "[^x]" }] });
+  });
+
   it("lists the notes on the document", () => {
     const { document } = parseMarkdown("A[^a]\n\n[^a]: Note", "a.md");
     expect(document.footnotes).toMatchObject([{ label: "a", number: 1, referenceCount: 1 }]);
