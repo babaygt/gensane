@@ -114,6 +114,7 @@ describe("parseReferenceDefinition", () => {
     ["[a] /u", "no colon"],
     ['[a]: /u "b" c', "text after the title on the same line"],
     ["[a]: /u b", "text after the destination"],
+    ["[^a]: /u", "the syntax of a footnote"],
     ['[a]: <b>"t"', "no space before the title"],
   ])("rejects %j (%s)", (source) => {
     expect(parseReferenceDefinition(source, 0)).toBeUndefined();

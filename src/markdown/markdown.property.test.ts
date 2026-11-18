@@ -32,6 +32,9 @@ const markdownLike = fc.string({
     "* ",
     "1. ",
     "2) ",
+    "[^a]",
+    "[^a]: ",
+    "[^b]: note\n",
     "- [ ] ",
     "- [x] ",
     "> [!NOTE]\n",
@@ -106,7 +109,7 @@ describe("Markdown parser properties", () => {
       fc.property(markdownLike, (source) => {
         const { document, diagnostics } = parseMarkdown(source, "x.md");
         const spans = [
-          ...allSpans(document.children),
+          ...allSpans([document.children, document.footnotes]),
           ...diagnostics.map((diagnostic) => diagnostic.span),
         ];
         for (const span of spans) {
@@ -119,7 +122,7 @@ describe("Markdown parser properties", () => {
 
   it("never lets user text produce HTML tags", () => {
     const ourTags =
-      /<\/?(?:h[1-6]|p|pre|code|hr|blockquote|ul|ol|li|table|thead|tbody|tr|th|td|em|strong|del|br|a|div)(?: id="[^"<>]*"| class="callout[^"<>]*"| class="language-[^"<>]*"| start="\d+"| align="(?:left|center|right)"| href="[^"<>]*"(?: title="[^"<>]*")?)? ?\/?>|<input(?: checked="")? disabled="" type="checkbox" \/>|<img src="[^"<>]*" alt="[^"<>]*"(?: title="[^"<>]*")? \/>/g;
+      /<\/?(?:h[1-6]|p|pre|code|hr|blockquote|ul|ol|li|table|thead|tbody|tr|th|td|em|strong|del|br|a|div|section|sup)(?: class="footnotes"| class="footnote-ref"| id="fn-\d+"| href="#fn-\d+" id="fnref-[\d-]+"| href="#fnref-[\d-]+" class="footnote-backref" aria-label="[^"<>]*"| id="[^"<>]*"| class="callout[^"<>]*"| class="language-[^"<>]*"| start="\d+"| align="(?:left|center|right)"| href="[^"<>]*"(?: title="[^"<>]*")?)? ?\/?>|<input(?: checked="")? disabled="" type="checkbox" \/>|<img src="[^"<>]*" alt="[^"<>]*"(?: title="[^"<>]*")? \/>/g;
     fc.assert(
       fc.property(markdownLike, (source) => {
         const withoutOurTags = markdownToHtml(source, "x.md", { rawHtml: "escape" }).html.replace(
