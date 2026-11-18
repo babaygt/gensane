@@ -12,16 +12,23 @@ import {
   type Diagnostic,
   type Result,
   type SourcePosition,
-  assertNever,
   err,
   ok,
 } from "../diagnostics/index.ts";
 import { FrontmatterCodes } from "./diagnostic-codes.ts";
 import { type SourceLine, positionInLine, splitSourceLines } from "./source-lines.ts";
-import type { FrontmatterValue, MapValue } from "./values.ts";
+import type { MapValue } from "./values.ts";
 import { parseYamlSubset } from "./yaml-parser.ts";
 
+export {
+  type ContentFields,
+  type ContentType,
+  contentSchemas,
+  validateContent,
+} from "./content-types.ts";
 export { FrontmatterCodes } from "./diagnostic-codes.ts";
+export { toPlainData } from "./plain-data.ts";
+export type { ContentDate, Validated } from "./schema.ts";
 export type {
   BooleanValue,
   DateValue,
@@ -89,26 +96,4 @@ function unclosedFrontmatter(opening: SourceLine, file: string): Diagnostic {
     },
     hint: "add a line with `---` after the last setting",
   };
-}
-
-/** The values without their positions, as ordinary JavaScript data. Dates stay text. */
-export function toPlainData(value: FrontmatterValue): unknown {
-  switch (value.kind) {
-    case "string":
-    case "number":
-    case "boolean":
-      return value.value;
-    case "null":
-      return null;
-    case "date":
-      return value.text;
-    case "list":
-      return value.items.map(toPlainData);
-    case "map":
-      return Object.fromEntries(
-        value.entries.map((entry) => [entry.key, toPlainData(entry.value)]),
-      );
-    default:
-      return assertNever(value);
-  }
 }

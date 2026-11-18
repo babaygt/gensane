@@ -15,4 +15,11 @@ export const FrontmatterCodes = {
   nestingTooDeep: "GS211",
   valueNeedsQuotes: "GS212",
   textAfterValue: "GS213",
+  missingField: "GS220",
+  wrongType: "GS221",
+  invalidChoice: "GS222",
+  invalidUrl: "GS223",
+  unknownField: "GS224",
+  emptyField: "GS225",
+  invalidDateRange: "GS226",
 } as const satisfies Record<string, DiagnosticCode>;
