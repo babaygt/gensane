@@ -6,7 +6,17 @@
  * CommonMark reference renderer, which lets us compare against its examples.
  */
 import { assertNever } from "../diagnostics/index.ts";
-import type { Block, Document, Inline, ListItem, Table, TableAlignment, TableRow } from "./ast.ts";
+import type {
+  CalloutKind,
+  Block,
+  Document,
+  Inline,
+  ListItem,
+  Table,
+  TableAlignment,
+  TableRow,
+} from "./ast.ts";
+import { plainTextOf } from "./inline-text.ts";
 
 export function renderHtml(document: Document): string {
   return renderBlocks(document.children);
@@ -18,8 +28,10 @@ function renderBlocks(blocks: readonly Block[]): string {
 
 function renderBlock(block: Block): string {
   switch (block.kind) {
-    case "heading":
-      return `<h${block.level}>${renderText(block)}</h${block.level}>\n`;
+    case "heading": {
+      const id = block.id === undefined ? "" : ` id="${escapeHtml(block.id)}"`;
+      return `<h${block.level}${id}>${renderText(block)}</h${block.level}>\n`;
+    }
     case "paragraph":
       return `<p>${renderText(block)}</p>\n`;
     case "code": {
@@ -30,7 +42,9 @@ function renderBlock(block: Block): string {
     case "thematic-break":
       return "<hr />\n";
     case "block-quote":
-      return `<blockquote>\n${renderBlocks(block.children)}</blockquote>\n`;
+      return block.callout === undefined
+        ? `<blockquote>\n${renderBlocks(block.children)}</blockquote>\n`
+        : renderCallout(block.callout, block.children);
     case "list": {
       const tag = block.ordered ? "ol" : "ul";
       const start = block.ordered && block.start !== 1 ? ` start="${block.start}"` : "";
@@ -46,16 +60,42 @@ function renderBlock(block: Block): string {
   }
 }
 
+const CALLOUT_TITLES: Readonly<Record<CalloutKind, string>> = {
+  note: "Note",
+  tip: "Tip",
+  important: "Important",
+  warning: "Warning",
+  caution: "Caution",
+};
+
+function renderCallout(kind: CalloutKind, children: readonly Block[]): string {
+  const title = `<p class="callout-title">${CALLOUT_TITLES[kind]}</p>\n`;
+  return `<div class="callout callout-${kind}">\n${title}${renderBlocks(children)}</div>\n`;
+}
+
+function renderCheckbox(checked: boolean): string {
+  return `<input ${checked ? 'checked="" ' : ""}disabled="" type="checkbox" /> `;
+}
+
 /** In a tight list, paragraphs are written without `<p>`; other blocks start on a new line. */
 function renderListItem(item: ListItem, tight: boolean): string {
+  // A task's checkbox goes in front of the text of its first paragraph.
+  let checkbox = item.checked === undefined ? "" : renderCheckbox(item.checked);
   let html = "<li>";
   for (const child of item.children) {
-    if (tight && child.kind === "paragraph") {
-      html += renderText(child);
+    if (child.kind === "paragraph") {
+      const content = `${checkbox}${renderText(child)}`;
+      if (tight) {
+        html += content;
+      } else {
+        if (!html.endsWith("\n")) html += "\n";
+        html += `<p>${content}</p>\n`;
+      }
     } else {
       if (!html.endsWith("\n")) html += "\n";
       html += renderBlock(child);
     }
+    checkbox = "";
   }
   return `${html}</li>\n`;
 }
@@ -90,7 +130,7 @@ function renderInline(inline: Inline): string {
     case "link":
       return `<a href="${renderUrl(inline.url)}"${renderTitle(inline.title)}>${renderInlines(inline.children)}</a>`;
     case "image": {
-      const alt = escapeHtml(plainText(inline.children));
+      const alt = escapeHtml(plainTextOf(inline.children));
       return `<img src="${renderUrl(inline.url)}" alt="${alt}"${renderTitle(inline.title)} />`;
     }
     default:
@@ -100,31 +140,6 @@ function renderInline(inline: Inline): string {
 
 function renderTitle(title: string | undefined): string {
   return title === undefined ? "" : ` title="${escapeHtml(title)}"`;
-}
-
-/** The text of an image description, without any formatting. */
-function plainText(inlines: readonly Inline[]): string {
-  return inlines
-    .map((inline) => {
-      switch (inline.kind) {
-        case "text":
-        case "code-span":
-        case "raw-html":
-          return inline.text;
-        case "hard-break":
-        case "soft-break":
-          return "\n";
-        case "emphasis":
-        case "strong":
-        case "strikethrough":
-        case "link":
-        case "image":
-          return plainText(inline.children);
-        default:
-          return assertNever(inline);
-      }
-    })
-    .join("");
 }
 
 /** Percent-encodes a URL for an attribute, leaving existing `%XX` sequences alone. */

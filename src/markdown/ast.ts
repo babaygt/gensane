@@ -93,6 +93,8 @@ export type Inline =
 export interface Heading {
   readonly kind: "heading";
   readonly level: HeadingLevel;
+  /** Unique within the document; used as the target of links to this section. */
+  readonly id?: string;
   readonly text: string;
   readonly segments: readonly TextSegment[];
   readonly inlines?: readonly Inline[];
@@ -129,8 +131,12 @@ export interface HtmlBlock {
   readonly span: SourceSpan;
 }
 
+export type CalloutKind = "note" | "tip" | "important" | "warning" | "caution";
+
 export interface BlockQuote {
   readonly kind: "block-quote";
+  /** Set when the quote starts with a marker such as `[!NOTE]`. */
+  readonly callout?: CalloutKind;
   readonly children: readonly Block[];
   readonly span: SourceSpan;
 }
@@ -150,6 +156,8 @@ export type List =
 
 export interface ListItem {
   readonly kind: "list-item";
+  /** Set on task list items: `[x]` is checked and `[ ]` is not. */
+  readonly checked?: boolean;
   readonly children: readonly Block[];
   readonly span: SourceSpan;
 }
