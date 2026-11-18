@@ -21,6 +21,7 @@ export function resolveInlines(document: Document): Document {
         case "paragraph":
           return withoutDefinitions(block, references);
         case "block-quote":
+        case "footnote-definition":
           return [{ ...block, children: extractDefinitions(block.children) }];
         case "list": {
           const items = block.items.map((item) => ({
@@ -47,6 +48,7 @@ export function resolveInlines(document: Document): Document {
       case "paragraph":
         return { ...block, inlines: parseInlines(block.text, block.segments, file, references) };
       case "block-quote":
+      case "footnote-definition":
         return { ...block, children: block.children.map(resolveBlock) };
       case "list": {
         const items = block.items.map((item) => ({

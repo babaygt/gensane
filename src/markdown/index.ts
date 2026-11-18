@@ -4,6 +4,7 @@ import { type BlockParseResult, parseBlocks } from "./block-parser.ts";
 import { escapeRawHtml } from "./escape-raw-html.ts";
 import { assignHeadingIds } from "./heading-ids.ts";
 import { renderHtml } from "./render-html.ts";
+import { resolveFootnotes } from "./resolve-footnotes.ts";
 import { resolveInlines } from "./resolve-inlines.ts";
 import { type TableOfContentsEntry, buildTableOfContents } from "./table-of-contents.ts";
 
@@ -15,6 +16,9 @@ export type {
   CodeSpan,
   Document,
   Emphasis,
+  Footnote,
+  FootnoteDefinition,
+  FootnoteReference,
   Heading,
   HeadingLevel,
   HtmlBlock,
@@ -57,9 +61,12 @@ export function parseMarkdown(
   const { document, diagnostics } = parseBlocks(source, file);
   const resolved = resolveInlines(applyBlockExtensions(document));
   const withIds = options.headingIds === false ? resolved : assignHeadingIds(resolved);
+  const footnotes = resolveFootnotes(withIds);
   return {
-    document: options.rawHtml === "escape" ? escapeRawHtml(withIds) : withIds,
-    diagnostics,
+    document: options.rawHtml === "escape" ? escapeRawHtml(footnotes.document) : footnotes.document,
+    diagnostics: [...diagnostics, ...footnotes.diagnostics].toSorted(
+      (first, second) => first.span.start.offset - second.span.start.offset,
+    ),
   };
 }
 

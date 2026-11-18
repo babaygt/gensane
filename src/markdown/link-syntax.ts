@@ -123,6 +123,8 @@ export function parseReferenceDefinition(
 ): ReferenceDefinition | undefined {
   const label = parseLinkLabel(text, position);
   if (label === undefined || text[label.end] !== ":") return undefined;
+  // `[^label]:` is the syntax of a footnote, never of a link.
+  if (label.label.startsWith("^")) return undefined;
   const destination = parseLinkDestination(text, skipToNextLine(text, label.end + 1));
   if (destination === undefined) return undefined;
 

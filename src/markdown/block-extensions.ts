@@ -32,6 +32,8 @@ function applyToBlock(block: Block): Block {
       );
       return { ...block, items };
     }
+    case "footnote-definition":
+      return { ...block, children: block.children.map(applyToBlock) };
     case "heading":
     case "paragraph":
     case "code":

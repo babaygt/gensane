@@ -36,6 +36,7 @@ export function assignHeadingIds(document: Document): Document {
       case "heading":
         return { ...block, id: uniqueId(plainTextOf(block.inlines ?? [])) };
       case "block-quote":
+      case "footnote-definition":
         return { ...block, children: block.children.map(assign) };
       case "list": {
         const items = block.items.map((item) => ({

@@ -155,3 +155,18 @@ export function isSameListType(first: ListType, second: ListType): boolean {
   }
   return false;
 }
+
+// `[^label]:` at the start of a line; the label has no spaces or brackets.
+const FOOTNOTE_DEFINITION = /^ {0,3}\[\^([^\][\s]{1,999})\]:[ \t]*/;
+
+export interface FootnoteDefinitionMatch {
+  readonly label: string;
+  /** Index in the line where the text of the note starts. */
+  readonly contentStart: number;
+}
+
+export function matchFootnoteDefinition(text: string): FootnoteDefinitionMatch | undefined {
+  const match = FOOTNOTE_DEFINITION.exec(text);
+  if (match === null) return undefined;
+  return { label: match[1] ?? "", contentStart: match[0].length };
+}

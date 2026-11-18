@@ -6,7 +6,15 @@ import { assertNever } from "../diagnostics/index.ts";
 import type { Block, Document, Inline, TableRow } from "./ast.ts";
 
 export function escapeRawHtml(document: Document): Document {
-  return { ...document, children: document.children.map(escapeBlock) };
+  const footnotes = document.footnotes?.map((footnote) => ({
+    ...footnote,
+    children: footnote.children.map(escapeBlock),
+  }));
+  return {
+    ...document,
+    children: document.children.map(escapeBlock),
+    ...(footnotes === undefined ? {} : { footnotes }),
+  };
 }
 
 function escapeBlock(block: Block): Block {
@@ -25,6 +33,7 @@ function escapeBlock(block: Block): Block {
     case "paragraph":
       return { ...block, inlines: escapeInlines(block.inlines ?? []) };
     case "block-quote":
+    case "footnote-definition":
       return { ...block, children: block.children.map(escapeBlock) };
     case "list": {
       const items = block.items.map((item) => ({
@@ -62,6 +71,7 @@ function escapeInlines(inlines: readonly Inline[]): Inline[] {
       case "link":
       case "image":
         return { ...inline, children: escapeInlines(inline.children) };
+      case "footnote-reference":
       case "text":
       case "code-span":
       case "hard-break":
