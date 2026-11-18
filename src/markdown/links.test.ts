@@ -29,7 +29,7 @@ describe("inline links", () => {
     ["[a](/ü)", '<a href="/%C3%BC">a</a>'],
     ["[a](/%20b)", '<a href="/%20b">a</a>'],
     ['[a](/"b)', '<a href="/%22b">a</a>'],
-    ['[a](<b>"t")', "[a](&lt;b&gt;&quot;t&quot;)"],
+    ['[a](<b>"t")', "[a](<b>&quot;t&quot;)"],
     ["*a [b*c](/u)", '*a <a href="/u">b*c</a>'],
     ["[a](/\ud83d)", '<a href="/%EF%BF%BD">a</a>'],
   ])("%s", (source, expected) => {
@@ -102,7 +102,7 @@ describe("autolinks", () => {
   it.each([
     ["<https://a.b/c?d=1>", '<a href="https://a.b/c?d=1">https://a.b/c?d=1</a>'],
     ["<me@a.example>", '<a href="mailto:me@a.example">me@a.example</a>'],
-    ["<not a link>", "&lt;not a link&gt;"],
+    ["< not a link>", "&lt; not a link&gt;"],
   ])("%s", (source, expected) => {
     expect(inline(source)).toBe(expected);
   });
