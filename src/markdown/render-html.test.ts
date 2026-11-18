@@ -10,7 +10,7 @@ function html(source: string): string {
 describe("markdownToHtml", () => {
   it.each([
     { name: "empty document", source: "", expected: "" },
-    { name: "heading", source: "## Hello", expected: "<h2>Hello</h2>\n" },
+    { name: "heading", source: "## Hello", expected: '<h2 id="hello">Hello</h2>\n' },
     { name: "paragraph", source: "a\nb", expected: "<p>a\nb</p>\n" },
     { name: "thematic break", source: "---", expected: "<hr />\n" },
     {
@@ -26,7 +26,7 @@ describe("markdownToHtml", () => {
     {
       name: "several blocks",
       source: "# T\n\ntext\n\n***",
-      expected: "<h1>T</h1>\n<p>text</p>\n<hr />\n",
+      expected: '<h1 id="t">T</h1>\n<p>text</p>\n<hr />\n',
     },
   ])("renders $name", ({ source, expected }) => {
     expect(html(source)).toBe(expected);

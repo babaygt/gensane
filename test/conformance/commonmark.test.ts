@@ -31,7 +31,9 @@ describe.each([...new Set(examples.map((example) => example.section))])(
     it.each(supported.map((example) => [example.example, example] as const))(
       "example %i",
       (_, example) => {
-        expect(markdownToHtml(example.markdown, "spec.md").html).toBe(example.html);
+        expect(markdownToHtml(example.markdown, "spec.md", { headingIds: false }).html).toBe(
+          example.html,
+        );
       },
     );
 
@@ -39,7 +41,9 @@ describe.each([...new Set(examples.map((example) => example.section))])(
     it.each(
       gaps.map((example) => [example.example, gapReasons.get(example.example), example] as const),
     )("example %i is still a known gap (%s)", (_, _reason, example) => {
-      expect(markdownToHtml(example.markdown, "spec.md").html).not.toBe(example.html);
+      expect(markdownToHtml(example.markdown, "spec.md", { headingIds: false }).html).not.toBe(
+        example.html,
+      );
     });
   },
 );
