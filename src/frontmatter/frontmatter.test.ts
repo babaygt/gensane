@@ -16,6 +16,10 @@ function errorCodes(yaml: string): string[] {
   return result.ok ? [] : result.error.map((error) => error.code);
 }
 
+function nested(levels: number): string {
+  return Array.from({ length: levels + 1 }, (_, level) => `${" ".repeat(level)}a:`).join("\n");
+}
+
 describe("finding the frontmatter", () => {
   it("separates the data from the body", () => {
     const result = parseFrontmatter("---\ntitle: Hi\n---\n# Body\n", "a.md");
@@ -126,6 +130,7 @@ describe("dates", () => {
     ["2026-11-18", { year: 2026, month: 11, day: 18 }],
     ["2024-06", { year: 2024, month: 6 }],
     ["2024-02-29", { year: 2024, month: 2, day: 29 }],
+    ["2000-02-29", { year: 2000, month: 2, day: 29 }],
     ["2026-11-18T10:30:00Z", { year: 2026, month: 11, day: 18, time: "10:30:00Z" }],
     ["2026-11-18T10:30:00+01:00", { year: 2026, month: 11, day: 18, time: "10:30:00+01:00" }],
   ])("%s", (text, expected) => {
@@ -138,12 +143,17 @@ describe("dates", () => {
     expect(data("a: 2026-11-18")).toEqual({ a: "2026-11-18" });
   });
 
-  it.each(["2026-13-01", "2026-00-10", "2026-02-30", "2025-02-29", "2026-04-31", "2026-11-00"])(
-    "rejects the impossible date %s",
-    (text) => {
-      expect(errorCodes(`a: ${text}`)).toEqual([FrontmatterCodes.invalidDate]);
-    },
-  );
+  it.each([
+    "2026-13-01",
+    "2026-00-10",
+    "2026-02-30",
+    "2025-02-29",
+    "1900-02-29",
+    "2026-04-31",
+    "2026-11-00",
+  ])("rejects the impossible date %s", (text) => {
+    expect(errorCodes(`a: ${text}`)).toEqual([FrontmatterCodes.invalidDate]);
+  });
 
   it.each(["2026-1-5", "26-11-18", "2026/11/18"])("keeps %s as text", (text) => {
     expect(data(`a: ${text}`)).toEqual({ a: text });
@@ -232,6 +242,14 @@ describe("lists", () => {
     expect(data(yaml)).toEqual({ a: expected });
   });
 
+  it("accepts a tab after the dash", () => {
+    expect(data("a:\n  -\tx")).toEqual({ a: ["x"] });
+  });
+
+  it("lines up a map with its first key, however far that is from the dash", () => {
+    expect(data("a:\n  -   b: 1\n      c: 2")).toEqual({ a: [{ b: 1, c: 2 }] });
+  });
+
   it("reads a list of maps", () => {
     expect(data("a:\n  - name: x\n    url: y\n  - name: z")).toEqual({
       a: [{ name: "x", url: "y" }, { name: "z" }],
@@ -274,6 +292,9 @@ describe("errors", () => {
     ["a:\n    b: 1\n  c: 2", FrontmatterCodes.unexpectedIndentation],
     ["a:\n  - x\n    y: 1", FrontmatterCodes.unexpectedIndentation],
     ["a: Hello: World", FrontmatterCodes.valueNeedsQuotes],
+    ["a: - x", FrontmatterCodes.valueNeedsQuotes],
+    ['a: ["x" "y"]', FrontmatterCodes.textAfterValue],
+    ["a: [x,,y]", FrontmatterCodes.invalidEntry],
     ["a: ends with colon:", FrontmatterCodes.valueNeedsQuotes],
     ["a: {b: 1}", FrontmatterCodes.unsupportedSyntax],
     ["a: &anchor x", FrontmatterCodes.unsupportedSyntax],
@@ -298,6 +319,25 @@ describe("errors", () => {
       FrontmatterCodes.duplicateKey,
     ]);
   });
+
+  it("reports problems in the order they appear in the file", () => {
+    expect(errorCodes("bad line\n\tb: 1")).toEqual([
+      FrontmatterCodes.invalidEntry,
+      FrontmatterCodes.tabIndentation,
+    ]);
+  });
+
+  it("reports one error for an impossible date inside a list", () => {
+    expect(errorCodes("a: [2026-13-01, x]")).toEqual([FrontmatterCodes.invalidDate]);
+  });
+
+  it.each(["a: 1\n  b: 2", "a:\n  - x\n    y: 1"])(
+    "explains that the entry above %j already has a value",
+    (yaml) => {
+      const result = parse(yaml);
+      expect(result.ok ? "" : result.error[0]?.message).toContain("already has a value");
+    },
+  );
 
   it("does not report the nested lines of a broken entry again", () => {
     expect(errorCodes("bad line\n  a: 1\n  b: 2\nc: 3")).toEqual([FrontmatterCodes.invalidEntry]);
@@ -330,6 +370,11 @@ describe("errors", () => {
     expect(errorCodes(deepList)).toContain(FrontmatterCodes.nestingTooDeep);
   });
 
+  it("allows 64 levels of nested maps", () => {
+    expect(errorCodes(nested(64))).toEqual([]);
+    expect(errorCodes(nested(65))).toEqual([FrontmatterCodes.nestingTooDeep]);
+  });
+
   it("allows 64 levels of nesting", () => {
     expect(errorCodes(`a: ${"[".repeat(64)}${"]".repeat(64)}`)).toEqual([]);
     expect(errorCodes(`a: ${"[".repeat(65)}${"]".repeat(65)}`)).toEqual([
@@ -356,6 +401,15 @@ describe("source positions of values", () => {
     const result = parseFrontmatter("---\na: b  # note\n---\n", "a.md");
     const entry = result.ok ? result.value.data.entries[0] : undefined;
     expect(entry?.value.span.end.column).toBe(5);
+  });
+
+  it("cover a whole list, including the nested lines of its last item", () => {
+    const result = parseFrontmatter("---\na:\n  - b: 1\n    c: 2\n---\n", "a.md");
+    const list = result.ok ? result.value.data.entries[0]?.value : undefined;
+    expect(list?.span).toMatchObject({
+      start: { line: 3, column: 3 },
+      end: { line: 4, column: 9 },
+    });
   });
 
   it("are exact inside a list item", () => {

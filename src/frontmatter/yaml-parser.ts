@@ -145,7 +145,7 @@ class YamlParser {
   #parseNestedValue(indent: number, at: SourceSpan, depth: number): FrontmatterValue {
     const next = this.#current();
     if (next !== undefined && next.indent === indent && isListItem(next.text)) {
-      return this.#parseList(indent, depth + 1);
+      return this.#parseList(next, depth + 1);
     }
     if (next !== undefined && next.indent > indent) return this.#parseBlock(next, depth + 1);
     return { kind: "null", span: { file: at.file, start: at.end, end: at.end } };
@@ -163,24 +163,22 @@ class YamlParser {
       return { kind: "null", span: this.#textSpan(line) };
     }
     return isListItem(line.text)
-      ? this.#parseList(line.indent, depth)
+      ? this.#parseList(line, depth)
       : this.#parseMap(line.indent, depth);
   }
 
-  #parseList(indent: number, depth: number): ListValue {
+  #parseList(first: ContentLine, depth: number): ListValue {
     const items: FrontmatterValue[] = [];
-    const first = this.#current();
-    let last = first;
     for (
-      let line = first;
-      line !== undefined && line.indent === indent && isListItem(line.text);
+      let line: ContentLine | undefined = first;
+      line !== undefined && line.indent === first.indent && isListItem(line.text);
       line = this.#current()
     ) {
       items.push(this.#parseListItem(line, depth));
-      last = line;
     }
-    const span = this.#spanBetween(first, last);
-    return { kind: "list", items, span };
+    const start = this.#textSpan(first).start;
+    const end = items.at(-1)?.span.end ?? start;
+    return { kind: "list", items, span: { file: this.#file, start, end } };
   }
 
   #parseListItem(line: ContentLine, depth: number): FrontmatterValue {
@@ -256,13 +254,6 @@ class YamlParser {
       start: positionInLine(line, start),
       end: positionInLine(line, end),
     };
-  }
-
-  #spanBetween(first: ContentLine | undefined, last: ContentLine | undefined): SourceSpan {
-    if (first === undefined || last === undefined) {
-      return { file: this.#file, start: this.#start, end: this.#start };
-    }
-    return { file: this.#file, start: this.#textSpan(first).start, end: this.#textSpan(last).end };
   }
 
   #mapSpan(entries: readonly MapEntry[]): SourceSpan {
