@@ -39,6 +39,10 @@ describe("post", () => {
     ]);
   });
 
+  it("needs a date with a day", () => {
+    expect(codes("post", "title: A\ndate: 2026-11")).toEqual([FrontmatterCodes.wrongType]);
+  });
+
   it("explains a day-first date", () => {
     const result = validated("post", "title: A\ndate: 18-11-2026");
     expect(result.ok ? undefined : result.error[0]).toMatchObject({

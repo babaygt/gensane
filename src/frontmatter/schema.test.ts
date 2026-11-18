@@ -58,6 +58,21 @@ describe("text", () => {
     expect(firstError(text(), yaml)?.code).toBe(FrontmatterCodes.emptyField);
   });
 
+  it.each([
+    ["field: [a]", "it is a list"],
+    ["field:\n  a: 1", "it is a group of settings"],
+    ["field: true", "true is a boolean"],
+    ["field: 2026-11-18", "2026-11-18 is a date"],
+  ])("describes what %j holds", (yaml, description) => {
+    expect(firstError(text(), yaml)?.message).toBe(`"field" must be text, but ${description}`);
+  });
+
+  it("describes an empty list item", () => {
+    expect(firstError(listOf(text()), "field: [null]")?.message).toBe(
+      '"field[0]" must be text, but it is empty',
+    );
+  });
+
   it("names the field and what was found", () => {
     expect(firstError(text(), "field: 42")?.message).toBe(
       '"field" must be text, but 42 is a number',
@@ -114,11 +129,14 @@ describe("dates", () => {
     expect(error?.hint).toBe(`write it as ${suggestion}`);
   });
 
-  it("does not guess when the day and month could be swapped", () => {
-    expect(firstError(fullDate(), "field: 03-04-2026")?.hint).toBe(
-      "write the date as YYYY-MM-DD, with the year first",
-    );
-  });
+  it.each(["03-04-2026", "32-11-2026", "11-32-2026", "18-13-2026", "13-18-2026"])(
+    "does not guess a date from %s",
+    (written) => {
+      expect(firstError(fullDate(), `field: ${written}`)?.hint).toBe(
+        "write the date as YYYY-MM-DD, with the year first",
+      );
+    },
+  );
 
   it("accepts the word present for something that is still going on", () => {
     expect(check(dateOrPresent(), "field: present")).toMatchObject({
@@ -207,6 +225,13 @@ describe("object", () => {
     expect(firstError(listOf(person), "field:\n  - name: 1")?.message).toContain('"field[0].name"');
   });
 
+  it("points at the key of a field that is empty", () => {
+    expect(firstError(person, "field:\n  age: 3\n  name:")?.span.start).toMatchObject({
+      line: 4,
+      column: 3,
+    });
+  });
+
   it("reports a missing field at the settings it belongs to", () => {
     const error = firstError(person, "field:\n  age: 3");
     expect(error).toMatchObject({
@@ -220,6 +245,12 @@ describe("object", () => {
     expect(firstError(person, "field:\n  name:\n  age: 3")?.code).toBe(
       FrontmatterCodes.missingField,
     );
+  });
+
+  it("reports problems in file order, not in the order of the schema", () => {
+    const schema = object({ a: text(), b: text() });
+    const result = validate(schema, dataOf("b: 1\na: 2"));
+    expect(result.ok ? [] : result.error.map((error) => error.span.start.line)).toEqual([2, 3]);
   });
 
   it("reports every problem at once", () => {
@@ -276,8 +307,24 @@ describe("unknown fields", () => {
     ]);
   });
 
+  it("finds typos in nested settings, with the path of the field", () => {
+    const nested = object({ person: object({ name: text(), age: optional(integer()) }) });
+    const result = validate(nested, dataOf("person:\n  name: A\n  agee: 3"));
+    expect(result.ok && result.value.warnings[0]?.message).toBe(
+      '"person.agee" is not a known field',
+    );
+  });
+
+  it("reports warnings in file order", () => {
+    const nested = object({ tags: optional(text()), person: object({ age: optional(integer()) }) });
+    const result = validate(nested, dataOf("tagz: 1\nperson:\n  agee: 3"));
+    expect(result.ok && result.value.warnings.map((warning) => warning.span.start.line)).toEqual([
+      2, 4,
+    ]);
+  });
+
   it("notices a different case", () => {
-    const result = validate(schema, dataOf("title: A\nTags: [x]"));
+    const result = validate(schema, dataOf("title: A\nTAGS: [x]"));
     expect(result.ok && result.value.warnings[0]?.hint).toBe('did you mean "tags"?');
   });
 
