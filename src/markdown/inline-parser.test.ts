@@ -96,6 +96,15 @@ describe("emphasis nesting limit", () => {
   });
 });
 
+describe("performance", () => {
+  // No timing assertion, which would be flaky: without the search limit in the emphasis
+  // algorithm this input takes far longer than Vitest's 5 second test timeout.
+  it("handles many closing delimiters that have no opener", () => {
+    const source = `${"_a ".repeat(50_000)}${"a* ".repeat(50_000)}`.trim();
+    expect(inline(source)).toContain("_a _a");
+  });
+});
+
 describe("strikethrough", () => {
   it.each([
     ["~~gone~~", "<del>gone</del>"],
@@ -136,6 +145,11 @@ describe("inline syntax in other blocks", () => {
     ["```\n*not emphasis*\n```", "<pre><code>*not emphasis*\n</code></pre>\n"],
   ])("%j", (source, expected) => {
     expect(markdownToHtml(source, "test.md").html).toBe(expected);
+  });
+
+  it("applies to table body rows", () => {
+    const html = markdownToHtml("| a |\n| - |\n| *b* |", "test.md").html;
+    expect(html).toContain("<td><em>b</em></td>");
   });
 
   it("renders a tree that has not been through the inline stage as plain text", () => {
@@ -190,6 +204,12 @@ describe("source positions", () => {
     const [table] = parseMarkdown("| a\\|b *c* |\n| --- |", "a.md").document.children;
     const cell = table?.kind === "table" ? table.header.cells[0] : undefined;
     expect(cell?.inlines?.at(-1)?.span.start).toEqual({ line: 1, column: 8, offset: 7 });
+  });
+
+  it("point at the heading text, not at the # that starts the line", () => {
+    const [heading] = parseMarkdown("# # #", "a.md").document.children;
+    const text = heading?.kind === "heading" ? heading.inlines?.[0] : undefined;
+    expect(text?.span.start).toEqual({ line: 1, column: 3, offset: 2 });
   });
 
   it("stay exact in a heading", () => {
