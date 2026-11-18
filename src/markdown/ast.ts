@@ -110,9 +110,9 @@ export interface Paragraph {
 export interface CodeBlock {
   readonly kind: "code";
   /** Everything after the opening fence, e.g. `ts title=demo`. */
-  readonly info: string;
-  /** First word of `info`; absent when there is no info string. */
-  readonly lang?: string;
+  readonly infoString: string;
+  /** First word of `infoString`; absent when there is no info string. */
+  readonly language?: string;
   /** Content lines, each ending in `\n`. */
   readonly text: string;
   readonly span: SourceSpan;

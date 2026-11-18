@@ -4,7 +4,7 @@ import { parseBlocks } from "./block-parser.ts";
 import { DiagnosticCodes } from "./diagnostic-codes.ts";
 import { blocks } from "./test-helpers.ts";
 
-const p = (text: string) => ({ kind: "paragraph", text });
+const paragraph = (text: string) => ({ kind: "paragraph", text });
 const row = (...texts: string[]) => ({
   kind: "table-row",
   cells: texts.map((text) => ({ kind: "table-cell", text })),
@@ -47,20 +47,23 @@ describe("tables", () => {
     {
       name: "a row without pipes, ended by a blank line",
       source: "| abc | def |\n| --- | --- |\n| bar | baz |\nbar\n\nbar",
-      expected: [table(plain, row("abc", "def"), row("bar", "baz"), row("bar", "")), p("bar")],
+      expected: [
+        table(plain, row("abc", "def"), row("bar", "baz"), row("bar", "")),
+        paragraph("bar"),
+      ],
     },
     {
       name: "ended by another block",
       source: "| abc |\n| --- |\n| bar |\n> quote",
       expected: [
         table(["none"], row("abc"), row("bar")),
-        { kind: "block-quote", children: [p("quote")] },
+        { kind: "block-quote", children: [paragraph("quote")] },
       ],
     },
     {
       name: "interrupting a paragraph: only the last line is the header",
       source: "intro\n| a |\n| - |",
-      expected: [p("intro"), table(["none"], row("a"))],
+      expected: [paragraph("intro"), table(["none"], row("a"))],
     },
   ])("$name", ({ source, expected }) => {
     expect(blocks(source)).toEqual(expected);
@@ -71,35 +74,35 @@ describe("tables", () => {
       {
         name: "a header and delimiter with different cell counts",
         source: "| abc | def |\n| --- |\n| bar |",
-        expected: [p("| abc | def |\n| --- |\n| bar |")],
+        expected: [paragraph("| abc | def |\n| --- |\n| bar |")],
       },
       {
         name: "--- without a pipe, which stays a horizontal rule",
         source: "a\n---",
-        expected: [p("a"), { kind: "thematic-break" }],
+        expected: [paragraph("a"), { kind: "thematic-break" }],
       },
       {
         name: "a delimiter that starts a list",
         source: "a | b\n- | -",
         expected: [
-          p("a | b"),
+          paragraph("a | b"),
           {
             kind: "list",
             ordered: false,
             tight: true,
-            items: [{ kind: "list-item", children: [p("| -")] }],
+            items: [{ kind: "list-item", children: [paragraph("| -")] }],
           },
         ],
       },
       {
         name: "rows indented by four spaces",
         source: "    | a |\n    | - |",
-        expected: [p("| a |\n| - |")],
+        expected: [paragraph("| a |\n| - |")],
       },
       {
         name: "a header indented by four spaces above a normal delimiter",
         source: "    | a |\n| - |",
-        expected: [p("| a |\n| - |")],
+        expected: [paragraph("| a |\n| - |")],
       },
     ])("$name", ({ source, expected }) => {
       expect(blocks(source)).toEqual(expected);
@@ -127,19 +130,19 @@ describe("tables", () => {
     it("does not take a row from a line outside the quote", () => {
       expect(blocks("> | a |\n> | - |\n| b |")).toEqual([
         { kind: "block-quote", children: [table(["none"], row("a"))] },
-        p("| b |"),
+        paragraph("| b |"),
       ]);
     });
 
     it("does not take its header from a line outside the quote", () => {
       expect(blocks("> x\n| a |\n> | - |")).toEqual([
-        { kind: "block-quote", children: [p("x\n| a |\n| - |")] },
+        { kind: "block-quote", children: [paragraph("x\n| a |\n| - |")] },
       ]);
     });
 
     it("does not take its delimiter from a line outside the quote", () => {
       expect(blocks("> | a |\n| - |")).toEqual([
-        { kind: "block-quote", children: [p("| a |\n| - |")] },
+        { kind: "block-quote", children: [paragraph("| a |\n| - |")] },
       ]);
     });
   });
@@ -159,7 +162,9 @@ describe("tables", () => {
 
     it("also applies to the last line of a longer paragraph", () => {
       const { diagnostics } = parseBlocks("intro\n| a | b |\n| - |", "post.md");
-      expect(diagnostics.map((d) => d.code)).toEqual([DiagnosticCodes.tableColumnMismatch]);
+      expect(diagnostics.map((diagnostic) => diagnostic.code)).toEqual([
+        DiagnosticCodes.tableColumnMismatch,
+      ]);
     });
 
     it.each([

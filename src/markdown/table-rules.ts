@@ -19,21 +19,21 @@ export interface RowCell {
 
 /** Splits a row on unescaped pipes. Leading and trailing pipes are optional. */
 export function splitTableRow(text: string): RowCell[] {
-  let i = leadingIndent(text).length;
-  if (text[i] === "|") i++;
+  let index = leadingIndent(text).length;
+  if (text[index] === "|") index++;
 
   const ranges: (readonly [number, number])[] = [];
-  let cellStart = i;
-  while (i < text.length) {
-    if (text[i] === "\\") {
+  let cellStart = index;
+  while (index < text.length) {
+    if (text[index] === "\\") {
       // Skip the escaped character, so `\|` does not separate cells.
-      i += 2;
-    } else if (text[i] === "|") {
-      ranges.push([cellStart, i]);
-      i++;
-      cellStart = i;
+      index += 2;
+    } else if (text[index] === "|") {
+      ranges.push([cellStart, index]);
+      index++;
+      cellStart = index;
     } else {
-      i++;
+      index++;
     }
   }
   // Text after the last pipe is a cell; only whitespace there means a trailing pipe.

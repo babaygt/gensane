@@ -38,7 +38,7 @@ describe("inline links", () => {
 });
 
 describe("reference links", () => {
-  const defs = '\n\n[ref]: /u "t"';
+  const definitions = '\n\n[ref]: /u "t"';
 
   it.each([
     ["[a][ref]", '<a href="/u" title="t">a</a>'],
@@ -48,7 +48,7 @@ describe("reference links", () => {
     ["[other]", "[other]"],
     ["[a][other]", "[a][other]"],
   ])("%s", (source, expected) => {
-    expect(inline(`${source}${defs}`)).toBe(expected);
+    expect(inline(`${source}${definitions}`)).toBe(expected);
   });
 
   it("ends a label at the first bracket, even inside a code span", () => {

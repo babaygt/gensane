@@ -23,8 +23,9 @@ function renderBlock(block: Block): string {
     case "paragraph":
       return `<p>${renderText(block)}</p>\n`;
     case "code": {
-      const cls = block.lang === undefined ? "" : ` class="language-${escapeHtml(block.lang)}"`;
-      return `<pre><code${cls}>${escapeHtml(block.text)}</code></pre>\n`;
+      const languageClass =
+        block.language === undefined ? "" : ` class="language-${escapeHtml(block.language)}"`;
+      return `<pre><code${languageClass}>${escapeHtml(block.text)}</code></pre>\n`;
     }
     case "thematic-break":
       return "<hr />\n";
@@ -132,7 +133,7 @@ function renderUrl(url: string): string {
   const wellFormed = url.replace(/\p{Surrogate}/gu, "\uFFFD");
   const encoded = wellFormed
     .split(/(%[0-9a-fA-F]{2})/)
-    .map((part, i) => (i % 2 === 1 ? part : encodeURI(part)))
+    .map((part, partIndex) => (partIndex % 2 === 1 ? part : encodeURI(part)))
     .join("");
   return escapeHtml(encoded);
 }
@@ -162,5 +163,5 @@ const ESCAPES: Readonly<Record<string, string>> = {
 
 /** Makes text safe to place in HTML content and in double-quoted attributes. */
 export function escapeHtml(text: string): string {
-  return text.replace(/[&<>"]/g, (ch) => ESCAPES[ch] ?? ch);
+  return text.replace(/[&<>"]/g, (character) => ESCAPES[character] ?? character);
 }

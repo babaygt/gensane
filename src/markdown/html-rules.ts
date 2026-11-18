@@ -58,28 +58,28 @@ export function endsHtmlBlock(type: MarkedHtmlBlockType, text: string): boolean 
   return BLOCK_ENDS[type].test(text);
 }
 
-const TAG = new RegExp(`${OPEN_TAG}|${CLOSING_TAG}`, "y");
+const HTML_TAG = new RegExp(`${OPEN_TAG}|${CLOSING_TAG}`, "y");
 
 /**
- * Returns where the raw HTML that starts at `pos` ends. `missing` remembers terminators that
+ * Returns where the raw HTML that starts at `position` ends. `missing` remembers terminators that
  * do not occur in the rest of the text, so many unclosed comments don't rescan it each time.
  * The accepted forms are listed at https://spec.commonmark.org/0.31.2/#raw-html
  */
 export function parseRawHtml(
   text: string,
-  pos: number,
+  position: number,
   missing: Map<string, number>,
 ): number | undefined {
-  if (text.startsWith("<!-->", pos)) return pos + 5;
-  if (text.startsWith("<!--->", pos)) return pos + 6;
-  if (text.startsWith("<!--", pos)) return endOf(text, "-->", pos + 4, missing);
-  if (text.startsWith("<?", pos)) return endOf(text, "?>", pos + 2, missing);
-  if (text.startsWith("<![CDATA[", pos)) return endOf(text, "]]>", pos + 9, missing);
-  if (/[A-Za-z]/.test(text[pos + 2] ?? "") && text.startsWith("<!", pos)) {
-    return endOf(text, ">", pos + 2, missing);
+  if (text.startsWith("<!-->", position)) return position + 5;
+  if (text.startsWith("<!--->", position)) return position + 6;
+  if (text.startsWith("<!--", position)) return endOf(text, "-->", position + 4, missing);
+  if (text.startsWith("<?", position)) return endOf(text, "?>", position + 2, missing);
+  if (text.startsWith("<![CDATA[", position)) return endOf(text, "]]>", position + 9, missing);
+  if (/[A-Za-z]/.test(text[position + 2] ?? "") && text.startsWith("<!", position)) {
+    return endOf(text, ">", position + 2, missing);
   }
-  TAG.lastIndex = pos;
-  return TAG.test(text) ? TAG.lastIndex : undefined;
+  HTML_TAG.lastIndex = position;
+  return HTML_TAG.test(text) ? HTML_TAG.lastIndex : undefined;
 }
 
 function endOf(

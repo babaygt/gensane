@@ -46,12 +46,12 @@ export function isThematicBreak(text: string): boolean {
 
 /** An opening fence of a fenced code block, e.g. ```` ```ts ````. */
 export interface FenceOpen {
-  readonly char: "`" | "~";
+  readonly character: "`" | "~";
   readonly length: number;
   /** Spaces before the fence; this many are removed from each content line. */
   readonly indent: number;
   /** Text after the fence, trimmed, e.g. `ts title=demo`. Its first word is the language. */
-  readonly info: string;
+  readonly infoString: string;
 }
 
 // Groups: (indent) (3+ backticks OR 3+ tildes, never mixed) (info string).
@@ -63,15 +63,15 @@ export function matchFenceOpen(text: string): FenceOpen | undefined {
   const match = FENCE_OPEN.exec(text);
   if (match === null) return undefined;
   const fence = match[2] ?? "";
-  const char = fence[0] === "~" ? "~" : "`";
-  const info = (match[3] ?? "").trim();
+  const character = fence[0] === "~" ? "~" : "`";
+  const infoString = (match[3] ?? "").trim();
   // Otherwise inline code such as ```foo``` at the start of a line would open a fence.
-  if (char === "`" && info.includes("`")) return undefined;
+  if (character === "`" && infoString.includes("`")) return undefined;
   return {
-    char,
+    character,
     length: fence.length,
     indent: (match[1] ?? "").length,
-    info: unescapeString(info),
+    infoString: unescapeString(infoString),
   };
 }
 
@@ -81,7 +81,7 @@ export function matchFenceOpen(text: string): FenceOpen | undefined {
  */
 export function isFenceClose(text: string, open: FenceOpen): boolean {
   const fence = FENCE_CLOSE.exec(text)?.[1];
-  return fence !== undefined && fence[0] === open.char && fence.length >= open.length;
+  return fence !== undefined && fence[0] === open.character && fence.length >= open.length;
 }
 
 // Only `=` or only `-`, with no spaces between them (so `- - -` is not an underline).
@@ -102,7 +102,7 @@ export function matchBlockQuote(text: string): number | undefined {
 }
 
 export type ListType =
-  | { readonly kind: "bullet"; readonly char: "-" | "+" | "*" }
+  | { readonly kind: "bullet"; readonly character: "-" | "+" | "*" }
   | { readonly kind: "ordered"; readonly start: number; readonly delimiter: "." | ")" };
 
 export interface ListMarkerMatch {
@@ -127,7 +127,7 @@ export function matchListMarker(text: string): ListMarkerMatch | undefined {
   const type: ListType =
     match[2] === undefined
       ? { kind: "ordered", start: Number(match[3]), delimiter: match[4] === ")" ? ")" : "." }
-      : { kind: "bullet", char: match[2] as "-" | "+" | "*" };
+      : { kind: "bullet", character: match[2] as "-" | "+" | "*" };
 
   const markerEnd = match[0].length;
   const spaces = leadingIndent(text.slice(markerEnd));
@@ -146,8 +146,12 @@ export function matchListMarker(text: string): ListMarkerMatch | undefined {
 }
 
 /** Items belong to the same list only if they use the same bullet or the same number delimiter. */
-export function isSameListType(a: ListType, b: ListType): boolean {
-  if (a.kind === "bullet" && b.kind === "bullet") return a.char === b.char;
-  if (a.kind === "ordered" && b.kind === "ordered") return a.delimiter === b.delimiter;
+export function isSameListType(first: ListType, second: ListType): boolean {
+  if (first.kind === "bullet" && second.kind === "bullet") {
+    return first.character === second.character;
+  }
+  if (first.kind === "ordered" && second.kind === "ordered") {
+    return first.delimiter === second.delimiter;
+  }
   return false;
 }

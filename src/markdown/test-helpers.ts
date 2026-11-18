@@ -8,7 +8,7 @@ export function withoutSpans(value: unknown): unknown {
   return Object.fromEntries(
     Object.entries(value)
       .filter(([key]) => key !== "span" && key !== "segments")
-      .map(([key, v]) => [key, withoutSpans(v)]),
+      .map(([key, child]) => [key, withoutSpans(child)]),
   );
 }
 
@@ -21,7 +21,7 @@ export function blocks(source: string): unknown[] {
 export function allSpans(value: unknown): SourceSpan[] {
   if (Array.isArray(value)) return value.flatMap(allSpans);
   if (typeof value !== "object" || value === null) return [];
-  return Object.entries(value).flatMap(([key, v]) =>
-    key === "span" ? [v as SourceSpan] : allSpans(v),
+  return Object.entries(value).flatMap(([key, child]) =>
+    key === "span" ? [child as SourceSpan] : allSpans(child),
   );
 }

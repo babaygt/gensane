@@ -32,21 +32,21 @@ export interface SourceLine {
 export function splitLines(source: string): SourceLine[] {
   const lines: SourceLine[] = [];
   let start = 0;
-  let i = 0;
-  while (i < source.length) {
-    const ch = source[i];
-    if (ch === "\n" || ch === "\r") {
+  let index = 0;
+  while (index < source.length) {
+    const character = source[index];
+    if (character === "\n" || character === "\r") {
       lines.push({
-        text: source.slice(start, i),
+        text: source.slice(start, index),
         start,
-        end: i,
+        end: index,
         number: lines.length + 1,
         lineStart: start,
       });
-      i += ch === "\r" && source[i + 1] === "\n" ? 2 : 1;
-      start = i;
+      index += character === "\r" && source[index + 1] === "\n" ? 2 : 1;
+      start = index;
     } else {
-      i++;
+      index++;
     }
   }
   if (start < source.length) {
@@ -74,9 +74,9 @@ export interface Indent {
 export function leadingIndent(text: string): Indent {
   let width = 0;
   let length = 0;
-  for (const ch of text) {
-    if (ch === " ") width += 1;
-    else if (ch === "\t") width += TAB_STOP - (width % TAB_STOP);
+  for (const character of text) {
+    if (character === " ") width += 1;
+    else if (character === "\t") width += TAB_STOP - (width % TAB_STOP);
     else break;
     length++;
   }
@@ -95,13 +95,13 @@ export function sliceLine(line: SourceLine, count: number): SourceLine {
 /** Removes leading whitespace up to `columns` wide (used for content inside list items). */
 export function stripColumns(line: SourceLine, columns: number): SourceLine {
   let width = 0;
-  let i = 0;
-  for (const ch of line.text) {
+  let index = 0;
+  for (const character of line.text) {
     if (width >= columns) break;
-    if (ch === " ") width += 1;
-    else if (ch === "\t") width += TAB_STOP - (width % TAB_STOP);
+    if (character === " ") width += 1;
+    else if (character === "\t") width += TAB_STOP - (width % TAB_STOP);
     else break;
-    i++;
+    index++;
   }
-  return sliceLine(line, i);
+  return sliceLine(line, index);
 }

@@ -8,12 +8,15 @@ export interface DecodedReference {
   readonly end: number;
 }
 
-/** Decodes the reference that starts at `pos`, if there is a valid one. */
-export function decodeCharacterReference(text: string, pos: number): DecodedReference | undefined {
-  REFERENCE.lastIndex = pos;
+/** Decodes the reference that starts at `position`, if there is a valid one. */
+export function decodeCharacterReference(
+  text: string,
+  position: number,
+): DecodedReference | undefined {
+  REFERENCE.lastIndex = position;
   const match = REFERENCE.exec(text);
   if (match === null) return undefined;
-  const end = pos + match[0].length;
+  const end = position + match[0].length;
 
   const [, hex, decimal, name] = match;
   if (name !== undefined) {

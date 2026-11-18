@@ -23,7 +23,7 @@ type DelimiterChar = "*" | "_" | "~";
 
 /** A run of delimiter characters. `start` and `end` shrink as characters get paired. */
 interface DelimiterRun {
-  readonly char: DelimiterChar;
+  readonly character: DelimiterChar;
   readonly length: number;
   readonly canOpen: boolean;
   readonly canClose: boolean;
@@ -105,7 +105,7 @@ class InlineParser {
   #firstRun: DelimiterRun | undefined;
   #lastRun: DelimiterRun | undefined;
   #runCount = 0;
-  #pos = 0;
+  #cursor = 0;
   #backticks: Map<number, { starts: number[]; cursor: number }> | undefined;
 
   constructor(
@@ -121,18 +121,19 @@ class InlineParser {
   }
 
   parse(): Inline[] {
-    while (this.#pos < this.#text.length) {
-      const ch = this.#text[this.#pos];
-      if (ch === "\\") this.#parseEscape();
-      else if (ch === "`") this.#parseCodeSpan();
-      else if (ch === "*" || ch === "_" || ch === "~") this.#parseDelimiterRun(ch);
-      else if (ch === "\n") this.#parseLineBreak();
-      else if (ch === "[") this.#openBracket(false);
-      else if (ch === "!" && this.#text[this.#pos + 1] === "[") this.#openBracket(true);
-      else if (ch === "]") this.#closeBracket();
-      else if (ch === "<") this.#parseAngleBracket();
-      else if (ch === "&") this.#parseCharacterReference();
-      else if (ch === "!") this.#pushLiteral(1);
+    while (this.#cursor < this.#text.length) {
+      const character = this.#text[this.#cursor];
+      if (character === "\\") this.#parseEscape();
+      else if (character === "`") this.#parseCodeSpan();
+      else if (character === "*" || character === "_" || character === "~")
+        this.#parseDelimiterRun(character);
+      else if (character === "\n") this.#parseLineBreak();
+      else if (character === "[") this.#openBracket(false);
+      else if (character === "!" && this.#text[this.#cursor + 1] === "[") this.#openBracket(true);
+      else if (character === "]") this.#closeBracket();
+      else if (character === "<") this.#parseAngleBracket();
+      else if (character === "&") this.#parseCharacterReference();
+      else if (character === "!") this.#pushLiteral(1);
       else this.#parsePlainText();
     }
     this.#processEmphasis(undefined);
@@ -140,43 +141,45 @@ class InlineParser {
   }
 
   #pushLiteral(length: number): void {
-    const end = this.#pos + length;
-    this.#pushText(this.#text.slice(this.#pos, end), this.#pos, end);
-    this.#pos = end;
+    const end = this.#cursor + length;
+    this.#pushText(this.#text.slice(this.#cursor, end), this.#cursor, end);
+    this.#cursor = end;
   }
 
   #parseCharacterReference(): void {
-    const reference = decodeCharacterReference(this.#text, this.#pos);
+    const reference = decodeCharacterReference(this.#text, this.#cursor);
     if (reference === undefined) {
       this.#pushLiteral(1);
       return;
     }
-    this.#pushText(reference.text, this.#pos, reference.end);
-    this.#pos = reference.end;
+    this.#pushText(reference.text, this.#cursor, reference.end);
+    this.#cursor = reference.end;
   }
 
   /** A `<` starts an autolink, raw HTML, or is plain text. */
   #parseAngleBracket(): void {
-    const autolink = parseAutolink(this.#text, this.#pos);
+    const autolink = parseAutolink(this.#text, this.#cursor);
     if (autolink === undefined) {
-      const end = parseRawHtml(this.#text, this.#pos, this.#missingHtmlEnds);
+      const end = parseRawHtml(this.#text, this.#cursor, this.#missingHtmlEnds);
       if (end === undefined) {
         this.#pushLiteral(1);
         return;
       }
-      const text = this.#text.slice(this.#pos, end);
-      this.#append({ kind: "raw-html", text, span: this.#span(this.#pos, end) });
-      this.#pos = end;
+      const text = this.#text.slice(this.#cursor, end);
+      this.#append({ kind: "raw-html", text, span: this.#span(this.#cursor, end) });
+      this.#cursor = end;
       return;
     }
     const { url, text, end } = autolink;
-    const children: Inline[] = [{ kind: "text", text, span: this.#span(this.#pos + 1, end - 1) }];
-    this.#append({ kind: "link", url, children, span: this.#span(this.#pos, end) });
-    this.#pos = end;
+    const children: Inline[] = [
+      { kind: "text", text, span: this.#span(this.#cursor + 1, end - 1) },
+    ];
+    this.#append({ kind: "link", url, children, span: this.#span(this.#cursor, end) });
+    this.#cursor = end;
   }
 
   #openBracket(image: boolean): void {
-    const start = this.#pos;
+    const start = this.#cursor;
     const length = image ? 2 : 1;
     this.#pushLiteral(length);
     this.#bracket = {
@@ -216,7 +219,7 @@ class InlineParser {
     const optionalTitle = title === undefined ? {} : { title };
     const kind = opener.image ? "image" : "link";
     this.#appendEntry({ kind, url, ...optionalTitle, children, span }).depth = depth;
-    this.#pos = end;
+    this.#cursor = end;
 
     if (!opener.image) {
       for (let bracket = this.#bracket; bracket !== undefined; bracket = bracket.previous) {
@@ -225,20 +228,20 @@ class InlineParser {
     }
   }
 
-  /** Tries the three link forms after `]`: `(/url)`, `[label]`, and the text as its own label. */
+  /** Tries the three link forms after `]`: `(/url)`, `[label]`, and the text as its ownLabel label. */
   #linkTarget(opener: Bracket): LinkTarget | undefined {
-    const after = this.#pos + 1;
+    const after = this.#cursor + 1;
     if (this.#text[after] === "(") {
       const inline = this.#inlineLinkTarget(after);
       if (inline !== undefined) return inline;
     }
-    const full = parseLinkLabel(this.#text, after);
-    if (full !== undefined) return this.#referenceTarget(full.label, full.end);
+    const fullLabel = parseLinkLabel(this.#text, after);
+    if (fullLabel !== undefined) return this.#referenceTarget(fullLabel.label, fullLabel.end);
 
-    const own = parseLinkLabel(this.#text, opener.contentStart - 1);
-    if (own?.end !== after) return undefined;
+    const ownLabel = parseLinkLabel(this.#text, opener.contentStart - 1);
+    if (ownLabel?.end !== after) return undefined;
     const end = this.#text.startsWith("[]", after) ? after + 2 : after;
-    return this.#referenceTarget(own.label, end);
+    return this.#referenceTarget(ownLabel.label, end);
   }
 
   #referenceTarget(label: string, end: number): LinkTarget | undefined {
@@ -262,33 +265,33 @@ class InlineParser {
   }
 
   #parsePlainText(): void {
-    PLAIN_TEXT.lastIndex = this.#pos;
+    PLAIN_TEXT.lastIndex = this.#cursor;
     PLAIN_TEXT.test(this.#text);
     const end = PLAIN_TEXT.lastIndex;
     // Spaces before a line ending are not part of the text.
-    const content = this.#text.slice(this.#pos, end);
-    const kept = this.#text[end] === "\n" ? content.replace(/[ \t]+$/, "") : content;
-    if (kept !== "") this.#pushText(kept, this.#pos, this.#pos + kept.length);
-    this.#pos = end;
+    const content = this.#text.slice(this.#cursor, end);
+    const keptText = this.#text[end] === "\n" ? content.replace(/[ \t]+$/, "") : content;
+    if (keptText !== "") this.#pushText(keptText, this.#cursor, this.#cursor + keptText.length);
+    this.#cursor = end;
   }
 
   #parseEscape(): void {
-    const start = this.#pos;
+    const start = this.#cursor;
     const next = this.#text[start + 1];
     if (next === "\n") {
       this.#append({ kind: "hard-break", span: this.#span(start, start + 1) });
-      this.#pos = start + 2;
+      this.#cursor = start + 2;
     } else if (next !== undefined && ASCII_PUNCTUATION.test(next)) {
       this.#pushText(next, start, start + 2);
-      this.#pos = start + 2;
+      this.#cursor = start + 2;
     } else {
       this.#pushText("\\", start, start + 1);
-      this.#pos = start + 1;
+      this.#cursor = start + 1;
     }
   }
 
   #parseCodeSpan(): void {
-    const start = this.#pos;
+    const start = this.#cursor;
     let contentStart = start;
     while (this.#text[contentStart] === "`") contentStart++;
     const length = contentStart - start;
@@ -296,13 +299,13 @@ class InlineParser {
     const closing = this.#findClosingBackticks(length, contentStart);
     if (closing === undefined) {
       this.#pushText(this.#text.slice(start, contentStart), start, contentStart);
-      this.#pos = contentStart;
+      this.#cursor = contentStart;
       return;
     }
     const end = closing + length;
     const text = normalizeCodeSpan(this.#text.slice(contentStart, closing));
     this.#append({ kind: "code-span", text, span: this.#span(start, end) });
-    this.#pos = end;
+    this.#cursor = end;
   }
 
   /** Finds the next backtick run of exactly `length`, without rescanning the text each time. */
@@ -321,14 +324,14 @@ class InlineParser {
     return runs.starts[runs.cursor];
   }
 
-  #parseDelimiterRun(char: DelimiterChar): void {
-    const start = this.#pos;
+  #parseDelimiterRun(character: DelimiterChar): void {
+    const start = this.#cursor;
     let end = start;
-    while (this.#text[end] === char) end++;
-    this.#pos = end;
+    while (this.#text[end] === character) end++;
+    this.#cursor = end;
 
     // Only `~~` is strikethrough, so that `~5 minutes` stays plain text.
-    if (char === "~" && end - start !== 2) {
+    if (character === "~" && end - start !== 2) {
       this.#pushText(this.#text.slice(start, end), start, end);
       return;
     }
@@ -344,13 +347,13 @@ class InlineParser {
 
     // `_` is stricter than `*`, so that snake_case_names are not emphasised.
     const canOpen =
-      char === "_" ? leftFlanking && (!rightFlanking || beforePunctuation) : leftFlanking;
+      character === "_" ? leftFlanking && (!rightFlanking || beforePunctuation) : leftFlanking;
     const canClose =
-      char === "_" ? rightFlanking && (!leftFlanking || afterPunctuation) : rightFlanking;
+      character === "_" ? rightFlanking && (!leftFlanking || afterPunctuation) : rightFlanking;
 
     const entry = this.#appendEntry(undefined);
     const run: DelimiterRun = {
-      char,
+      character,
       length: end - start,
       canOpen,
       canClose,
@@ -368,12 +371,12 @@ class InlineParser {
   }
 
   #parseLineBreak(): void {
-    const end = this.#pos;
+    const end = this.#cursor;
     let start = end;
     while (this.#text[start - 1] === " ") start--;
     const kind = end - start >= 2 ? "hard-break" : "soft-break";
     this.#append({ kind, span: this.#span(start, end) });
-    this.#pos = end + 1;
+    this.#cursor = end + 1;
   }
 
   /**
@@ -398,7 +401,7 @@ class InlineParser {
         closer = closer.next;
         continue;
       }
-      const key = `${closer.char}${closer.canOpen}${closer.length % 3}`;
+      const key = `${closer.character}${closer.canOpen}${closer.length % 3}`;
       const opener = this.#findOpener(closer, openersBottom.get(key) ?? floor);
       if (opener === undefined) {
         openersBottom.set(key, closer.previous?.order ?? floor);
@@ -422,7 +425,8 @@ class InlineParser {
 
   #findOpener(closer: DelimiterRun, bottom: number): DelimiterRun | undefined {
     for (let run = closer.previous; run !== undefined && run.order > bottom; run = run.previous) {
-      if (run.char === closer.char && run.canOpen && !breaksRuleOfThree(run, closer)) return run;
+      if (run.character === closer.character && run.canOpen && !breaksRuleOfThree(run, closer))
+        return run;
     }
     return undefined;
   }
@@ -453,7 +457,7 @@ class InlineParser {
 
     const span = this.#span(opener.end, closer.start);
     let inline: Inline;
-    if (opener.char === "~") inline = { kind: "strikethrough", children, span };
+    if (opener.character === "~") inline = { kind: "strikethrough", children, span };
     else if (used === 2) inline = { kind: "strong", children, span };
     else inline = { kind: "emphasis", children, span };
 
@@ -521,11 +525,11 @@ class InlineParser {
   }
 
   #span(start: number, end: number): SourceSpan {
-    return { file: this.#file, start: this.#position(start), end: this.#position(end) };
+    return { file: this.#file, start: this.#sourcePosition(start), end: this.#sourcePosition(end) };
   }
 
   /** Maps an index in the block's text back to the original file. */
-  #position(index: number): SourcePosition {
+  #sourcePosition(index: number): SourcePosition {
     let low = 0;
     let high = this.#segments.length - 1;
     while (low < high) {

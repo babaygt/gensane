@@ -7,7 +7,7 @@ describe("positionAt", () => {
   it.each([
     { offset: 0, line: 1, column: 1, label: "start of text" },
     { offset: 2, line: 1, column: 3, label: "the newline itself belongs to its line" },
-    { offset: 3, line: 2, column: 1, label: "first char after a newline" },
+    { offset: 3, line: 2, column: 1, label: "first character after a newline" },
     { offset: 7, line: 3, column: 1, label: "empty line" },
     { offset: 8, line: 4, column: 1, label: "last line without trailing newline" },
     { offset: 9, line: 4, column: 2, label: "end of text" },

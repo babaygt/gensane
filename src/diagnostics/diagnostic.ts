@@ -25,5 +25,5 @@ export function assertNever(value: never): never {
 }
 
 export function hasErrors(diagnostics: readonly Diagnostic[]): boolean {
-  return diagnostics.some((d) => d.severity === "error");
+  return diagnostics.some((diagnostic) => diagnostic.severity === "error");
 }

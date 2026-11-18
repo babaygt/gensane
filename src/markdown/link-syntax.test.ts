@@ -30,9 +30,12 @@ describe("parseLinkLabel", () => {
     expect(parseLinkLabel(source, 0)).toEqual({ label, end });
   });
 
-  it.each(["foo", "[foo", "[]", "[   ]", "[a[b]", `[${"a".repeat(1000)}]`])("rejects %j", (s) => {
-    expect(parseLinkLabel(s, 0)).toBeUndefined();
-  });
+  it.each(["foo", "[foo", "[]", "[   ]", "[a[b]", `[${"a".repeat(1000)}]`])(
+    "rejects %j",
+    (source) => {
+      expect(parseLinkLabel(source, 0)).toBeUndefined();
+    },
+  );
 
   it("accepts 999 characters", () => {
     expect(parseLinkLabel(`[${"a".repeat(999)}]`, 0)?.end).toBe(1001);

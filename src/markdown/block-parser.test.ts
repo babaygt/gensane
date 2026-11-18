@@ -4,7 +4,7 @@ import { DiagnosticCodes } from "./diagnostic-codes.ts";
 import { blocks, withoutSpans } from "./test-helpers.ts";
 
 function codes(source: string): string[] {
-  return parseBlocks(source, "test.md").diagnostics.map((d) => d.code);
+  return parseBlocks(source, "test.md").diagnostics.map((diagnostic) => diagnostic.code);
 }
 
 describe("parseBlocks: structure", () => {
@@ -37,7 +37,7 @@ describe("parseBlocks: structure", () => {
     it.each([
       ["a heading", "text\n# Heading", { kind: "heading", level: 1, text: "Heading" }],
       ["a thematic break", "text\n***", { kind: "thematic-break" }],
-      ["a code fence", "text\n```\ncode\n```", { kind: "code", info: "", text: "code\n" }],
+      ["a code fence", "text\n```\ncode\n```", { kind: "code", infoString: "", text: "code\n" }],
     ])("are interrupted by %s without a blank line", (_, source, second) => {
       expect(blocks(source)).toEqual([{ kind: "paragraph", text: "text" }, second]);
     });
@@ -50,35 +50,35 @@ describe("parseBlocks: structure", () => {
   describe("fenced code blocks", () => {
     it("keep their content verbatim, with a trailing newline", () => {
       expect(blocks("```\n<a>\n  *b*\n\n```")).toEqual([
-        { kind: "code", info: "", text: "<a>\n  *b*\n\n" },
+        { kind: "code", infoString: "", text: "<a>\n  *b*\n\n" },
       ]);
     });
 
     it("record the info string and use its first word as the language", () => {
       expect(blocks("```ts title=demo\nlet x;\n```")).toEqual([
-        { kind: "code", info: "ts title=demo", lang: "ts", text: "let x;\n" },
+        { kind: "code", infoString: "ts title=demo", language: "ts", text: "let x;\n" },
       ]);
     });
 
     it("can be empty", () => {
-      expect(blocks("```\n```")).toEqual([{ kind: "code", info: "", text: "" }]);
+      expect(blocks("```\n```")).toEqual([{ kind: "code", infoString: "", text: "" }]);
     });
 
     it("are only closed by a fence of the same character that is at least as long", () => {
       expect(blocks("````\n```\n~~~~\n````")).toEqual([
-        { kind: "code", info: "", text: "```\n~~~~\n" },
+        { kind: "code", infoString: "", text: "```\n~~~~\n" },
       ]);
     });
 
     it("remove the opening fence's indentation from content lines", () => {
       expect(blocks("  ```\n    a\n  b\nc\n  ```")).toEqual([
-        { kind: "code", info: "", text: "  a\nb\nc\n" },
+        { kind: "code", infoString: "", text: "  a\nb\nc\n" },
       ]);
     });
 
     it("do not treat Markdown inside them as blocks", () => {
       expect(blocks("```\n# not a heading\n---\n```")).toEqual([
-        { kind: "code", info: "", text: "# not a heading\n---\n" },
+        { kind: "code", infoString: "", text: "# not a heading\n---\n" },
       ]);
     });
   });
@@ -94,7 +94,7 @@ describe("parseBlocks: warnings for unsupported or risky syntax", () => {
       const { document, diagnostics } = parseBlocks("text\n\n```ts\nlet x;\n\nmore", "post.md");
       expect(document.children.map(withoutSpans)).toEqual([
         { kind: "paragraph", text: "text" },
-        { kind: "code", info: "ts", lang: "ts", text: "let x;\n\nmore\n" },
+        { kind: "code", infoString: "ts", language: "ts", text: "let x;\n\nmore\n" },
       ]);
       expect(diagnostics).toEqual([
         expect.objectContaining({
@@ -156,10 +156,10 @@ describe("parseBlocks: warnings for unsupported or risky syntax", () => {
 
 describe("parseBlocks: source spans", () => {
   const source = "# Hi\n\npara one\npara two\n\n```\ncode\n```";
-  const spans = parseBlocks(source, "a.md").document.children.map((b) => b.span);
+  const spans = parseBlocks(source, "a.md").document.children.map((block) => block.span);
 
   it("cover each block from its first to its last character", () => {
-    expect(spans.map((s) => source.slice(s.start.offset, s.end.offset))).toEqual([
+    expect(spans.map((span) => source.slice(span.start.offset, span.end.offset))).toEqual([
       "# Hi",
       "para one\npara two",
       "```\ncode\n```",

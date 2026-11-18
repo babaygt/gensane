@@ -21,13 +21,13 @@ export function positionAt(text: string, offset: number): SourcePosition {
   const clamped = Math.max(0, Math.min(offset, text.length));
   let line = 1;
   let lineStart = 0;
-  for (let i = 0; i < clamped; i++) {
-    const ch = text[i];
+  for (let index = 0; index < clamped; index++) {
+    const character = text[index];
     // In `\r\n` only the `\n` counts, so the pair is one line break.
-    const isBreak = ch === "\n" || (ch === "\r" && text[i + 1] !== "\n");
+    const isBreak = character === "\n" || (character === "\r" && text[index + 1] !== "\n");
     if (isBreak) {
       line++;
-      lineStart = i + 1;
+      lineStart = index + 1;
     }
   }
   return { line, column: clamped - lineStart + 1, offset: clamped };

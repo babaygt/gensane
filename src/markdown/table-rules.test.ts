@@ -14,15 +14,15 @@ describe("splitTableRow", () => {
     { text: "no pipes", cells: ["no pipes"] },
     { text: "|", cells: [""] },
   ])("$text", ({ text, cells }) => {
-    expect(splitTableRow(text).map((c) => c.text)).toEqual(cells);
+    expect(splitTableRow(text).map((cell) => cell.text)).toEqual(cells);
   });
 
   it("keeps an escaped pipe inside the cell, without its backslash", () => {
-    expect(splitTableRow("| f\\|oo | b |").map((c) => c.text)).toEqual(["f|oo", "b"]);
+    expect(splitTableRow("| f\\|oo | b |").map((cell) => cell.text)).toEqual(["f|oo", "b"]);
   });
 
   it("treats a pipe after an escaped backslash as a separator", () => {
-    expect(splitTableRow("| a\\\\| b |").map((c) => c.text)).toEqual(["a\\\\", "b"]);
+    expect(splitTableRow("| a\\\\| b |").map((cell) => cell.text)).toEqual(["a\\\\", "b"]);
   });
 
   it("records where each cell's content is in the line", () => {
