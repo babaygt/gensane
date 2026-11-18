@@ -2,10 +2,10 @@
  * Reads the value written on one line: a plain word, a quoted string or a `[flow, list]`.
  * After a problem the rest of the line is skipped, so each line reports at most one error.
  */
-import type { DiagnosticCode, SourceSpan } from "../diagnostics/index.ts";
-import { FrontmatterCodes } from "./diagnostic-codes.ts";
+import type { DiagnosticCode, SourceSpan } from "../../diagnostics/index.ts";
+import { FrontmatterCodes } from "../diagnostic-codes.ts";
 import { type SourceLine, positionInLine } from "./source-lines.ts";
-import type { DateValue, FrontmatterValue } from "./values.ts";
+import type { DateValue, FrontmatterValue } from "../values.ts";
 
 export type ReportProblem = (
   code: DiagnosticCode,

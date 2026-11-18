@@ -9,11 +9,11 @@ import type {
   DiagnosticCode,
   SourcePosition,
   SourceSpan,
-} from "../diagnostics/index.ts";
-import { FrontmatterCodes } from "./diagnostic-codes.ts";
+} from "../../diagnostics/index.ts";
+import { FrontmatterCodes } from "../diagnostic-codes.ts";
 import { MAX_NESTING_DEPTH, type ReportProblem, readInlineValue } from "./inline-values.ts";
 import { type SourceLine, positionInLine } from "./source-lines.ts";
-import type { FrontmatterValue, ListValue, MapEntry, MapValue } from "./values.ts";
+import type { FrontmatterValue, ListValue, MapEntry, MapValue } from "../values.ts";
 
 /** A line with content. A list item's text is a line of its own, indented past the dash. */
 interface ContentLine {

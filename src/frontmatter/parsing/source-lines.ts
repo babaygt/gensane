@@ -1,4 +1,4 @@
-import type { SourcePosition } from "../diagnostics/index.ts";
+import type { SourcePosition } from "../../diagnostics/index.ts";
 
 /** One line of the file, without its line ending. */
 export interface SourceLine {

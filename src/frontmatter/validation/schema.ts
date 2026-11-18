@@ -14,11 +14,11 @@ import {
   type SourceSpan,
   err,
   ok,
-} from "../diagnostics/index.ts";
+} from "../../diagnostics/index.ts";
 import { closestMatch } from "./closest-match.ts";
-import { FrontmatterCodes } from "./diagnostic-codes.ts";
-import { toPlainData } from "./plain-data.ts";
-import type { DateValue, FrontmatterValue, MapEntry, MapValue } from "./values.ts";
+import { FrontmatterCodes } from "../diagnostic-codes.ts";
+import { toPlainData } from "../plain-data.ts";
+import type { DateValue, FrontmatterValue, MapEntry, MapValue } from "../values.ts";
 
 /** The outcome of checking one value. Warnings don't make a value invalid. */
 export type Checked<T> =
