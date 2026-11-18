@@ -38,6 +38,8 @@ function renderBlock(block: Block): string {
     }
     case "table":
       return renderTable(block);
+    case "html-block":
+      return `${block.text}\n`;
     default:
       return assertNever(block);
   }
@@ -82,6 +84,8 @@ function renderInline(inline: Inline): string {
       return "<br />\n";
     case "soft-break":
       return "\n";
+    case "raw-html":
+      return inline.text;
     case "link":
       return `<a href="${renderUrl(inline.url)}"${renderTitle(inline.title)}>${renderInlines(inline.children)}</a>`;
     case "image": {
@@ -104,6 +108,7 @@ function plainText(inlines: readonly Inline[]): string {
       switch (inline.kind) {
         case "text":
         case "code-span":
+        case "raw-html":
           return inline.text;
         case "hard-break":
         case "soft-break":

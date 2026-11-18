@@ -10,4 +10,5 @@ export const DiagnosticCodes = {
   indentedCode: "GS103",
   tableColumnMismatch: "GS104",
   nestingTooDeep: "GS105",
+  unclosedHtmlBlock: "GS106",
 } as const satisfies Record<string, DiagnosticCode>;

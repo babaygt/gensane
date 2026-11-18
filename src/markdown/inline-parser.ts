@@ -9,6 +9,7 @@
 import type { SourcePosition, SourceSpan } from "../diagnostics/index.ts";
 import type { Inline, TextSegment } from "./ast.ts";
 import { decodeCharacterReference } from "./character-references.ts";
+import { parseRawHtml } from "./html-rules.ts";
 import {
   normalizeLabel,
   parseAutolink,
@@ -97,6 +98,7 @@ class InlineParser {
     next: undefined,
   };
   #tail: Entry = this.#head;
+  readonly #missingHtmlEnds = new Map<string, number>();
   #bracket: Bracket | undefined;
   /** Set when images nest too deeply; all later brackets then stay as text. */
   #tooDeep = false;
@@ -128,7 +130,7 @@ class InlineParser {
       else if (ch === "[") this.#openBracket(false);
       else if (ch === "!" && this.#text[this.#pos + 1] === "[") this.#openBracket(true);
       else if (ch === "]") this.#closeBracket();
-      else if (ch === "<") this.#parseAutolink();
+      else if (ch === "<") this.#parseAngleBracket();
       else if (ch === "&") this.#parseCharacterReference();
       else if (ch === "!") this.#pushLiteral(1);
       else this.#parsePlainText();
@@ -153,10 +155,18 @@ class InlineParser {
     this.#pos = reference.end;
   }
 
-  #parseAutolink(): void {
+  /** A `<` starts an autolink, raw HTML, or is plain text. */
+  #parseAngleBracket(): void {
     const autolink = parseAutolink(this.#text, this.#pos);
     if (autolink === undefined) {
-      this.#pushLiteral(1);
+      const end = parseRawHtml(this.#text, this.#pos, this.#missingHtmlEnds);
+      if (end === undefined) {
+        this.#pushLiteral(1);
+        return;
+      }
+      const text = this.#text.slice(this.#pos, end);
+      this.#append({ kind: "raw-html", text, span: this.#span(this.#pos, end) });
+      this.#pos = end;
       return;
     }
     const { url, text, end } = autolink;

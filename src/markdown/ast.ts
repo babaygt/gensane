@@ -73,7 +73,22 @@ export interface Image {
   readonly span: SourceSpan;
 }
 
-export type Inline = Text | CodeSpan | Emphasis | Strong | Strikethrough | LineBreak | Link | Image;
+export interface RawHtml {
+  readonly kind: "raw-html";
+  readonly text: string;
+  readonly span: SourceSpan;
+}
+
+export type Inline =
+  | RawHtml
+  | Text
+  | CodeSpan
+  | Emphasis
+  | Strong
+  | Strikethrough
+  | LineBreak
+  | Link
+  | Image;
 
 export interface Heading {
   readonly kind: "heading";
@@ -105,6 +120,12 @@ export interface CodeBlock {
 
 export interface ThematicBreak {
   readonly kind: "thematic-break";
+  readonly span: SourceSpan;
+}
+
+export interface HtmlBlock {
+  readonly kind: "html-block";
+  readonly text: string;
   readonly span: SourceSpan;
 }
 
@@ -156,7 +177,15 @@ export interface Table {
   readonly span: SourceSpan;
 }
 
-export type Block = Heading | Paragraph | CodeBlock | ThematicBreak | BlockQuote | List | Table;
+export type Block =
+  | HtmlBlock
+  | Heading
+  | Paragraph
+  | CodeBlock
+  | ThematicBreak
+  | BlockQuote
+  | List
+  | Table;
 
 export interface Document {
   readonly kind: "document";

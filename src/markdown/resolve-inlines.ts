@@ -32,6 +32,7 @@ export function resolveInlines(document: Document): Document {
         case "code":
         case "thematic-break":
         case "table":
+        case "html-block":
           return [block];
         default:
           return assertNever(block);
@@ -57,6 +58,7 @@ export function resolveInlines(document: Document): Document {
         return { ...block, header: resolveRow(block.header), rows: block.rows.map(resolveRow) };
       case "code":
       case "thematic-break":
+      case "html-block":
         return block;
       default:
         return assertNever(block);
