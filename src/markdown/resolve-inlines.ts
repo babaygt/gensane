@@ -7,6 +7,7 @@
  */
 import { assertNever } from "../diagnostics/index.ts";
 import type { Block, Document, Paragraph, TableRow } from "./ast.ts";
+import { sliceParagraph } from "./block-extensions.ts";
 import { type LinkReference, parseInlines } from "./inline-parser.ts";
 import { parseReferenceDefinition } from "./link-syntax.ts";
 
@@ -94,11 +95,6 @@ function withoutDefinitions(
   }
   if (consumed === 0) return [paragraph];
 
-  const text = paragraph.text.slice(consumed);
-  const segments = paragraph.segments
-    .filter((segment) => segment.index >= consumed)
-    .map((segment) => ({ ...segment, index: segment.index - consumed }));
-  const start = segments[0]?.position;
-  if (text.trim() === "" || start === undefined) return [];
-  return [{ ...paragraph, text, segments, span: { ...paragraph.span, start } }];
+  const remaining = sliceParagraph(paragraph, consumed);
+  return remaining === undefined ? [] : [remaining];
 }
