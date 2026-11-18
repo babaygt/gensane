@@ -12,8 +12,9 @@
  */
 import type { SourceSpan } from "../diagnostics/index.ts";
 import type { HeadingLevel } from "./block-rules.ts";
+import type { TableAlignment } from "./table-rules.ts";
 
-export type { HeadingLevel };
+export type { HeadingLevel, TableAlignment };
 
 export interface Heading {
   readonly kind: "heading";
@@ -69,7 +70,28 @@ export interface ListItem {
   readonly span: SourceSpan;
 }
 
-export type Block = Heading | Paragraph | CodeBlock | ThematicBreak | BlockQuote | List;
+export interface TableCell {
+  readonly kind: "table-cell";
+  readonly text: string;
+  readonly span: SourceSpan;
+}
+
+export interface TableRow {
+  readonly kind: "table-row";
+  /** Always one cell per column: short rows are filled up, long rows are cut off. */
+  readonly cells: readonly TableCell[];
+  readonly span: SourceSpan;
+}
+
+export interface Table {
+  readonly kind: "table";
+  readonly alignments: readonly TableAlignment[];
+  readonly header: TableRow;
+  readonly rows: readonly TableRow[];
+  readonly span: SourceSpan;
+}
+
+export type Block = Heading | Paragraph | CodeBlock | ThematicBreak | BlockQuote | List | Table;
 
 export interface Document {
   readonly kind: "document";

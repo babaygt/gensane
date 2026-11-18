@@ -6,7 +6,7 @@
  * CommonMark reference renderer, which lets us compare against its examples.
  */
 import { assertNever } from "../diagnostics/index.ts";
-import type { Block, Document, ListItem } from "./ast.ts";
+import type { Block, Document, ListItem, Table, TableAlignment, TableRow } from "./ast.ts";
 
 export function renderHtml(document: Document): string {
   return renderBlocks(document.children);
@@ -36,6 +36,8 @@ function renderBlock(block: Block): string {
       const items = block.items.map((item) => renderListItem(item, block.tight)).join("");
       return `<${tag}${start}>\n${items}</${tag}>\n`;
     }
+    case "table":
+      return renderTable(block);
     default:
       return assertNever(block);
   }
@@ -53,6 +55,22 @@ function renderListItem(item: ListItem, tight: boolean): string {
     }
   }
   return `${html}</li>\n`;
+}
+
+function renderTable(table: Table): string {
+  const head = `<thead>\n${renderRow(table.header, "th", table.alignments)}</thead>\n`;
+  const rows = table.rows.map((row) => renderRow(row, "td", table.alignments)).join("");
+  const body = table.rows.length === 0 ? "" : `<tbody>\n${rows}</tbody>\n`;
+  return `<table>\n${head}${body}</table>\n`;
+}
+
+function renderRow(row: TableRow, tag: "th" | "td", alignments: readonly TableAlignment[]): string {
+  const cells = row.cells.map((cell, column) => {
+    const alignment = alignments[column] ?? "none";
+    const align = alignment === "none" ? "" : ` align="${alignment}"`;
+    return `<${tag}${align}>${escapeHtml(cell.text)}</${tag}>\n`;
+  });
+  return `<tr>\n${cells.join("")}</tr>\n`;
 }
 
 const ESCAPES: Readonly<Record<string, string>> = {
