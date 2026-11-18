@@ -32,6 +32,12 @@ const markdownLike = fc.string({
     "* ",
     "1. ",
     "2) ",
+    "*",
+    "**",
+    "_",
+    "__",
+    "~~",
+    "  \n",
     "|",
     "| ",
     " | ",
@@ -91,7 +97,7 @@ describe("Markdown parser properties", () => {
 
   it("never lets user text produce HTML tags", () => {
     const ourTags =
-      /<\/?(?:h[1-6]|p|pre|code|hr|blockquote|ul|ol|li|table|thead|tbody|tr|th|td)(?: class="language-[^"<>]*"| start="\d+"| align="(?:left|center|right)")? ?\/?>/g;
+      /<\/?(?:h[1-6]|p|pre|code|hr|blockquote|ul|ol|li|table|thead|tbody|tr|th|td|em|strong|del|br)(?: class="language-[^"<>]*"| start="\d+"| align="(?:left|center|right)")? ?\/?>/g;
     fc.assert(
       fc.property(markdownLike, (source) => {
         const withoutOurTags = markdownToHtml(source, "x.md").html.replace(ourTags, "");
