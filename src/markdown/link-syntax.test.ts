@@ -50,6 +50,7 @@ describe("parseLinkDestination", () => {
     ["a\\)b", "a)b", 4],
     ["f&ouml;", "fö", 7],
     ["<a\\>b>", "a>b", 6],
+    ["a\x7fb", "a", 1],
   ])("%j", (source, url, end) => {
     expect(parseLinkDestination(source, 0)).toEqual({ url, end });
   });
@@ -110,6 +111,7 @@ describe("parseReferenceDefinition", () => {
     ["[a] /u", "no colon"],
     ['[a]: /u "b" c', "text after the title on the same line"],
     ["[a]: /u b", "text after the destination"],
+    ['[a]: <b>"t"', "no space before the title"],
   ])("rejects %j (%s)", (source) => {
     expect(parseReferenceDefinition(source, 0)).toBeUndefined();
   });
@@ -129,10 +131,11 @@ describe("parseAutolink", () => {
     "<>",
     "< http://a>",
     "<http://a b>",
-    "<m:abc",
+    "<xy:abc",
     "<a:b\nc>",
     "<foo\\+@bar.example.com>",
-    "<x:a<b>",
+    "<xy:a<b>",
+    "<xy:a\x7fb>",
   ])("rejects %j", (source) => {
     expect(parseAutolink(source, 0)).toBeUndefined();
   });
