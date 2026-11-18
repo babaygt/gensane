@@ -105,7 +105,7 @@ describe("markdownToHtml", () => {
     });
 
     it("escapes cell text", () => {
-      expect(html("| <b> |\n| --- |")).toContain("<th>&lt;b&gt;</th>");
+      expect(html("| 1 < 2 |\n| --- |")).toContain("<th>1 &lt; 2</th>");
     });
   });
 

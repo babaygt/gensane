@@ -32,6 +32,12 @@ const markdownLike = fc.string({
     "* ",
     "1. ",
     "2) ",
+    "<div>",
+    "</div>",
+    "<b>",
+    "<!--",
+    "-->",
+    "<?",
     "[",
     "]",
     "](",
@@ -110,7 +116,10 @@ describe("Markdown parser properties", () => {
       /<\/?(?:h[1-6]|p|pre|code|hr|blockquote|ul|ol|li|table|thead|tbody|tr|th|td|em|strong|del|br|a)(?: class="language-[^"<>]*"| start="\d+"| align="(?:left|center|right)"| href="[^"<>]*"(?: title="[^"<>]*")?)? ?\/?>|<img src="[^"<>]*" alt="[^"<>]*"(?: title="[^"<>]*")? \/>/g;
     fc.assert(
       fc.property(markdownLike, (source) => {
-        const withoutOurTags = markdownToHtml(source, "x.md").html.replace(ourTags, "");
+        const withoutOurTags = markdownToHtml(source, "x.md", { rawHtml: "escape" }).html.replace(
+          ourTags,
+          "",
+        );
         expect(withoutOurTags).not.toMatch(/[<>]/);
       }),
     );
@@ -122,10 +131,9 @@ describe("Markdown parser properties", () => {
       fc.property(markdownLike, (source) => {
         const open: string[] = [];
         const mismatches: string[] = [];
-        for (const [, closing, name = "", selfClosing] of markdownToHtml(
-          source,
-          "x.md",
-        ).html.matchAll(tag)) {
+        for (const [, closing, name = "", selfClosing] of markdownToHtml(source, "x.md", {
+          rawHtml: "escape",
+        }).html.matchAll(tag)) {
           if (selfClosing) continue;
           if (!closing) open.push(name);
           else if (open.pop() !== name) mismatches.push(name);
