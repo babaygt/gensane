@@ -7,7 +7,7 @@
  *   > [!NOTE]
  *   > a callout
  */
-import { assertNever } from "../diagnostics/index.ts";
+import { assertNever } from "../../diagnostics/index.ts";
 import type {
   Block,
   BlockQuote,
@@ -16,7 +16,7 @@ import type {
   ListItem,
   Paragraph,
   TextSegment,
-} from "./ast.ts";
+} from "../ast.ts";
 
 export function applyBlockExtensions(document: Document): Document {
   return { ...document, children: document.children.map(applyToBlock) };

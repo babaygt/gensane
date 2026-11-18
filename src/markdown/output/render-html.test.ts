@@ -1,7 +1,7 @@
 // End-to-end: Markdown source in, HTML out. Expected output follows the CommonMark
 // reference renderer's format (one block per line, `<hr />`, `language-` classes).
 import { describe, expect, it } from "vitest";
-import { markdownToHtml } from "./index.ts";
+import { markdownToHtml } from "../index.ts";
 
 function html(source: string): string {
   return markdownToHtml(source, "test.md").html;

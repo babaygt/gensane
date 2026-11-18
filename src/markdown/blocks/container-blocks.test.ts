@@ -2,9 +2,9 @@
 // spec sections "Block quotes", "List items" and "Lists".
 import { describe, expect, it } from "vitest";
 import { parseBlocks } from "./block-parser.ts";
-import { DiagnosticCodes } from "./diagnostic-codes.ts";
-import { markdownToHtml } from "./index.ts";
-import { blocks } from "./test-helpers.ts";
+import { DiagnosticCodes } from "../diagnostic-codes.ts";
+import { markdownToHtml } from "../index.ts";
+import { blocks } from "../test-helpers.ts";
 
 const paragraph = (text: string) => ({ kind: "paragraph", text });
 const quote = (...children: unknown[]) => ({ kind: "block-quote", children });

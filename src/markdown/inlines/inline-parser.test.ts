@@ -1,9 +1,9 @@
 // Cases are adapted from the CommonMark spec sections on inlines, and from the GitHub
 // Flavored Markdown spec for strikethrough.
 import { describe, expect, it } from "vitest";
-import { markdownToHtml, parseMarkdown, renderHtml } from "./index.ts";
-import { parseBlocks } from "./block-parser.ts";
-import { withoutSpans } from "./test-helpers.ts";
+import { markdownToHtml, parseMarkdown, renderHtml } from "../index.ts";
+import { parseBlocks } from "../blocks/block-parser.ts";
+import { withoutSpans } from "../test-helpers.ts";
 
 /** The HTML inside the single paragraph that `source` produces. */
 function inline(source: string): string {

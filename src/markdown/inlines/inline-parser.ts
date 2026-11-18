@@ -6,10 +6,10 @@
  * comes later. So the scanner first records delimiter runs, and `#processEmphasis` then
  * pairs them using the algorithm from the CommonMark spec's appendix.
  */
-import type { SourcePosition, SourceSpan } from "../diagnostics/index.ts";
-import type { Inline, TextSegment } from "./ast.ts";
+import type { SourcePosition, SourceSpan } from "../../diagnostics/index.ts";
+import type { Inline, TextSegment } from "../ast.ts";
 import { decodeCharacterReference } from "./character-references.ts";
-import { parseRawHtml } from "./html-rules.ts";
+import { parseRawHtml } from "../blocks/html-rules.ts";
 import {
   normalizeLabel,
   parseAutolink,

@@ -1,12 +1,12 @@
 import type { Diagnostic } from "../diagnostics/index.ts";
-import { applyBlockExtensions } from "./block-extensions.ts";
-import { type BlockParseResult, parseBlocks } from "./block-parser.ts";
-import { escapeRawHtml } from "./escape-raw-html.ts";
-import { assignHeadingIds } from "./heading-ids.ts";
-import { renderHtml } from "./render-html.ts";
-import { resolveFootnotes } from "./resolve-footnotes.ts";
-import { resolveInlines } from "./resolve-inlines.ts";
-import { type TableOfContentsEntry, buildTableOfContents } from "./table-of-contents.ts";
+import { applyBlockExtensions } from "./passes/block-extensions.ts";
+import { type BlockParseResult, parseBlocks } from "./blocks/block-parser.ts";
+import { escapeRawHtml } from "./passes/escape-raw-html.ts";
+import { assignHeadingIds } from "./passes/heading-ids.ts";
+import { renderHtml } from "./output/render-html.ts";
+import { resolveFootnotes } from "./passes/resolve-footnotes.ts";
+import { resolveInlines } from "./passes/resolve-inlines.ts";
+import { type TableOfContentsEntry, buildTableOfContents } from "./output/table-of-contents.ts";
 
 export type {
   Block,
@@ -40,8 +40,8 @@ export type {
   ThematicBreak,
 } from "./ast.ts";
 export { DiagnosticCodes } from "./diagnostic-codes.ts";
-export { escapeHtml, renderHtml } from "./render-html.ts";
-export type { TableOfContentsEntry } from "./table-of-contents.ts";
+export { escapeHtml, renderHtml } from "./output/render-html.ts";
+export type { TableOfContentsEntry } from "./output/table-of-contents.ts";
 
 export type ParseResult = BlockParseResult;
 

@@ -10,8 +10,8 @@
  * Blocks with text keep it raw at first. A later stage parses it and fills `inlines`.
  */
 import type { SourcePosition, SourceSpan } from "../diagnostics/index.ts";
-import type { HeadingLevel } from "./block-rules.ts";
-import type { TableAlignment } from "./table-rules.ts";
+import type { HeadingLevel } from "./blocks/block-rules.ts";
+import type { TableAlignment } from "./blocks/table-rules.ts";
 
 export type { HeadingLevel, TableAlignment };
 

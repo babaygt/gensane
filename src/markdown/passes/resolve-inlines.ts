@@ -5,11 +5,11 @@
  *    the file, so all of them must be known before any text is parsed.
  * 2. Run the inline parser over every block that contains text.
  */
-import { assertNever } from "../diagnostics/index.ts";
-import type { Block, Document, Paragraph, TableRow } from "./ast.ts";
+import { assertNever } from "../../diagnostics/index.ts";
+import type { Block, Document, Paragraph, TableRow } from "../ast.ts";
 import { sliceParagraph } from "./block-extensions.ts";
-import { type LinkReference, parseInlines } from "./inline-parser.ts";
-import { parseReferenceDefinition } from "./link-syntax.ts";
+import { type LinkReference, parseInlines } from "../inlines/inline-parser.ts";
+import { parseReferenceDefinition } from "../inlines/link-syntax.ts";
 
 export function resolveInlines(document: Document): Document {
   const file = document.span.file;

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { markdownToHtml, parseMarkdown } from "./index.ts";
-import { withoutSpans } from "./test-helpers.ts";
+import { markdownToHtml, parseMarkdown } from "../index.ts";
+import { withoutSpans } from "../test-helpers.ts";
 
 function html(source: string): string {
   return markdownToHtml(source, "test.md").html;

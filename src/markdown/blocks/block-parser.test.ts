@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { parseBlocks } from "./block-parser.ts";
-import { DiagnosticCodes } from "./diagnostic-codes.ts";
-import { blocks, withoutSpans } from "./test-helpers.ts";
+import { DiagnosticCodes } from "../diagnostic-codes.ts";
+import { blocks, withoutSpans } from "../test-helpers.ts";
 
 function codes(source: string): string[] {
   return parseBlocks(source, "test.md").diagnostics.map((diagnostic) => diagnostic.code);

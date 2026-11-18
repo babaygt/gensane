@@ -5,7 +5,7 @@
  * instead of being spread across the code. Output follows the format of the
  * CommonMark reference renderer, which lets us compare against its examples.
  */
-import { assertNever } from "../diagnostics/index.ts";
+import { assertNever } from "../../diagnostics/index.ts";
 import type {
   CalloutKind,
   Footnote,
@@ -17,7 +17,7 @@ import type {
   Table,
   TableAlignment,
   TableRow,
-} from "./ast.ts";
+} from "../ast.ts";
 import { plainTextOf } from "./inline-text.ts";
 
 export function renderHtml(document: Document): string {
