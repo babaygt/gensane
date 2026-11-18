@@ -3,7 +3,14 @@
 import * as fc from "fast-check";
 import { describe, expect, it } from "vitest";
 import { type SourceSpan, positionAt } from "../diagnostics/index.ts";
-import { type FrontmatterValue, parseFrontmatter, toPlainData } from "./index.ts";
+import {
+  type ContentType,
+  type FrontmatterValue,
+  contentSchemas,
+  parseFrontmatter,
+  toPlainData,
+  validateContent,
+} from "./index.ts";
 
 type Data = string | number | boolean | null | readonly Data[] | { readonly [key: string]: Data };
 
@@ -142,6 +149,35 @@ describe("frontmatter properties", () => {
       fc.property(fc.string({ unit: "binary" }), (body) => {
         const result = parseFrontmatter(`---\na: 1\n---\n${body}`, "x.md");
         expect(result.ok && result.value.body).toBe(body);
+      }),
+    );
+  });
+
+  it("never throws while validating, and reports problems in file order", () => {
+    const types = Object.keys(contentSchemas) as ContentType[];
+    fc.assert(
+      fc.property(data, fc.constantFrom(...types), (value, type) => {
+        const source = `---\n${toYamlLines(value).join("\n")}\n---\n`;
+        const parsed = parseFrontmatter(source, "x.md");
+        if (!parsed.ok) return;
+        const result = validateContent(type, parsed.value.data);
+        const diagnostics = result.ok ? result.value.warnings : result.error;
+        const offsets = diagnostics.map((diagnostic) => diagnostic.span.start.offset);
+        expect(offsets).toEqual(offsets.toSorted((first, second) => first - second));
+      }),
+    );
+  });
+
+  it("accepts every well-formed post and keeps its values", () => {
+    const word = fc
+      .stringMatching(/^[a-z]{1,8}$/)
+      .filter((text) => !["null", "true", "false"].includes(text));
+    fc.assert(
+      fc.property(word, fc.array(word, { maxLength: 4 }), fc.boolean(), (title, tags, draft) => {
+        const yaml = `title: ${title}\ndate: 2026-11-18\ntags: [${tags.join(", ")}]\ndraft: ${draft}`;
+        const parsed = parseFrontmatter(`---\n${yaml}\n---\n`, "x.md");
+        const result = parsed.ok ? validateContent("post", parsed.value.data) : parsed;
+        expect(result).toMatchObject({ ok: true, value: { value: { title, tags, draft } } });
       }),
     );
   });
