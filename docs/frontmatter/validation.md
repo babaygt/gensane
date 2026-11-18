@@ -115,7 +115,7 @@ field is valid on its own. [`endsAfterStart`](../../src/frontmatter/validation/c
 ## Suggesting a date
 
 A date written the wrong way round is text to the parser, so the hint comes from [`dateHint`](../../src/frontmatter/validation/schema.ts). It suggests
-a corrected date only when one number can't be a month, because it is above 12.
+a corrected date only when one number can't be a month, because it is above 12, and the corrected date exists.
 
 <!-- reports GS221 as post -->
 ```yaml
