@@ -28,6 +28,7 @@ import type {
   BlockQuote,
   CodeBlock,
   Document,
+  HtmlBlock,
   List,
   ListItem,
   Paragraph,
@@ -49,6 +50,7 @@ import {
   matchListMarker,
 } from "./block-rules.ts";
 import { DiagnosticCodes } from "./diagnostic-codes.ts";
+import { type HtmlBlockType, endsHtmlBlock, matchHtmlBlockStart } from "./html-rules.ts";
 import {
   type SourceLine,
   isBlank,
@@ -88,6 +90,14 @@ function parseLines(lines: readonly SourceLine[], file: string, depth: number): 
 
 /** Indentation at which CommonMark would start an indented code block. */
 const CODE_INDENT = 4;
+
+const HTML_BLOCK_END_NAMES: Partial<Record<HtmlBlockType, string>> = {
+  1: "the closing tag",
+  2: "`-->`",
+  3: "`?>`",
+  4: "`>`",
+  5: "`]]>`",
+};
 
 /** Containers are parsed recursively, so unlimited nesting would overflow the call stack. */
 const MAX_NESTING_DEPTH = 256;
@@ -168,6 +178,9 @@ class BlockParser {
     }
     if (marker !== undefined) return this.#parseList(marker);
     if (isContainer) return this.#parseBlockQuote();
+
+    const htmlType = matchHtmlBlockStart(line.text);
+    if (htmlType !== undefined) return this.#parseHtmlBlock(htmlType);
 
     const alignments = this.#tableAlignmentsAt(this.#index);
     if (alignments !== undefined) return this.#parseTable(alignments);
@@ -256,6 +269,37 @@ class BlockParser {
       segments,
       span: this.#span(first, last),
     };
+  }
+
+  /** Lines are kept exactly as written; Markdown inside an HTML block is not parsed. */
+  #parseHtmlBlock(type: HtmlBlockType): HtmlBlock {
+    const first = this.#current();
+    const endsAtBlankLine = type === 6 || type === 7;
+    const texts: string[] = [];
+    let last = first;
+    let closed = endsAtBlankLine;
+
+    while (this.#index < this.#lines.length) {
+      const line = this.#current();
+      if (line.lazy || (endsAtBlankLine && isBlank(line.text))) break;
+      texts.push(line.text);
+      last = line;
+      this.#index++;
+      if (type !== 6 && type !== 7 && endsHtmlBlock(type, line.text)) {
+        closed = true;
+        break;
+      }
+    }
+
+    if (!closed) {
+      this.#warn(
+        DiagnosticCodes.unclosedHtmlBlock,
+        first,
+        "HTML block is never closed",
+        `add ${HTML_BLOCK_END_NAMES[type] ?? "its closing marker"} where the block ends; until then, everything after it is raw HTML`,
+      );
+    }
+    return { kind: "html-block", text: texts.join("\n"), span: this.#span(first, last) };
   }
 
   #parseTable(alignments: readonly TableAlignment[]): Table {
@@ -487,6 +531,10 @@ function interruptsParagraph(text: string): boolean {
   ) {
     return true;
   }
+  // A lone tag such as `<span>` (type 7) can be part of a sentence, so it does not interrupt.
+  const htmlType = matchHtmlBlockStart(text);
+  if (htmlType !== undefined && htmlType !== 7) return true;
+
   // So that "in 2024. we..." wrapped onto a new line doesn't become a list:
   // only bullets and lists starting at 1 may interrupt, and never an empty item.
   const marker = matchListMarker(text);
