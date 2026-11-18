@@ -68,6 +68,47 @@ describe("markdownToHtml", () => {
     });
   });
 
+  describe("tables", () => {
+    it("renders a header and body", () => {
+      expect(html("| foo | bar |\n| --- | --- |\n| baz | bim |")).toBe(
+        [
+          "<table>",
+          "<thead>",
+          "<tr>",
+          "<th>foo</th>",
+          "<th>bar</th>",
+          "</tr>",
+          "</thead>",
+          "<tbody>",
+          "<tr>",
+          "<td>baz</td>",
+          "<td>bim</td>",
+          "</tr>",
+          "</tbody>",
+          "</table>",
+          "",
+        ].join("\n"),
+      );
+    });
+
+    it("leaves out <tbody> when there are no rows", () => {
+      expect(html("| abc |\n| --- |")).toBe(
+        "<table>\n<thead>\n<tr>\n<th>abc</th>\n</tr>\n</thead>\n</table>\n",
+      );
+    });
+
+    it("writes column alignment on every cell", () => {
+      const output = html("| a | b | c |\n| :- | :-: | -: |\n| d | e | f |");
+      expect(output).toContain('<th align="left">a</th>');
+      expect(output).toContain('<th align="center">b</th>');
+      expect(output).toContain('<td align="right">f</td>');
+    });
+
+    it("escapes cell text", () => {
+      expect(html("| <b> |\n| --- |")).toContain("<th>&lt;b&gt;</th>");
+    });
+  });
+
   describe("escaping", () => {
     it("escapes HTML special characters in text", () => {
       expect(html(`5 < 6 & "quotes" > 'x'`)).toBe(
