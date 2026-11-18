@@ -82,9 +82,54 @@ function renderInline(inline: Inline): string {
       return "<br />\n";
     case "soft-break":
       return "\n";
+    case "link":
+      return `<a href="${renderUrl(inline.url)}"${renderTitle(inline.title)}>${renderInlines(inline.children)}</a>`;
+    case "image": {
+      const alt = escapeHtml(plainText(inline.children));
+      return `<img src="${renderUrl(inline.url)}" alt="${alt}"${renderTitle(inline.title)} />`;
+    }
     default:
       return assertNever(inline);
   }
+}
+
+function renderTitle(title: string | undefined): string {
+  return title === undefined ? "" : ` title="${escapeHtml(title)}"`;
+}
+
+/** The text of an image description, without any formatting. */
+function plainText(inlines: readonly Inline[]): string {
+  return inlines
+    .map((inline) => {
+      switch (inline.kind) {
+        case "text":
+        case "code-span":
+          return inline.text;
+        case "hard-break":
+        case "soft-break":
+          return "\n";
+        case "emphasis":
+        case "strong":
+        case "strikethrough":
+        case "link":
+        case "image":
+          return plainText(inline.children);
+        default:
+          return assertNever(inline);
+      }
+    })
+    .join("");
+}
+
+/** Percent-encodes a URL for an attribute, leaving existing `%XX` sequences alone. */
+function renderUrl(url: string): string {
+  // `encodeURI` throws on half of a surrogate pair, which random input can contain.
+  const wellFormed = url.replace(/\p{Surrogate}/gu, "\uFFFD");
+  const encoded = wellFormed
+    .split(/(%[0-9a-fA-F]{2})/)
+    .map((part, i) => (i % 2 === 1 ? part : encodeURI(part)))
+    .join("");
+  return escapeHtml(encoded);
 }
 
 function renderTable(table: Table): string {

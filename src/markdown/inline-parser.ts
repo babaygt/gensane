@@ -8,6 +8,15 @@
  */
 import type { SourcePosition, SourceSpan } from "../diagnostics/index.ts";
 import type { Inline, TextSegment } from "./ast.ts";
+import { decodeCharacterReference } from "./character-references.ts";
+import {
+  normalizeLabel,
+  parseAutolink,
+  parseLinkDestination,
+  parseLinkLabel,
+  parseLinkTitle,
+  skipWhitespace,
+} from "./link-syntax.ts";
 
 type DelimiterChar = "*" | "_" | "~";
 
@@ -36,18 +45,41 @@ interface Entry {
   next: Entry | undefined;
 }
 
+/** A `[` or `![` that may still become the start of a link or image. */
+interface Bracket {
+  readonly entry: Entry;
+  readonly image: boolean;
+  readonly start: number;
+  readonly contentStart: number;
+  /** The last delimiter run before this bracket; emphasis inside the link stops there. */
+  readonly runBelow: DelimiterRun | undefined;
+  readonly previous: Bracket | undefined;
+  /** Links cannot contain links, so a finished link deactivates the `[` brackets before it. */
+  active: boolean;
+}
+
+export interface LinkReference {
+  readonly url: string;
+  readonly title: string | undefined;
+}
+
+interface LinkTarget extends LinkReference {
+  readonly end: number;
+}
+
 export function parseInlines(
   text: string,
   segments: readonly TextSegment[],
   file: string,
+  references: ReadonlyMap<string, LinkReference>,
 ): Inline[] {
-  return new InlineParser(text, segments, file).parse();
+  return new InlineParser(text, segments, file, references).parse();
 }
 
 /** Rendering is recursive, so unlimited nesting would overflow the call stack. */
 const MAX_EMPHASIS_DEPTH = 256;
 
-const PLAIN_TEXT = /[^\\`*_~\n]+/y;
+const PLAIN_TEXT = /[^\\`*_~\n[\]!<&]+/y;
 const ASCII_PUNCTUATION = /[!-/:-@[-`{-~]/;
 const WHITESPACE = /\s/u;
 const PUNCTUATION = /[\p{P}\p{S}]/u;
@@ -56,6 +88,7 @@ class InlineParser {
   readonly #text: string;
   readonly #segments: readonly TextSegment[];
   readonly #file: string;
+  readonly #references: ReadonlyMap<string, LinkReference>;
   readonly #head: Entry = {
     inline: undefined,
     depth: 0,
@@ -64,13 +97,20 @@ class InlineParser {
     next: undefined,
   };
   #tail: Entry = this.#head;
+  #bracket: Bracket | undefined;
   #firstRun: DelimiterRun | undefined;
   #lastRun: DelimiterRun | undefined;
   #runCount = 0;
   #pos = 0;
   #backticks: Map<number, { starts: number[]; cursor: number }> | undefined;
 
-  constructor(text: string, segments: readonly TextSegment[], file: string) {
+  constructor(
+    text: string,
+    segments: readonly TextSegment[],
+    file: string,
+    references: ReadonlyMap<string, LinkReference>,
+  ) {
+    this.#references = references;
     this.#text = text;
     this.#segments = segments;
     this.#file = file;
@@ -83,10 +123,129 @@ class InlineParser {
       else if (ch === "`") this.#parseCodeSpan();
       else if (ch === "*" || ch === "_" || ch === "~") this.#parseDelimiterRun(ch);
       else if (ch === "\n") this.#parseLineBreak();
+      else if (ch === "[") this.#openBracket(false);
+      else if (ch === "!" && this.#text[this.#pos + 1] === "[") this.#openBracket(true);
+      else if (ch === "]") this.#closeBracket();
+      else if (ch === "<") this.#parseAutolink();
+      else if (ch === "&") this.#parseCharacterReference();
+      else if (ch === "!") this.#pushLiteral(1);
       else this.#parsePlainText();
     }
-    this.#processEmphasis();
+    this.#processEmphasis(undefined);
     return this.#collect(this.#head.next, undefined);
+  }
+
+  #pushLiteral(length: number): void {
+    const end = this.#pos + length;
+    this.#pushText(this.#text.slice(this.#pos, end), this.#pos, end);
+    this.#pos = end;
+  }
+
+  #parseCharacterReference(): void {
+    const reference = decodeCharacterReference(this.#text, this.#pos);
+    if (reference === undefined) {
+      this.#pushLiteral(1);
+      return;
+    }
+    this.#pushText(reference.text, this.#pos, reference.end);
+    this.#pos = reference.end;
+  }
+
+  #parseAutolink(): void {
+    const autolink = parseAutolink(this.#text, this.#pos);
+    if (autolink === undefined) {
+      this.#pushLiteral(1);
+      return;
+    }
+    const { url, text, end } = autolink;
+    const children: Inline[] = [{ kind: "text", text, span: this.#span(this.#pos + 1, end - 1) }];
+    this.#append({ kind: "link", url, children, span: this.#span(this.#pos, end) });
+    this.#pos = end;
+  }
+
+  #openBracket(image: boolean): void {
+    const start = this.#pos;
+    const length = image ? 2 : 1;
+    this.#pushLiteral(length);
+    this.#bracket = {
+      entry: this.#tail,
+      image,
+      start,
+      contentStart: start + length,
+      runBelow: this.#lastRun,
+      previous: this.#bracket,
+      active: true,
+    };
+  }
+
+  /** A `]` either completes a link or image, or is plain text. */
+  #closeBracket(): void {
+    const opener = this.#bracket;
+    if (opener === undefined) {
+      this.#pushLiteral(1);
+      return;
+    }
+    this.#bracket = opener.previous;
+    const target = opener.active ? this.#linkTarget(opener) : undefined;
+    const depth = target === undefined ? 0 : this.#depthAfter(opener.entry) + 1;
+    if (target === undefined || depth > MAX_EMPHASIS_DEPTH) {
+      this.#pushLiteral(1);
+      return;
+    }
+
+    this.#processEmphasis(opener.runBelow);
+    const children = this.#collect(opener.entry.next, undefined);
+    this.#tail = opener.entry.previous ?? this.#head;
+    this.#tail.next = undefined;
+
+    const { url, title, end } = target;
+    const span = this.#span(opener.start, end);
+    const optionalTitle = title === undefined ? {} : { title };
+    const kind = opener.image ? "image" : "link";
+    this.#appendEntry({ kind, url, ...optionalTitle, children, span }).depth = depth;
+    this.#pos = end;
+
+    if (!opener.image) {
+      for (let bracket = this.#bracket; bracket !== undefined; bracket = bracket.previous) {
+        if (!bracket.image) bracket.active = false;
+      }
+    }
+  }
+
+  /** Tries the three link forms after `]`: `(/url)`, `[label]`, and the text as its own label. */
+  #linkTarget(opener: Bracket): LinkTarget | undefined {
+    const after = this.#pos + 1;
+    if (this.#text[after] === "(") {
+      const inline = this.#inlineLinkTarget(after);
+      if (inline !== undefined) return inline;
+    }
+    const full = parseLinkLabel(this.#text, after);
+    if (full !== undefined) return this.#referenceTarget(full.label, full.end);
+
+    const own = parseLinkLabel(this.#text, opener.contentStart - 1);
+    if (own?.end !== after) return undefined;
+    const end = this.#text.startsWith("[]", after) ? after + 2 : after;
+    return this.#referenceTarget(own.label, end);
+  }
+
+  #referenceTarget(label: string, end: number): LinkTarget | undefined {
+    const reference = this.#references.get(normalizeLabel(label));
+    return reference === undefined
+      ? undefined
+      : { url: reference.url, title: reference.title, end };
+  }
+
+  /** `(destination "title")`, where both parts are optional. */
+  #inlineLinkTarget(open: number): LinkTarget | undefined {
+    let i = skipWhitespace(this.#text, open + 1);
+    const destination = parseLinkDestination(this.#text, i);
+    if (destination !== undefined) i = destination.end;
+
+    const titleStart = skipWhitespace(this.#text, i);
+    const title = titleStart > i ? parseLinkTitle(this.#text, titleStart) : undefined;
+    i = skipWhitespace(this.#text, title?.end ?? titleStart);
+    if (this.#text[i] !== ")") return undefined;
+    return { url: destination?.url ?? "", title: title?.title, end: i + 1 };
   }
 
   #parsePlainText(): void {
@@ -204,11 +363,22 @@ class InlineParser {
     this.#pos = end + 1;
   }
 
-  /** Pairs delimiter runs into emphasis, strong emphasis and strikethrough. */
-  #processEmphasis(): void {
+  /**
+   * Pairs delimiter runs above `bottom` into emphasis, strong emphasis and strikethrough.
+   * Afterwards those runs are finished: what is left of them is plain text.
+   */
+  #processEmphasis(bottom: DelimiterRun | undefined): void {
+    this.#pairDelimiters(bottom);
+    if (bottom === undefined) this.#firstRun = undefined;
+    else bottom.next = undefined;
+    this.#lastRun = bottom;
+  }
+
+  #pairDelimiters(bottom: DelimiterRun | undefined): void {
     // Where the search for an opener can stop, so long documents stay fast.
     const openersBottom = new Map<string, number>();
-    let closer = this.#firstRun;
+    const floor = bottom?.order ?? -1;
+    let closer = bottom === undefined ? this.#firstRun : bottom.next;
 
     while (closer !== undefined) {
       if (!closer.canClose) {
@@ -216,9 +386,9 @@ class InlineParser {
         continue;
       }
       const key = `${closer.char}${closer.canOpen}${closer.length % 3}`;
-      const opener = this.#findOpener(closer, openersBottom.get(key) ?? -1);
+      const opener = this.#findOpener(closer, openersBottom.get(key) ?? floor);
       if (opener === undefined) {
-        openersBottom.set(key, closer.previous?.order ?? -1);
+        openersBottom.set(key, closer.previous?.order ?? floor);
         const next: DelimiterRun | undefined = closer.next;
         if (!closer.canOpen) this.#removeRun(closer);
         closer = next;
@@ -242,6 +412,14 @@ class InlineParser {
       if (run.char === closer.char && run.canOpen && !breaksRuleOfThree(run, closer)) return run;
     }
     return undefined;
+  }
+
+  #depthAfter(start: Entry): number {
+    let depth = 0;
+    for (let entry = start.next; entry !== undefined; entry = entry.next) {
+      depth = Math.max(depth, entry.depth);
+    }
+    return depth;
   }
 
   #depthBetween(opener: DelimiterRun, closer: DelimiterRun): number {

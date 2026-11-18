@@ -56,7 +56,24 @@ export interface LineBreak {
   readonly span: SourceSpan;
 }
 
-export type Inline = Text | CodeSpan | Emphasis | Strong | Strikethrough | LineBreak;
+export interface Link {
+  readonly kind: "link";
+  readonly url: string;
+  readonly title?: string;
+  readonly children: readonly Inline[];
+  readonly span: SourceSpan;
+}
+
+export interface Image {
+  readonly kind: "image";
+  readonly url: string;
+  readonly title?: string;
+  /** The image description; rendered as plain text in the `alt` attribute. */
+  readonly children: readonly Inline[];
+  readonly span: SourceSpan;
+}
+
+export type Inline = Text | CodeSpan | Emphasis | Strong | Strikethrough | LineBreak | Link | Image;
 
 export interface Heading {
   readonly kind: "heading";
