@@ -66,7 +66,12 @@ export function matchFenceOpen(text: string): FenceOpen | undefined {
   const info = (match[3] ?? "").trim();
   // Otherwise inline code such as ```foo``` at the start of a line would open a fence.
   if (char === "`" && info.includes("`")) return undefined;
-  return { char, length: fence.length, indent: (match[1] ?? "").length, info };
+  return {
+    char,
+    length: fence.length,
+    indent: (match[1] ?? "").length,
+    info: info.replace(/\\([!-/:-@[-`{-~])/g, "$1"),
+  };
 }
 
 /**
