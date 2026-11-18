@@ -85,6 +85,7 @@ describe("matchFenceOpen", () => {
     { text: "```  ts title=x  ", char: "`", length: 3, indent: 0, info: "ts title=x" },
     { text: "  ```", char: "`", length: 3, indent: 2, info: "" },
     { text: "~~~ aa ``` ~~~", char: "~", length: 3, indent: 0, info: "aa ``` ~~~" },
+    { text: "``` foo\\+bar", char: "`", length: 3, indent: 0, info: "foo+bar" },
   ])("$text opens a fence", ({ text, ...expected }) => {
     expect(matchFenceOpen(text)).toEqual(expected);
   });
