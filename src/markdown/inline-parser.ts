@@ -80,6 +80,7 @@ export function parseInlines(
 /** Rendering is recursive, so unlimited nesting would overflow the call stack. */
 const MAX_EMPHASIS_DEPTH = 256;
 
+const FOOTNOTE_REFERENCE = /\[\^([^\][\s]{1,999})\]/y;
 const PLAIN_TEXT = /[^\\`*_~\n[\]!<&]+/y;
 const ASCII_PUNCTUATION = /[!-/:-@[-`{-~]/;
 const WHITESPACE = /\s/u;
@@ -128,7 +129,7 @@ class InlineParser {
       else if (character === "*" || character === "_" || character === "~")
         this.#parseDelimiterRun(character);
       else if (character === "\n") this.#parseLineBreak();
-      else if (character === "[") this.#openBracket(false);
+      else if (character === "[") this.#parseOpeningBracket();
       else if (character === "!" && this.#text[this.#cursor + 1] === "[") this.#openBracket(true);
       else if (character === "]") this.#closeBracket();
       else if (character === "<") this.#parseAngleBracket();
@@ -175,6 +176,23 @@ class InlineParser {
       { kind: "text", text, span: this.#span(this.#cursor + 1, end - 1) },
     ];
     this.#append({ kind: "link", url, children, span: this.#span(this.#cursor, end) });
+    this.#cursor = end;
+  }
+
+  /** `[^label]` is a footnote reference, unless `(` makes it an ordinary link. */
+  #parseOpeningBracket(): void {
+    FOOTNOTE_REFERENCE.lastIndex = this.#cursor;
+    const match = FOOTNOTE_REFERENCE.exec(this.#text);
+    const end = this.#cursor + (match?.[0].length ?? 0);
+    if (match?.[1] === undefined || this.#text[end] === "(") {
+      this.#openBracket(false);
+      return;
+    }
+    this.#append({
+      kind: "footnote-reference",
+      label: match[1],
+      span: this.#span(this.#cursor, end),
+    });
     this.#cursor = end;
   }
 

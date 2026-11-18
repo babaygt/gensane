@@ -28,6 +28,7 @@ import type {
   BlockQuote,
   CodeBlock,
   Document,
+  FootnoteDefinition,
   HtmlBlock,
   List,
   ListItem,
@@ -39,6 +40,7 @@ import type {
 } from "./ast.ts";
 import {
   type FenceOpen,
+  type FootnoteDefinitionMatch,
   type ListMarkerMatch,
   isFenceClose,
   isSameListType,
@@ -47,6 +49,7 @@ import {
   matchAtxHeading,
   matchBlockQuote,
   matchFenceOpen,
+  matchFootnoteDefinition,
   matchListMarker,
 } from "./block-rules.ts";
 import { DiagnosticCodes } from "./diagnostic-codes.ts";
@@ -90,6 +93,8 @@ function parseLines(lines: readonly SourceLine[], file: string, depth: number): 
 
 /** Indentation at which CommonMark would start an indented code block. */
 const INDENTED_CODE_WIDTH = 4;
+
+const FOOTNOTE_CONTENT_COLUMN = 4;
 
 const HTML_BLOCK_END_NAMES: Partial<Record<HtmlBlockType, string>> = {
   1: "the closing tag",
@@ -166,7 +171,9 @@ class BlockParser {
     }
 
     const marker = matchListMarker(line.text);
-    const isContainer = marker !== undefined || matchBlockQuote(line.text) !== undefined;
+    const footnote = matchFootnoteDefinition(line.text);
+    const isContainer =
+      marker !== undefined || footnote !== undefined || matchBlockQuote(line.text) !== undefined;
     if (isContainer && this.#depth >= MAX_NESTING_DEPTH) {
       this.#warn(
         DiagnosticCodes.nestingTooDeep,
@@ -177,6 +184,7 @@ class BlockParser {
       return this.#parseParagraph();
     }
     if (marker !== undefined) return this.#parseList(marker);
+    if (footnote !== undefined) return this.#parseFootnoteDefinition(footnote);
     if (isContainer) return this.#parseBlockQuote();
 
     const htmlType = matchHtmlBlockStart(line.text);
@@ -433,22 +441,22 @@ class BlockParser {
     // An item may start with at most one blank line: "-" followed by a blank is empty.
     const startsEmpty =
       marker.empty && (this.#index >= this.#lines.length || isBlank(this.#current().text));
-    if (!startsEmpty) this.#collectItemLines(marker, outer, inner);
+    if (!startsEmpty) this.#collectIndentedLines(marker.contentColumn, outer, inner);
 
     const { children, last } = this.#parseContainer(outer, inner);
     return { item: { kind: "list-item", children, span: this.#span(first, last) }, last };
   }
 
-  /** Appends the item's continuation lines to `outer` (original) and `inner` (stripped). */
-  #collectItemLines(marker: ListMarkerMatch, outer: SourceLine[], inner: SourceLine[]): void {
+  /** Appends continuation lines to `outer` (original) and `inner` (stripped). */
+  #collectIndentedLines(contentColumn: number, outer: SourceLine[], inner: SourceLine[]): void {
     let blanks: SourceLine[] = [];
     while (this.#index < this.#lines.length) {
       const line = this.#current();
       if (isBlank(line.text)) {
         blanks.push(line);
-      } else if (leadingIndent(line.text).width >= marker.contentColumn) {
+      } else if (leadingIndent(line.text).width >= contentColumn) {
         outer.push(...blanks, line);
-        inner.push(...blanks, stripColumns(line, marker.contentColumn));
+        inner.push(...blanks, stripColumns(line, contentColumn));
         blanks = [];
       } else if (blanks.length === 0 && isLazyCandidate(line, inner)) {
         outer.push(line);
@@ -460,6 +468,23 @@ class BlockParser {
     }
     // Trailing blank lines belong to whatever comes after the item.
     this.#index -= blanks.length;
+  }
+
+  /** Like a list item: the note continues on lines indented by four spaces. */
+  #parseFootnoteDefinition(match: FootnoteDefinitionMatch): FootnoteDefinition {
+    const first = this.#current();
+    const outer: SourceLine[] = [first];
+    const inner: SourceLine[] = [sliceLine(first, match.contentStart)];
+    this.#index++;
+    this.#collectIndentedLines(FOOTNOTE_CONTENT_COLUMN, outer, inner);
+
+    const { children, last } = this.#parseContainer(outer, inner);
+    return {
+      kind: "footnote-definition",
+      label: match.label,
+      children,
+      span: this.#span(first, last),
+    };
   }
 
   /**
@@ -527,7 +552,8 @@ function interruptsParagraph(text: string): boolean {
     matchFenceOpen(text) !== undefined ||
     matchAtxHeading(text) !== undefined ||
     isThematicBreak(text) ||
-    matchBlockQuote(text) !== undefined
+    matchBlockQuote(text) !== undefined ||
+    matchFootnoteDefinition(text) !== undefined
   ) {
     return true;
   }

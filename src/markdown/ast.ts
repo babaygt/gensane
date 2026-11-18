@@ -79,7 +79,18 @@ export interface RawHtml {
   readonly span: SourceSpan;
 }
 
+export interface FootnoteReference {
+  readonly kind: "footnote-reference";
+  readonly label: string;
+  /** The number of the note. Set once references are connected to their definitions. */
+  readonly number?: number;
+  /** 1 for the first reference to a note, 2 for the second, and so on. */
+  readonly referenceIndex?: number;
+  readonly span: SourceSpan;
+}
+
 export type Inline =
+  | FootnoteReference
   | RawHtml
   | Text
   | CodeSpan
@@ -122,6 +133,24 @@ export interface CodeBlock {
 
 export interface ThematicBreak {
   readonly kind: "thematic-break";
+  readonly span: SourceSpan;
+}
+
+/** `[^label]: text` where it was written. These move to `Document.footnotes` in a later pass. */
+export interface FootnoteDefinition {
+  readonly kind: "footnote-definition";
+  readonly label: string;
+  readonly children: readonly Block[];
+  readonly span: SourceSpan;
+}
+
+/** A referenced note, in the numbered list at the end of the document. */
+export interface Footnote {
+  readonly kind: "footnote";
+  readonly label: string;
+  readonly number: number;
+  readonly referenceCount: number;
+  readonly children: readonly Block[];
   readonly span: SourceSpan;
 }
 
@@ -186,6 +215,7 @@ export interface Table {
 }
 
 export type Block =
+  | FootnoteDefinition
   | HtmlBlock
   | Heading
   | Paragraph
@@ -198,5 +228,7 @@ export type Block =
 export interface Document {
   readonly kind: "document";
   readonly children: readonly Block[];
+  /** The notes of the document in display order; absent when there are none. */
+  readonly footnotes?: readonly Footnote[];
   readonly span: SourceSpan;
 }

@@ -8,6 +8,8 @@
 import { assertNever } from "../diagnostics/index.ts";
 import type {
   CalloutKind,
+  Footnote,
+  FootnoteReference,
   Block,
   Document,
   Inline,
@@ -19,7 +21,7 @@ import type {
 import { plainTextOf } from "./inline-text.ts";
 
 export function renderHtml(document: Document): string {
-  return renderBlocks(document.children);
+  return renderBlocks(document.children) + renderFootnotes(document.footnotes ?? []);
 }
 
 function renderBlocks(blocks: readonly Block[]): string {
@@ -55,6 +57,9 @@ function renderBlock(block: Block): string {
       return renderTable(block);
     case "html-block":
       return `${block.text}\n`;
+    case "footnote-definition":
+      // Definitions have moved to the end of the document by the time a tree is rendered.
+      return "";
     default:
       return assertNever(block);
   }
@@ -127,6 +132,8 @@ function renderInline(inline: Inline): string {
       return "\n";
     case "raw-html":
       return inline.text;
+    case "footnote-reference":
+      return renderFootnoteReference(inline);
     case "link":
       return `<a href="${renderUrl(inline.url)}"${renderTitle(inline.title)}>${renderInlines(inline.children)}</a>`;
     case "image": {
@@ -136,6 +143,43 @@ function renderInline(inline: Inline): string {
     default:
       return assertNever(inline);
   }
+}
+
+function renderFootnoteReference(reference: FootnoteReference): string {
+  const { label, number, referenceIndex = 1 } = reference;
+  if (number === undefined) return escapeHtml(`[^${label}]`);
+  const id = `fnref-${number}${referenceSuffix(referenceIndex)}`;
+  return `<sup class="footnote-ref"><a href="#fn-${number}" id="${id}">${number}</a></sup>`;
+}
+
+/** The first reference to a note has no suffix; later ones get `-2`, `-3` and so on. */
+function referenceSuffix(referenceIndex: number): string {
+  return referenceIndex === 1 ? "" : `-${referenceIndex}`;
+}
+
+function renderFootnotes(footnotes: readonly Footnote[]): string {
+  if (footnotes.length === 0) return "";
+  const items = footnotes.map(renderFootnote).join("");
+  return `<section class="footnotes">\n<ol>\n${items}</ol>\n</section>\n`;
+}
+
+/** The links back to the text join the last paragraph of the note, if it ends with one. */
+function renderFootnote(footnote: Footnote): string {
+  const links = Array.from({ length: footnote.referenceCount }, (_, position) =>
+    renderBackReference(footnote.number, position + 1),
+  ).join(" ");
+  const last = footnote.children.at(-1);
+  const body =
+    last?.kind === "paragraph"
+      ? `${renderBlocks(footnote.children.slice(0, -1))}<p>${renderText(last)} ${links}</p>\n`
+      : `${renderBlocks(footnote.children)}<p>${links}</p>\n`;
+  return `<li id="fn-${footnote.number}">\n${body}</li>\n`;
+}
+
+function renderBackReference(number: number, referenceIndex: number): string {
+  const suffix = referenceSuffix(referenceIndex);
+  const mark = referenceIndex === 1 ? "↩" : `↩${referenceIndex}`;
+  return `<a href="#fnref-${number}${suffix}" class="footnote-backref" aria-label="Back to reference ${number}${suffix}">${mark}</a>`;
 }
 
 function renderTitle(title: string | undefined): string {

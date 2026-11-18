@@ -11,4 +11,7 @@ export const DiagnosticCodes = {
   tableColumnMismatch: "GS104",
   nestingTooDeep: "GS105",
   unclosedHtmlBlock: "GS106",
+  unusedFootnote: "GS107",
+  undefinedFootnote: "GS108",
+  duplicateFootnote: "GS109",
 } as const satisfies Record<string, DiagnosticCode>;

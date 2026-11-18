@@ -10,6 +10,8 @@ export function plainTextOf(inlines: readonly Inline[]): string {
         case "code-span":
         case "raw-html":
           return inline.text;
+        case "footnote-reference":
+          return "";
         case "hard-break":
         case "soft-break":
           return "\n";
