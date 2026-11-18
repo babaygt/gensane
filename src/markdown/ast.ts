@@ -7,25 +7,71 @@
  *
  * The type is recursive: block quotes and list items contain blocks themselves.
  *
- * Headings and paragraphs keep their raw inline text for now. Inline syntax
- * (emphasis, links, code spans) is parsed in a later stage.
+ * Blocks with text keep it raw at first. A later stage parses it and fills `inlines`.
  */
-import type { SourceSpan } from "../diagnostics/index.ts";
+import type { SourcePosition, SourceSpan } from "../diagnostics/index.ts";
 import type { HeadingLevel } from "./block-rules.ts";
 import type { TableAlignment } from "./table-rules.ts";
 
 export type { HeadingLevel, TableAlignment };
 
+/** Maps part of a block's text back to the file: `text[index]` is at `position`. */
+export interface TextSegment {
+  readonly index: number;
+  readonly position: SourcePosition;
+}
+
+export interface Text {
+  readonly kind: "text";
+  readonly text: string;
+  readonly span: SourceSpan;
+}
+
+export interface CodeSpan {
+  readonly kind: "code-span";
+  readonly text: string;
+  readonly span: SourceSpan;
+}
+
+export interface Emphasis {
+  readonly kind: "emphasis";
+  readonly children: readonly Inline[];
+  readonly span: SourceSpan;
+}
+
+export interface Strong {
+  readonly kind: "strong";
+  readonly children: readonly Inline[];
+  readonly span: SourceSpan;
+}
+
+export interface Strikethrough {
+  readonly kind: "strikethrough";
+  readonly children: readonly Inline[];
+  readonly span: SourceSpan;
+}
+
+export interface LineBreak {
+  readonly kind: "hard-break" | "soft-break";
+  readonly span: SourceSpan;
+}
+
+export type Inline = Text | CodeSpan | Emphasis | Strong | Strikethrough | LineBreak;
+
 export interface Heading {
   readonly kind: "heading";
   readonly level: HeadingLevel;
   readonly text: string;
+  readonly segments: readonly TextSegment[];
+  readonly inlines?: readonly Inline[];
   readonly span: SourceSpan;
 }
 
 export interface Paragraph {
   readonly kind: "paragraph";
   readonly text: string;
+  readonly segments: readonly TextSegment[];
+  readonly inlines?: readonly Inline[];
   readonly span: SourceSpan;
 }
 
@@ -73,6 +119,8 @@ export interface ListItem {
 export interface TableCell {
   readonly kind: "table-cell";
   readonly text: string;
+  readonly segments: readonly TextSegment[];
+  readonly inlines?: readonly Inline[];
   readonly span: SourceSpan;
 }
 

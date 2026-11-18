@@ -6,7 +6,7 @@
  * CommonMark reference renderer, which lets us compare against its examples.
  */
 import { assertNever } from "../diagnostics/index.ts";
-import type { Block, Document, ListItem, Table, TableAlignment, TableRow } from "./ast.ts";
+import type { Block, Document, Inline, ListItem, Table, TableAlignment, TableRow } from "./ast.ts";
 
 export function renderHtml(document: Document): string {
   return renderBlocks(document.children);
@@ -19,9 +19,9 @@ function renderBlocks(blocks: readonly Block[]): string {
 function renderBlock(block: Block): string {
   switch (block.kind) {
     case "heading":
-      return `<h${block.level}>${escapeHtml(block.text)}</h${block.level}>\n`;
+      return `<h${block.level}>${renderText(block)}</h${block.level}>\n`;
     case "paragraph":
-      return `<p>${escapeHtml(block.text)}</p>\n`;
+      return `<p>${renderText(block)}</p>\n`;
     case "code": {
       const cls = block.lang === undefined ? "" : ` class="language-${escapeHtml(block.lang)}"`;
       return `<pre><code${cls}>${escapeHtml(block.text)}</code></pre>\n`;
@@ -48,13 +48,43 @@ function renderListItem(item: ListItem, tight: boolean): string {
   let html = "<li>";
   for (const child of item.children) {
     if (tight && child.kind === "paragraph") {
-      html += escapeHtml(child.text);
+      html += renderText(child);
     } else {
       if (!html.endsWith("\n")) html += "\n";
       html += renderBlock(child);
     }
   }
   return `${html}</li>\n`;
+}
+
+/** A tree that skipped the inline stage still renders, with its text shown literally. */
+function renderText(node: { readonly text: string; readonly inlines?: readonly Inline[] }): string {
+  return node.inlines === undefined ? escapeHtml(node.text) : renderInlines(node.inlines);
+}
+
+function renderInlines(inlines: readonly Inline[]): string {
+  return inlines.map(renderInline).join("");
+}
+
+function renderInline(inline: Inline): string {
+  switch (inline.kind) {
+    case "text":
+      return escapeHtml(inline.text);
+    case "code-span":
+      return `<code>${escapeHtml(inline.text)}</code>`;
+    case "emphasis":
+      return `<em>${renderInlines(inline.children)}</em>`;
+    case "strong":
+      return `<strong>${renderInlines(inline.children)}</strong>`;
+    case "strikethrough":
+      return `<del>${renderInlines(inline.children)}</del>`;
+    case "hard-break":
+      return "<br />\n";
+    case "soft-break":
+      return "\n";
+    default:
+      return assertNever(inline);
+  }
 }
 
 function renderTable(table: Table): string {
@@ -68,7 +98,7 @@ function renderRow(row: TableRow, tag: "th" | "td", alignments: readonly TableAl
   const cells = row.cells.map((cell, column) => {
     const alignment = alignments[column] ?? "none";
     const align = alignment === "none" ? "" : ` align="${alignment}"`;
-    return `<${tag}${align}>${escapeHtml(cell.text)}</${tag}>\n`;
+    return `<${tag}${align}>${renderText(cell)}</${tag}>\n`;
   });
   return `<tr>\n${cells.join("")}</tr>\n`;
 }
