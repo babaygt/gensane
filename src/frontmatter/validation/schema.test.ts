@@ -123,20 +123,32 @@ describe("dates", () => {
     ["18.11.2026", "2026-11-18"],
     ["11-18-2026", "2026-11-18"],
     ["5-13-2026", "2026-05-13"],
+    ["30-04-2026", "2026-04-30"],
+    ["29-02-2024", "2024-02-29"],
+    ["2-29-2024", "2024-02-29"],
   ])("suggests the right form for %s", (written, suggestion) => {
     const error = firstError(fullDate(), `field: ${written}`);
     expect(error?.message).toBe(`"field" must be a date, but "${written}" is text`);
     expect(error?.hint).toBe(`write it as ${suggestion}`);
   });
 
-  it.each(["03-04-2026", "32-11-2026", "11-32-2026", "18-13-2026", "13-18-2026"])(
-    "does not guess a date from %s",
-    (written) => {
-      expect(firstError(fullDate(), `field: ${written}`)?.hint).toBe(
-        "write the date as YYYY-MM-DD, with the year first",
-      );
-    },
-  );
+  it.each([
+    "03-04-2026",
+    "32-11-2026",
+    "11-32-2026",
+    "18-13-2026",
+    "13-18-2026",
+    "31-02-2026",
+    "02-31-2026",
+    "31-04-2026",
+    "29-02-2025",
+    "18-0-2026",
+    "0-13-2026",
+  ])("does not guess a date from %s", (written) => {
+    expect(firstError(fullDate(), `field: ${written}`)?.hint).toBe(
+      "write the date as YYYY-MM-DD, with the year first",
+    );
+  });
 
   it("accepts the word present for something that is still going on", () => {
     expect(check(dateOrPresent(), "field: present")).toMatchObject({
