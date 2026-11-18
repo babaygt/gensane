@@ -1,6 +1,6 @@
 /** What each type of content file must contain. The data types are inferred from these schemas. */
-import type { Diagnostic, Result } from "../diagnostics/index.ts";
-import { FrontmatterCodes } from "./diagnostic-codes.ts";
+import type { Diagnostic, Result } from "../../diagnostics/index.ts";
+import { FrontmatterCodes } from "../diagnostic-codes.ts";
 import {
   type ContentDate,
   type FieldRule,
@@ -23,7 +23,7 @@ import {
   withDefault,
   withRule,
 } from "./schema.ts";
-import type { MapValue } from "./values.ts";
+import type { MapValue } from "../values.ts";
 
 const tags = () => withDefault(listOf(text()), []);
 

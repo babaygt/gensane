@@ -17,7 +17,7 @@ import {
   validate,
   withDefault,
 } from "./schema.ts";
-import { FrontmatterCodes, type MapValue, parseFrontmatter } from "./index.ts";
+import { FrontmatterCodes, type MapValue, parseFrontmatter } from "../index.ts";
 
 function dataOf(yaml: string): MapValue {
   const result = parseFrontmatter(`---\n${yaml}\n---\n`, "post.md");

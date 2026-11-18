@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { type ContentType, FrontmatterCodes, parseFrontmatter, validateContent } from "./index.ts";
+import { type ContentType, FrontmatterCodes, parseFrontmatter, validateContent } from "../index.ts";
 
 function validated(type: ContentType, yaml: string) {
   const result = parseFrontmatter(`---\n${yaml}\n---\n`, "content.md");

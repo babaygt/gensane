@@ -16,19 +16,19 @@ import {
   ok,
 } from "../diagnostics/index.ts";
 import { FrontmatterCodes } from "./diagnostic-codes.ts";
-import { type SourceLine, positionInLine, splitSourceLines } from "./source-lines.ts";
+import { type SourceLine, positionInLine, splitSourceLines } from "./parsing/source-lines.ts";
 import type { MapValue } from "./values.ts";
-import { parseYamlSubset } from "./yaml-parser.ts";
+import { parseYamlSubset } from "./parsing/yaml-parser.ts";
 
 export {
   type ContentFields,
   type ContentType,
   contentSchemas,
   validateContent,
-} from "./content-types.ts";
+} from "./validation/content-types.ts";
 export { FrontmatterCodes } from "./diagnostic-codes.ts";
 export { toPlainData } from "./plain-data.ts";
-export type { ContentDate, Validated } from "./schema.ts";
+export type { ContentDate, Validated } from "./validation/schema.ts";
 export type {
   BooleanValue,
   DateValue,
