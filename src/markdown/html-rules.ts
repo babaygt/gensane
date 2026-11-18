@@ -24,7 +24,7 @@ const VERBATIM_ELEMENTS = "pre|script|style|textarea";
 const BLOCK_ELEMENTS =
   "address|article|aside|base|basefont|blockquote|body|caption|center|col|colgroup|dd|details|" +
   "dialog|dir|div|dl|dt|fieldset|figcaption|figure|footer|form|frame|frameset|h1|h2|h3|h4|h5|h6|" +
-  "head|header|hr|html|iframe|legend|li|link|main|menu|menuitem|meta|nav|noframes|ol|optgroup|" +
+  "head|header|hr|html|iframe|legend|li|link|main|menu|menuitem|nav|noframes|ol|optgroup|" +
   "option|p|param|search|section|summary|table|tbody|td|tfoot|th|thead|title|tr|track|ul";
 
 const BLOCK_STARTS: readonly (readonly [MarkedHtmlBlockType | 6, RegExp])[] = [
@@ -37,13 +37,13 @@ const BLOCK_STARTS: readonly (readonly [MarkedHtmlBlockType | 6, RegExp])[] = [
 ];
 
 const COMPLETE_TAG_LINE = new RegExp(`^ {0,3}(?:${OPEN_TAG}|${CLOSING_TAG})[ \\t]*$`);
-const VERBATIM_TAG_NAME = new RegExp(`^ {0,3}</?(?:${VERBATIM_ELEMENTS})[ \\t/>]`, "i");
+const VERBATIM_OPEN_TAG = new RegExp(`^ {0,3}<(?:${VERBATIM_ELEMENTS})[ \\t/>]`, "i");
 
 export function matchHtmlBlockStart(text: string): HtmlBlockType | undefined {
   for (const [type, pattern] of BLOCK_STARTS) {
     if (pattern.test(text)) return type;
   }
-  return COMPLETE_TAG_LINE.test(text) && !VERBATIM_TAG_NAME.test(text) ? 7 : undefined;
+  return COMPLETE_TAG_LINE.test(text) && !VERBATIM_OPEN_TAG.test(text) ? 7 : undefined;
 }
 
 const BLOCK_ENDS: Readonly<Record<MarkedHtmlBlockType, RegExp>> = {

@@ -22,6 +22,8 @@ describe("matchHtmlBlockStart", () => {
     ["</ins>  ", 7],
     ["<custom-tag>", 7],
     ["<input disabled />", 7],
+    ["</pre>", 7],
+    ["<meta charset='utf-8'>", 7],
   ])("%j is type %i", (text, type) => {
     expect(matchHtmlBlockStart(text)).toBe(type);
   });
@@ -30,7 +32,8 @@ describe("matchHtmlBlockStart", () => {
     ["    <div>", "four spaces of indentation"],
     ["<divider text", "a longer name is not a block tag"],
     ["<a href='x'> text", "type 7 needs the tag alone on its line"],
-    ["</pre>", "a closing tag of a type 1 element"],
+    ["<pre/>", "an open tag of a type 1 element"],
+    ["<meta charset='utf-8'> text", "meta is not one of the type 6 names"],
     ["<a href='x'", "an unfinished tag"],
     ["text <div>", "does not start the line"],
     ["<!", "not a declaration"],
