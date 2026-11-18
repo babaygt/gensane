@@ -34,6 +34,7 @@ import type {
   Table,
   TableCell,
   TableRow,
+  TextSegment,
 } from "./ast.ts";
 import {
   type FenceOpen,
@@ -129,6 +130,16 @@ class BlockParser {
         kind: "heading",
         level: heading.level,
         text: heading.content,
+        segments: [
+          {
+            index: 0,
+            position: position(
+              line,
+              line.start +
+                line.text.indexOf(heading.content, leadingIndent(line.text).length + heading.level),
+            ),
+          },
+        ],
         span: this.#span(line, line),
       };
     }
@@ -202,6 +213,8 @@ class BlockParser {
 
     this.#warnIfColumnsDiffer(this.#index);
     const texts = [withoutIndent(first.text)];
+    const segments = [contentSegment(first, 0)];
+    let textLength = (texts[0] ?? "").length;
     let last = first;
     this.#index++;
 
@@ -215,12 +228,20 @@ class BlockParser {
       if (interrupts || this.#tableAlignmentsAt(this.#index) !== undefined) break;
 
       this.#warnIfColumnsDiffer(this.#index);
-      texts.push(withoutIndent(line.text));
+      const text = withoutIndent(line.text);
+      segments.push(contentSegment(line, textLength + 1));
+      textLength += text.length + 1;
+      texts.push(text);
       last = line;
       this.#index++;
     }
 
-    return { kind: "paragraph", text: texts.join("\n").trimEnd(), span: this.#span(first, last) };
+    return {
+      kind: "paragraph",
+      text: texts.join("\n").trimEnd(),
+      segments,
+      span: this.#span(first, last),
+    };
   }
 
   #parseTable(alignments: readonly TableAlignment[]): Table {
@@ -249,6 +270,7 @@ class BlockParser {
       return {
         kind: "table-cell",
         text: cell?.text ?? "",
+        segments: cellSegments(line, start, end),
         span: { file: this.#file, start: position(line, start), end: position(line, end) },
       };
     });
@@ -486,6 +508,25 @@ function hasBlankLineBetweenChildren(item: ListItem): boolean {
     const previous = item.children[i - 1];
     return previous !== undefined && child.span.start.line > previous.span.end.line + 1;
   });
+}
+
+function contentSegment(line: SourceLine, index: number): TextSegment {
+  return { index, position: position(line, line.start + leadingIndent(line.text).length) };
+}
+
+/** An escaped pipe loses its backslash in the cell text, so positions shift after each one. */
+function cellSegments(line: SourceLine, start: number, end: number): TextSegment[] {
+  const segments: TextSegment[] = [{ index: 0, position: position(line, start) }];
+  const raw = line.text.slice(start - line.start, end - line.start);
+  let removed = 0;
+  for (const match of raw.matchAll(/\\\|/g)) {
+    removed++;
+    segments.push({
+      index: match.index + 1 - removed,
+      position: position(line, start + match.index + 1),
+    });
+  }
+  return segments;
 }
 
 function position(line: SourceLine, offset: number): SourcePosition {
