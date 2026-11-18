@@ -29,6 +29,9 @@ describe("inline links", () => {
     ["[a](/ü)", '<a href="/%C3%BC">a</a>'],
     ["[a](/%20b)", '<a href="/%20b">a</a>'],
     ['[a](/"b)', '<a href="/%22b">a</a>'],
+    ['[a](<b>"t")', "[a](&lt;b&gt;&quot;t&quot;)"],
+    ["*a [b*c](/u)", '*a <a href="/u">b*c</a>'],
+    ["[a](/\ud83d)", '<a href="/%EF%BF%BD">a</a>'],
   ])("%s", (source, expected) => {
     expect(inline(source)).toBe(expected);
   });
@@ -46,6 +49,10 @@ describe("reference links", () => {
     ["[a][other]", "[a][other]"],
   ])("%s", (source, expected) => {
     expect(inline(`${source}${defs}`)).toBe(expected);
+  });
+
+  it("ends a label at the first bracket, even inside a code span", () => {
+    expect(inline("[a`]`b]\n\n[a`]: /u")).toBe("[a<code>]</code>b]");
   });
 
   it("uses the first definition of a label", () => {
@@ -79,6 +86,8 @@ describe("images", () => {
     ["![a [b](/v)](/u)", '<img src="/u" alt="a b" />'],
     ["[![a](/i)](/u)", '<a href="/u"><img src="/i" alt="a" /></a>'],
     ["!a", "!a"],
+    ["![<](/u)", '<img src="/u" alt="&lt;" />'],
+    ["![a\nb](/u)", '<img src="/u" alt="a\nb" />'],
     ["\\![a](/u)", '!<a href="/u">a</a>'],
   ])("%s", (source, expected) => {
     expect(inline(source)).toBe(expected);

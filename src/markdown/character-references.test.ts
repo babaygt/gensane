@@ -15,6 +15,7 @@ describe("decodeCharacterReference", () => {
     ["&#0;", "\uFFFD"],
     ["&#xD800;", "\uFFFD"],
     ["&#x10FFFF;", "\u{10FFFF}"],
+    ["&#x110000;", "\uFFFD"],
   ])("%s", (source, text) => {
     expect(decodeCharacterReference(source, 0)).toEqual({ text, end: source.length });
   });
@@ -28,6 +29,7 @@ describe("decodeCharacterReference", () => {
     ["&#abcdef0;", "letters without x"],
     ["&ThisIsNotDefined;", "unknown name"],
     ["& amp;", "a space"],
+    ["&constructor;", "a property every JavaScript object has"],
   ])("rejects %s (%s)", (source) => {
     expect(decodeCharacterReference(source, 0)).toBeUndefined();
   });
