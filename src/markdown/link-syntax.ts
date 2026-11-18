@@ -14,27 +14,31 @@ export function normalizeLabel(label: string): string {
   return label.trim().replace(/\s+/g, " ").toLowerCase().toUpperCase();
 }
 
-export function skipWhitespace(text: string, pos: number): number {
-  let i = pos;
-  while (text[i] === " " || text[i] === "\t" || text[i] === "\n") i++;
-  return i;
+export function skipWhitespace(text: string, position: number): number {
+  let index = position;
+  while (text[index] === " " || text[index] === "\t" || text[index] === "\n") index++;
+  return index;
 }
 
 /** `[label]`: no unescaped brackets inside, and at least one non-space character. */
 export function parseLinkLabel(
   text: string,
-  pos: number,
+  position: number,
 ): { label: string; end: number } | undefined {
-  if (text[pos] !== "[") return undefined;
-  for (let i = pos + 1; i - pos - 1 <= MAX_LABEL_LENGTH && i < text.length; i++) {
-    const ch = text[i];
-    if (ch === "\\") {
-      i++;
-    } else if (ch === "[") {
+  if (text[position] !== "[") return undefined;
+  for (
+    let index = position + 1;
+    index - position - 1 <= MAX_LABEL_LENGTH && index < text.length;
+    index++
+  ) {
+    const character = text[index];
+    if (character === "\\") {
+      index++;
+    } else if (character === "[") {
       return undefined;
-    } else if (ch === "]") {
-      const label = text.slice(pos + 1, i);
-      return label.trim() === "" ? undefined : { label, end: i + 1 };
+    } else if (character === "]") {
+      const label = text.slice(position + 1, index);
+      return label.trim() === "" ? undefined : { label, end: index + 1 };
     }
   }
   return undefined;
@@ -43,41 +47,44 @@ export function parseLinkLabel(
 /** `<with spaces>` or a run of characters without spaces and with balanced parentheses. */
 export function parseLinkDestination(
   text: string,
-  pos: number,
+  position: number,
 ): { url: string; end: number } | undefined {
   const end =
-    text[pos] === "<" ? endOfAngleDestination(text, pos) : endOfBareDestination(text, pos);
+    text[position] === "<"
+      ? endOfAngleDestination(text, position)
+      : endOfBareDestination(text, position);
   if (end === undefined) return undefined;
-  const raw = text[pos] === "<" ? text.slice(pos + 1, end - 1) : text.slice(pos, end);
+  const raw =
+    text[position] === "<" ? text.slice(position + 1, end - 1) : text.slice(position, end);
   return { url: unescapeString(raw), end };
 }
 
-function endOfAngleDestination(text: string, pos: number): number | undefined {
-  for (let i = pos + 1; i < text.length; i++) {
-    const ch = text[i];
-    if (ch === "\n" || ch === "<") return undefined;
-    if (ch === ">") return i + 1;
-    if (ch === "\\" && ASCII_PUNCTUATION.test(text[i + 1] ?? "")) i++;
+function endOfAngleDestination(text: string, position: number): number | undefined {
+  for (let index = position + 1; index < text.length; index++) {
+    const character = text[index];
+    if (character === "\n" || character === "<") return undefined;
+    if (character === ">") return index + 1;
+    if (character === "\\" && ASCII_PUNCTUATION.test(text[index + 1] ?? "")) index++;
   }
   return undefined;
 }
 
-function endOfBareDestination(text: string, pos: number): number | undefined {
+function endOfBareDestination(text: string, position: number): number | undefined {
   let depth = 0;
-  let i = pos;
-  for (; i < text.length; i++) {
-    const ch = text[i] ?? "";
-    if (ch <= " " || ch === "\x7f") break;
-    if (ch === "\\" && ASCII_PUNCTUATION.test(text[i + 1] ?? "")) i++;
-    else if (ch === "(") {
+  let index = position;
+  for (; index < text.length; index++) {
+    const character = text[index] ?? "";
+    if (character <= " " || character === "\x7f") break;
+    if (character === "\\" && ASCII_PUNCTUATION.test(text[index + 1] ?? "")) index++;
+    else if (character === "(") {
       depth++;
       if (depth > MAX_DESTINATION_PARENTHESES) return undefined;
-    } else if (ch === ")") {
+    } else if (character === ")") {
       if (depth === 0) break;
       depth--;
     }
   }
-  return i === pos || depth !== 0 ? undefined : i;
+  return index === position || depth !== 0 ? undefined : index;
 }
 
 const TITLE_CLOSERS: Readonly<Record<string, string>> = { '"': '"', "'": "'", "(": ")" };
@@ -85,16 +92,17 @@ const TITLE_CLOSERS: Readonly<Record<string, string>> = { '"': '"', "'": "'", "(
 /** `"title"`, `'title'` or `(title)`. */
 export function parseLinkTitle(
   text: string,
-  pos: number,
+  position: number,
 ): { title: string; end: number } | undefined {
-  const opener = text[pos] ?? "";
+  const opener = text[position] ?? "";
   const closer = TITLE_CLOSERS[opener];
   if (closer === undefined) return undefined;
-  for (let i = pos + 1; i < text.length; i++) {
-    const ch = text[i];
-    if (ch === "\\") i++;
-    else if (ch === closer) return { title: unescapeString(text.slice(pos + 1, i)), end: i + 1 };
-    else if (ch === "(" && opener === "(") return undefined;
+  for (let index = position + 1; index < text.length; index++) {
+    const character = text[index];
+    if (character === "\\") index++;
+    else if (character === closer)
+      return { title: unescapeString(text.slice(position + 1, index)), end: index + 1 };
+    else if (character === "(" && opener === "(") return undefined;
   }
   return undefined;
 }
@@ -111,9 +119,9 @@ export interface ReferenceDefinition {
 /** `[label]: destination "optional title"`, each part may be on its own line. */
 export function parseReferenceDefinition(
   text: string,
-  pos: number,
+  position: number,
 ): ReferenceDefinition | undefined {
-  const label = parseLinkLabel(text, pos);
+  const label = parseLinkLabel(text, position);
   if (label === undefined || text[label.end] !== ":") return undefined;
   const destination = parseLinkDestination(text, skipToNextLine(text, label.end + 1));
   if (destination === undefined) return undefined;
@@ -133,21 +141,21 @@ export function parseReferenceDefinition(
 }
 
 /** Skips spaces and at most one line ending. */
-function skipToNextLine(text: string, pos: number): number {
-  let i = pos;
-  while (text[i] === " " || text[i] === "\t") i++;
-  if (text[i] !== "\n") return i;
-  i++;
-  while (text[i] === " " || text[i] === "\t") i++;
-  return i;
+function skipToNextLine(text: string, position: number): number {
+  let index = position;
+  while (text[index] === " " || text[index] === "\t") index++;
+  if (text[index] !== "\n") return index;
+  index++;
+  while (text[index] === " " || text[index] === "\t") index++;
+  return index;
 }
 
 /** The start of the next line, if only spaces remain on this one. */
-function endOfLine(text: string, pos: number): number | undefined {
-  let i = pos;
-  while (text[i] === " " || text[i] === "\t") i++;
-  if (i >= text.length) return i;
-  return text[i] === "\n" ? i + 1 : undefined;
+function endOfLine(text: string, position: number): number | undefined {
+  let index = position;
+  while (text[index] === " " || text[index] === "\t") index++;
+  if (index >= text.length) return index;
+  return text[index] === "\n" ? index + 1 : undefined;
 }
 
 // Both patterns come from the CommonMark spec, section "Autolinks".
@@ -158,27 +166,27 @@ const EMAIL_AUTOLINK =
 /** `<https://example.com>` or `<me@example.com>`. */
 export function parseAutolink(
   text: string,
-  pos: number,
+  position: number,
 ): { url: string; text: string; end: number } | undefined {
-  const uriEnd = endOfUriAutolink(text, pos);
+  const uriEnd = endOfUriAutolink(text, position);
   if (uriEnd !== undefined) {
-    const url = text.slice(pos + 1, uriEnd - 1);
+    const url = text.slice(position + 1, uriEnd - 1);
     return { url, text: url, end: uriEnd };
   }
-  EMAIL_AUTOLINK.lastIndex = pos;
+  EMAIL_AUTOLINK.lastIndex = position;
   const email = EMAIL_AUTOLINK.exec(text);
   if (email?.[1] === undefined) return undefined;
-  return { url: `mailto:${email[1]}`, text: email[1], end: pos + email[0].length };
+  return { url: `mailto:${email[1]}`, text: email[1], end: position + email[0].length };
 }
 
 /** After the scheme, anything goes except spaces, control characters, `<` and `>`. */
-function endOfUriAutolink(text: string, pos: number): number | undefined {
-  URI_SCHEME.lastIndex = pos;
+function endOfUriAutolink(text: string, position: number): number | undefined {
+  URI_SCHEME.lastIndex = position;
   if (!URI_SCHEME.test(text)) return undefined;
-  for (let i = URI_SCHEME.lastIndex; i < text.length; i++) {
-    const ch = text[i] ?? "";
-    if (ch === ">") return i + 1;
-    if (ch === "<" || ch <= " " || ch === "\x7f") return undefined;
+  for (let index = URI_SCHEME.lastIndex; index < text.length; index++) {
+    const character = text[index] ?? "";
+    if (character === ">") return index + 1;
+    if (character === "<" || character <= " " || character === "\x7f") return undefined;
   }
   return undefined;
 }

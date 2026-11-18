@@ -14,11 +14,11 @@ describe("splitLines", () => {
   });
 
   it("does not create an extra empty line after a trailing newline", () => {
-    expect(splitLines("ab\n").map((l) => l.text)).toEqual(["ab"]);
+    expect(splitLines("ab\n").map((line) => line.text)).toEqual(["ab"]);
   });
 
   it("keeps empty lines in the middle", () => {
-    expect(splitLines("a\n\nb").map((l) => l.text)).toEqual(["a", "", "b"]);
+    expect(splitLines("a\n\nb").map((line) => line.text)).toEqual(["a", "", "b"]);
   });
 
   it.each([
@@ -27,7 +27,7 @@ describe("splitLines", () => {
     ["\\r", "a\rb"],
   ])("accepts %s as a line ending", (_, source) => {
     const lines = splitLines(source);
-    expect(lines.map((l) => l.text)).toEqual(["a", "b"]);
+    expect(lines.map((line) => line.text)).toEqual(["a", "b"]);
     expect(lines[1]?.start).toBe(source.length - 1);
   });
 });

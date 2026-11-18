@@ -5,12 +5,15 @@ import { type SourceFile, findViolations } from "./import-rules.ts";
 
 const packageRoot = join(import.meta.dirname, "..", "..");
 
-async function loadSources(dir: string): Promise<SourceFile[]> {
-  const entries = await readdir(join(packageRoot, dir), { recursive: true, withFileTypes: true });
-  const tsFiles = entries.filter((e) => e.isFile() && e.name.endsWith(".ts"));
+async function loadSources(directory: string): Promise<SourceFile[]> {
+  const entries = await readdir(join(packageRoot, directory), {
+    recursive: true,
+    withFileTypes: true,
+  });
+  const tsFiles = entries.filter((entry) => entry.isFile() && entry.name.endsWith(".ts"));
   return Promise.all(
-    tsFiles.map(async (e) => {
-      const absolute = join(e.parentPath, e.name);
+    tsFiles.map(async (entry) => {
+      const absolute = join(entry.parentPath, entry.name);
       const path = relative(packageRoot, absolute).split(sep).join("/");
       return { path, text: await readFile(absolute, "utf8") };
     }),

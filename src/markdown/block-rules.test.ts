@@ -78,14 +78,14 @@ describe("matchAtxHeading", () => {
 
 describe("matchFenceOpen", () => {
   it.each([
-    { text: "```", char: "`", length: 3, indent: 0, info: "" },
-    { text: "~~~", char: "~", length: 3, indent: 0, info: "" },
-    { text: "`````", char: "`", length: 5, indent: 0, info: "" },
-    { text: "```ts", char: "`", length: 3, indent: 0, info: "ts" },
-    { text: "```  ts title=x  ", char: "`", length: 3, indent: 0, info: "ts title=x" },
-    { text: "  ```", char: "`", length: 3, indent: 2, info: "" },
-    { text: "~~~ aa ``` ~~~", char: "~", length: 3, indent: 0, info: "aa ``` ~~~" },
-    { text: "``` foo\\+bar", char: "`", length: 3, indent: 0, info: "foo+bar" },
+    { text: "```", character: "`", length: 3, indent: 0, infoString: "" },
+    { text: "~~~", character: "~", length: 3, indent: 0, infoString: "" },
+    { text: "`````", character: "`", length: 5, indent: 0, infoString: "" },
+    { text: "```ts", character: "`", length: 3, indent: 0, infoString: "ts" },
+    { text: "```  ts title=x  ", character: "`", length: 3, indent: 0, infoString: "ts title=x" },
+    { text: "  ```", character: "`", length: 3, indent: 2, infoString: "" },
+    { text: "~~~ aa ``` ~~~", character: "~", length: 3, indent: 0, infoString: "aa ``` ~~~" },
+    { text: "``` foo\\+bar", character: "`", length: 3, indent: 0, infoString: "foo+bar" },
   ])("$text opens a fence", ({ text, ...expected }) => {
     expect(matchFenceOpen(text)).toEqual(expected);
   });
@@ -101,7 +101,7 @@ describe("matchFenceOpen", () => {
 });
 
 describe("isFenceClose", () => {
-  const backticks = { char: "`", length: 3, indent: 0, info: "" } as const;
+  const backticks = { character: "`", length: 3, indent: 0, infoString: "" } as const;
 
   it.each(["```", "````", "   ```", "```   "])("%j closes a ``` fence", (text) => {
     expect(isFenceClose(text, backticks)).toBe(true);
@@ -123,8 +123,8 @@ describe("isSetextUnderline", () => {
     ["=", "="],
     ["---", "-"],
     ["  ---   ", "-"],
-  ])("%j is a %s underline", (text, char) => {
-    expect(isSetextUnderline(text)).toBe(char);
+  ])("%j is a %s underline", (text, character) => {
+    expect(isSetextUnderline(text)).toBe(character);
   });
 
   it.each(["- - -", "=-=", "    ===", "== x", "***"])("%j is not", (text) => {
@@ -153,21 +153,21 @@ describe("matchListMarker", () => {
   it.each([
     {
       text: "- a",
-      type: { kind: "bullet", char: "-" },
+      type: { kind: "bullet", character: "-" },
       contentColumn: 2,
       contentStart: 2,
       empty: false,
     },
     {
       text: "* a",
-      type: { kind: "bullet", char: "*" },
+      type: { kind: "bullet", character: "*" },
       contentColumn: 2,
       contentStart: 2,
       empty: false,
     },
     {
       text: "+ a",
-      type: { kind: "bullet", char: "+" },
+      type: { kind: "bullet", character: "+" },
       contentColumn: 2,
       contentStart: 2,
       empty: false,
@@ -202,28 +202,28 @@ describe("matchListMarker", () => {
     },
     {
       text: "-   a",
-      type: { kind: "bullet", char: "-" },
+      type: { kind: "bullet", character: "-" },
       contentColumn: 4,
       contentStart: 4,
       empty: false,
     }, // up to 4 spaces after the marker belong to it
     {
       text: "-      a",
-      type: { kind: "bullet", char: "-" },
+      type: { kind: "bullet", character: "-" },
       contentColumn: 2,
       contentStart: 2,
       empty: false,
     }, // 5+ spaces: only one belongs to the marker
     {
       text: "-",
-      type: { kind: "bullet", char: "-" },
+      type: { kind: "bullet", character: "-" },
       contentColumn: 2,
       contentStart: 1,
       empty: true,
     },
     {
       text: "-   ",
-      type: { kind: "bullet", char: "-" },
+      type: { kind: "bullet", character: "-" },
       contentColumn: 2,
       contentStart: 4,
       empty: true,
@@ -244,24 +244,31 @@ describe("matchListMarker", () => {
   });
 });
 
-const dot = (start: number) => ({ kind: "ordered", start, delimiter: "." }) as const;
+const dotDelimiter = (start: number) => ({ kind: "ordered", start, delimiter: "." }) as const;
 
 describe("isSameListType", () => {
   it("matches bullets with the same character", () => {
-    expect(isSameListType({ kind: "bullet", char: "-" }, { kind: "bullet", char: "-" })).toBe(true);
-    expect(isSameListType({ kind: "bullet", char: "-" }, { kind: "bullet", char: "*" })).toBe(
+    expect(
+      isSameListType({ kind: "bullet", character: "-" }, { kind: "bullet", character: "-" }),
+    ).toBe(true);
+    expect(
+      isSameListType({ kind: "bullet", character: "-" }, { kind: "bullet", character: "*" }),
+    ).toBe(false);
+  });
+
+  it("matches ordered lists with the same delimiter, whatever the number", () => {
+    expect(isSameListType(dotDelimiter(1), dotDelimiter(7))).toBe(true);
+    expect(isSameListType(dotDelimiter(1), { kind: "ordered", start: 2, delimiter: ")" })).toBe(
       false,
     );
   });
 
-  it("matches ordered lists with the same delimiter, whatever the number", () => {
-    expect(isSameListType(dot(1), dot(7))).toBe(true);
-    expect(isSameListType(dot(1), { kind: "ordered", start: 2, delimiter: ")" })).toBe(false);
-  });
-
   it("never matches a bullet with an ordered marker", () => {
     expect(
-      isSameListType({ kind: "bullet", char: "-" }, { kind: "ordered", start: 1, delimiter: "." }),
+      isSameListType(
+        { kind: "bullet", character: "-" },
+        { kind: "ordered", start: 1, delimiter: "." },
+      ),
     ).toBe(false);
   });
 });

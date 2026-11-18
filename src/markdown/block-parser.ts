@@ -89,7 +89,7 @@ function parseLines(lines: readonly SourceLine[], file: string, depth: number): 
 }
 
 /** Indentation at which CommonMark would start an indented code block. */
-const CODE_INDENT = 4;
+const INDENTED_CODE_WIDTH = 4;
 
 const HTML_BLOCK_END_NAMES: Partial<Record<HtmlBlockType, string>> = {
   1: "the closing tag",
@@ -208,7 +208,7 @@ class BlockParser {
     }
 
     if (!closed) {
-      const fence = open.char.repeat(open.length);
+      const fence = open.character.repeat(open.length);
       this.#warn(
         DiagnosticCodes.unclosedCodeFence,
         first,
@@ -217,19 +217,19 @@ class BlockParser {
       );
     }
 
-    const lang = open.info.split(/[ \t]/)[0];
+    const language = open.infoString.split(/[ \t]/)[0];
     return {
       kind: "code",
-      info: open.info,
-      ...(lang ? { lang } : {}),
-      text: content.map((l) => `${l}\n`).join(""),
+      infoString: open.infoString,
+      ...(language ? { language } : {}),
+      text: content.map((contentLine) => `${contentLine}\n`).join(""),
       span: this.#span(first, last),
     };
   }
 
   #parseParagraph(): Paragraph {
     const first = this.#current();
-    if (leadingIndent(first.text).width >= CODE_INDENT) {
+    if (leadingIndent(first.text).width >= INDENTED_CODE_WIDTH) {
       this.#warn(
         DiagnosticCodes.indentedCode,
         first,
@@ -342,7 +342,7 @@ class BlockParser {
     const header = this.#lines[index];
     const line = this.#lines[index + 1];
     if (header === undefined || line === undefined || header.lazy || line.lazy) return undefined;
-    if (leadingIndent(header.text).width >= CODE_INDENT || interruptsParagraph(line.text)) {
+    if (leadingIndent(header.text).width >= INDENTED_CODE_WIDTH || interruptsParagraph(line.text)) {
       return undefined;
     }
     const alignments = matchDelimiterRow(line.text);
@@ -566,8 +566,8 @@ function startsBlock(text: string): boolean {
 
 /** A list is loose if any item has a blank line between two of its blocks. */
 function hasBlankLineBetweenChildren(item: ListItem): boolean {
-  return item.children.some((child, i) => {
-    const previous = item.children[i - 1];
+  return item.children.some((child, childIndex) => {
+    const previous = item.children[childIndex - 1];
     return previous !== undefined && child.span.start.line > previous.span.end.line + 1;
   });
 }
@@ -601,7 +601,7 @@ function withoutIndent(text: string): string {
 
 /** Removes up to `count` leading spaces (used for content inside an indented fence). */
 function removeSpaces(text: string, count: number): string {
-  let i = 0;
-  while (i < count && text[i] === " ") i++;
-  return text.slice(i);
+  let removed = 0;
+  while (removed < count && text[removed] === " ") removed++;
+  return text.slice(removed);
 }

@@ -68,12 +68,16 @@ describe("findViolations", () => {
     `import "path";`,
   ])("rejects Node built-ins in pure modules: %s", (text) => {
     const files = [{ path: "src/core/build.ts", text }];
-    expect(findViolations(files).map((v) => v.rule)).toEqual(["pure-module-imports-node"]);
+    expect(findViolations(files).map((violation) => violation.rule)).toEqual([
+      "pure-module-imports-node",
+    ]);
   });
 
   it("treats a module it has never heard of as pure", () => {
     const files = [{ path: "src/brand-new-module/x.ts", text: `import "node:fs";` }];
-    expect(findViolations(files).map((v) => v.rule)).toEqual(["pure-module-imports-node"]);
+    expect(findViolations(files).map((violation) => violation.rule)).toEqual([
+      "pure-module-imports-node",
+    ]);
   });
 
   it("allows Node built-ins in I/O modules", () => {

@@ -21,20 +21,25 @@ const gapReasons = new Map<number, string>(
   ),
 );
 
-describe.each([...new Set(examples.map((e) => e.section))])("CommonMark: %s", (section) => {
-  const inSection = examples.filter((e) => e.section === section);
-  const supported = inSection.filter((e) => !gapReasons.has(e.example));
-  const gaps = inSection.filter((e) => gapReasons.has(e.example));
+describe.each([...new Set(examples.map((example) => example.section))])(
+  "CommonMark: %s",
+  (section) => {
+    const inSection = examples.filter((example) => example.section === section);
+    const supported = inSection.filter((example) => !gapReasons.has(example.example));
+    const gaps = inSection.filter((example) => gapReasons.has(example.example));
 
-  it.each(supported.map((e) => [e.example, e] as const))("example %i", (_, example) => {
-    expect(markdownToHtml(example.markdown, "spec.md").html).toBe(example.html);
-  });
+    it.each(supported.map((example) => [example.example, example] as const))(
+      "example %i",
+      (_, example) => {
+        expect(markdownToHtml(example.markdown, "spec.md").html).toBe(example.html);
+      },
+    );
 
-  // A ratchet: when a gap gets fixed, this fails until the example leaves the list.
-  it.each(gaps.map((e) => [e.example, gapReasons.get(e.example), e] as const))(
-    "example %i is still a known gap (%s)",
-    (_, _reason, example) => {
+    // A ratchet: when a gap gets fixed, this fails until the example leaves the list.
+    it.each(
+      gaps.map((example) => [example.example, gapReasons.get(example.example), example] as const),
+    )("example %i is still a known gap (%s)", (_, _reason, example) => {
       expect(markdownToHtml(example.markdown, "spec.md").html).not.toBe(example.html);
-    },
-  );
-});
+    });
+  },
+);

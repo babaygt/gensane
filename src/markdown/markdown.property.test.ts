@@ -102,7 +102,10 @@ describe("Markdown parser properties", () => {
     fc.assert(
       fc.property(markdownLike, (source) => {
         const { document, diagnostics } = parseMarkdown(source, "x.md");
-        const spans = [...allSpans(document.children), ...diagnostics.map((d) => d.span)];
+        const spans = [
+          ...allSpans(document.children),
+          ...diagnostics.map((diagnostic) => diagnostic.span),
+        ];
         for (const span of spans) {
           expect(span.start).toEqual(positionAt(source, span.start.offset));
           expect(span.end).toEqual(positionAt(source, span.end.offset));
