@@ -29,6 +29,8 @@ interface DelimiterRun {
 /** A linked list keeps inserting and removing nodes cheap while emphasis is paired. */
 interface Entry {
   inline: Inline | undefined;
+  /** How many levels of emphasis this node contains. */
+  depth: number;
   run: DelimiterRun | undefined;
   previous: Entry | undefined;
   next: Entry | undefined;
@@ -42,6 +44,9 @@ export function parseInlines(
   return new InlineParser(text, segments, file).parse();
 }
 
+/** Rendering is recursive, so unlimited nesting would overflow the call stack. */
+const MAX_EMPHASIS_DEPTH = 256;
+
 const PLAIN_TEXT = /[^\\`*_~\n]+/y;
 const ASCII_PUNCTUATION = /[!-/:-@[-`{-~]/;
 const WHITESPACE = /\s/u;
@@ -53,6 +58,7 @@ class InlineParser {
   readonly #file: string;
   readonly #head: Entry = {
     inline: undefined,
+    depth: 0,
     run: undefined,
     previous: undefined,
     next: undefined,
@@ -218,7 +224,10 @@ class InlineParser {
         closer = next;
         continue;
       }
-      this.#wrap(opener, closer);
+      // Past the limit, all remaining delimiters simply stay as text.
+      const depth = this.#depthBetween(opener, closer) + 1;
+      if (depth > MAX_EMPHASIS_DEPTH) return;
+      this.#wrap(opener, closer, depth);
       if (opener.end === opener.start) this.#removeRunAndEntry(opener);
       if (closer.end === closer.start) {
         const next: DelimiterRun | undefined = closer.next;
@@ -235,8 +244,16 @@ class InlineParser {
     return undefined;
   }
 
+  #depthBetween(opener: DelimiterRun, closer: DelimiterRun): number {
+    let depth = 0;
+    for (let entry = opener.entry.next; entry !== closer.entry; entry = entry?.next) {
+      depth = Math.max(depth, entry?.depth ?? 0);
+    }
+    return depth;
+  }
+
   /** Moves everything between two runs into a new node, using up delimiter characters. */
-  #wrap(opener: DelimiterRun, closer: DelimiterRun): void {
+  #wrap(opener: DelimiterRun, closer: DelimiterRun, depth: number): void {
     const bothDouble = opener.end - opener.start >= 2 && closer.end - closer.start >= 2;
     const used = bothDouble ? 2 : 1;
     const children = this.#collect(opener.entry.next, closer.entry);
@@ -251,6 +268,7 @@ class InlineParser {
 
     const entry: Entry = {
       inline,
+      depth,
       run: undefined,
       previous: opener.entry,
       next: closer.entry,
@@ -301,6 +319,7 @@ class InlineParser {
   #appendEntry(inline: Inline | undefined): Entry {
     const entry: Entry = {
       inline,
+      depth: 0,
       run: undefined,
       previous: this.#tail,
       next: undefined,

@@ -83,6 +83,19 @@ describe("emphasis and strong emphasis", () => {
   });
 });
 
+const nested = (levels: number) => `${"*a ".repeat(levels)}b${" c*".repeat(levels)}`;
+
+describe("emphasis nesting limit", () => {
+  it("keeps 256 levels", () => {
+    expect(inline(nested(256)).match(/<em>/g)).toHaveLength(256);
+  });
+
+  it("does not crash on thousands of levels, and keeps all the text", () => {
+    const html = inline(nested(50_000));
+    expect(html.replace(/<\/?em>/g, "").match(/a/g)).toHaveLength(50_000);
+  });
+});
+
 describe("strikethrough", () => {
   it.each([
     ["~~gone~~", "<del>gone</del>"],
