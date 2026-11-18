@@ -12,6 +12,7 @@
  * `---`. Gensane supports only ATX headings.
  */
 
+import { unescapeString } from "./character-references.ts";
 import { leadingIndent } from "./lines.ts";
 
 export type HeadingLevel = 1 | 2 | 3 | 4 | 5 | 6;
@@ -70,7 +71,7 @@ export function matchFenceOpen(text: string): FenceOpen | undefined {
     char,
     length: fence.length,
     indent: (match[1] ?? "").length,
-    info: info.replace(/\\([!-/:-@[-`{-~])/g, "$1"),
+    info: unescapeString(info),
   };
 }
 
