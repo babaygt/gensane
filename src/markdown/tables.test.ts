@@ -96,6 +96,11 @@ describe("tables", () => {
         source: "    | a |\n    | - |",
         expected: [p("| a |\n| - |")],
       },
+      {
+        name: "a header indented by four spaces above a normal delimiter",
+        source: "    | a |\n| - |",
+        expected: [p("| a |\n| - |")],
+      },
     ])("$name", ({ source, expected }) => {
       expect(blocks(source)).toEqual(expected);
     });
@@ -123,6 +128,12 @@ describe("tables", () => {
       expect(blocks("> | a |\n> | - |\n| b |")).toEqual([
         { kind: "block-quote", children: [table(["none"], row("a"))] },
         p("| b |"),
+      ]);
+    });
+
+    it("does not take its header from a line outside the quote", () => {
+      expect(blocks("> x\n| a |\n> | - |")).toEqual([
+        { kind: "block-quote", children: [p("x\n| a |\n| - |")] },
       ]);
     });
 
