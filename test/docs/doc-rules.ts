@@ -87,6 +87,73 @@ export function findWarningExamples(page: string): WarningExample[] {
   });
 }
 
+export type FrontmatterExample =
+  | { readonly kind: "reads"; readonly source: string; readonly data: unknown }
+  | { readonly kind: "valid"; readonly source: string; readonly contentType: string }
+  | {
+      readonly kind: "reports";
+      readonly source: string;
+      readonly code: string;
+      readonly contentType: string | undefined;
+      readonly output: string;
+    };
+
+/** A misspelled marker is counted too, so it fails instead of leaving its example unchecked. */
+export function countFrontmatterMarkers(page: string): number {
+  return page.match(/^<!--\s*(?:reads|valid|reports)\b.*-->$/gm)?.length ?? 0;
+}
+
+/**
+ * Three markers go before a `yaml` fence:
+ * `reads` is followed by a `json` fence with the data,
+ * `valid post` must pass the rules for that type of content, and
+ * `reports GS221 as post` is followed by a `text` fence with the exact problem.
+ */
+export function findFrontmatterExamples(page: string): FrontmatterExample[] {
+  const fences = findCodeFences(page);
+  return fences.flatMap((fence, index): FrontmatterExample[] => {
+    const marker = fence.marker ?? "";
+    const source = fence.text;
+    const next = fences[index + 1];
+    if (marker === "reads") {
+      if (next?.info !== "json") throw new Error(`Example without a json fence after it:\n${source}`);
+      return [{ kind: "reads", source, data: JSON.parse(next.text) }];
+    }
+    const valid = /^valid (\w+)$/.exec(marker);
+    if (valid !== null) return [{ kind: "valid", source, contentType: valid[1] ?? "" }];
+    const reports = /^reports (GS\d+)(?: as (\w+))?$/.exec(marker);
+    if (reports === null) return [];
+    if (next?.info !== "text") throw new Error(`Example without a text fence after it:\n${source}`);
+    const [, code = "", contentType] = reports;
+    return [{ kind: "reports", source, code, contentType, output: next.text }];
+  });
+}
+
+/** The part of a page from a heading up to the next heading of the same level. */
+export function findSection(page: string, heading: string): string {
+  const level = /^#+/.exec(heading)?.[0] ?? "";
+  const lines = page.split("\n");
+  const start = lines.indexOf(heading);
+  if (start === -1) return "";
+  const length = lines
+    .slice(start + 1)
+    .findIndex((line) => line.startsWith(`${level} `));
+  return lines.slice(start, length === -1 ? undefined : start + 1 + length).join("\n");
+}
+
+export interface FieldRow {
+  readonly field: string;
+  readonly required: boolean;
+}
+
+/** Rows of a table that starts with a field in code and says `Yes` or `No`. */
+export function findFieldRows(section: string): FieldRow[] {
+  return [...section.matchAll(/^\|\s*`(\w+)`\s*\|\s*(Yes|No)\s*\|/gm)].map((match) => ({
+    field: match[1] ?? "",
+    required: match[2] === "Yes",
+  }));
+}
+
 /** Links outside code. `[text](/url)` written as inline code is an example, not a link. */
 export function findLinks(page: string): DocLink[] {
   const withoutFences = page.replace(/^(`{3,}|~{3,}).*\n[\s\S]*?^\1[`~]*\s*$/gm, "");

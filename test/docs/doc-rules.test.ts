@@ -1,9 +1,13 @@
 import { describe, expect, it } from "vitest";
 import {
   countExampleMarkers,
+  countFrontmatterMarkers,
   declaresSymbol,
   findCodeFences,
+  findFieldRows,
+  findFrontmatterExamples,
   findLinks,
+  findSection,
   findVerifiedExamples,
   findWarningExamples,
   isExternalLink,
@@ -58,6 +62,85 @@ describe("findWarningExamples", () => {
     expect(findWarningExamples("<!-- warns GS101 -->\n```markdown\nx\n```")).toEqual([
       { code: "GS101", markdown: "x" },
     ]);
+  });
+});
+
+describe("countFrontmatterMarkers", () => {
+  it("counts every kind of marker, even a misspelled one", () => {
+    const page = "<!-- reads -->\n<!-- valid post -->\n<!-- reports GS201 -->\n<!-- reports oops -->";
+    expect(countFrontmatterMarkers(page)).toBe(4);
+  });
+
+  it("ignores other comments", () => {
+    expect(countFrontmatterMarkers("<!-- example -->\n<!-- readers -->")).toBe(0);
+  });
+});
+
+describe("findFrontmatterExamples", () => {
+  it("pairs a read example with its data", () => {
+    const page = '<!-- reads -->\n```yaml\na: 1\n```\n\n```json\n{ "a": 1 }\n```';
+    expect(findFrontmatterExamples(page)).toEqual([
+      { kind: "reads", source: "a: 1", data: { a: 1 } },
+    ]);
+  });
+
+  it("reads the type of a valid example", () => {
+    expect(findFrontmatterExamples("<!-- valid talk -->\n```yaml\na: 1\n```")).toEqual([
+      { kind: "valid", source: "a: 1", contentType: "talk" },
+    ]);
+  });
+
+  it("reads the code, the type and the output of a problem", () => {
+    const page = "<!-- reports GS221 as post -->\n```yaml\na: 1\n```\n\n```text\nwrong\n```";
+    expect(findFrontmatterExamples(page)).toEqual([
+      { kind: "reports", source: "a: 1", code: "GS221", contentType: "post", output: "wrong" },
+    ]);
+  });
+
+  it("allows a problem that needs no type of content", () => {
+    const page = "<!-- reports GS201 -->\n```yaml\n---\n```\n\n```text\nwrong\n```";
+    expect(findFrontmatterExamples(page)[0]).toMatchObject({ contentType: undefined });
+  });
+
+  it("rejects a read example without data", () => {
+    expect(() => findFrontmatterExamples("<!-- reads -->\n```yaml\na: 1\n```")).toThrow(
+      "without a json fence",
+    );
+  });
+
+  it("rejects a problem without its output", () => {
+    expect(() => findFrontmatterExamples("<!-- reports GS201 -->\n```yaml\n---\n```")).toThrow(
+      "without a text fence",
+    );
+  });
+});
+
+describe("findSection", () => {
+  const page = "# Top\n\n## One\n\ntext\n\n### Inner\n\n## Two\n\nmore";
+
+  it("ends at the next heading of the same level", () => {
+    expect(findSection(page, "## One")).toBe("## One\n\ntext\n\n### Inner\n");
+  });
+
+  it("runs to the end of the page for the last section", () => {
+    expect(findSection(page, "## Two")).toBe("## Two\n\nmore");
+  });
+
+  it("is empty for a heading that does not exist", () => {
+    expect(findSection(page, "## Three")).toBe("");
+  });
+});
+
+describe("findFieldRows", () => {
+  it("reads the field and whether it is required", () => {
+    expect(findFieldRows("| `title` | Yes | Text |\n| `tags` | No | List |")).toEqual([
+      { field: "title", required: true },
+      { field: "tags", required: false },
+    ]);
+  });
+
+  it("ignores other rows", () => {
+    expect(findFieldRows("| Field | Required |\n| --- | --- |")).toEqual([]);
   });
 });
 
