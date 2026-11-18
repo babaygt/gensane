@@ -94,7 +94,7 @@ describe('the rawHtml: "escape" option', () => {
     ["**<b>**", "<p><strong>&lt;b&gt;</strong></p>\n"],
     ["~~<b>~~", "<p><del>&lt;b&gt;</del></p>\n"],
     ["[<b>](/u)", '<p><a href="/u">&lt;b&gt;</a></p>\n'],
-    ["# <b>", "<h1>&lt;b&gt;</h1>\n"],
+    ["# <b>", "&lt;b&gt;</h1>\n"],
     ["> <b>", "<blockquote>\n<p>&lt;b&gt;</p>\n</blockquote>\n"],
     ["- <b>", "<ul>\n<li>&lt;b&gt;</li>\n</ul>\n"],
     ["| <b> |\n| - |\n| <i> |", "<th>&lt;b&gt;</th>"],

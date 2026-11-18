@@ -135,7 +135,7 @@ describe("line breaks", () => {
 
 describe("inline syntax in other blocks", () => {
   it.each([
-    ["# *Title*", "<h1><em>Title</em></h1>\n"],
+    ["# *Title*", '<h1 id="title"><em>Title</em></h1>\n'],
     ["- **bold**", "<ul>\n<li><strong>bold</strong></li>\n</ul>\n"],
     ["> `code`", "<blockquote>\n<p><code>code</code></p>\n</blockquote>\n"],
     [
