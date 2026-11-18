@@ -99,6 +99,7 @@ describe("parseRawHtml", () => {
     "<!-- open",
     "<? open",
     "<!a",
+    "<! a>",
     "<![CDATA[ open",
     "<",
   ])("rejects %j", (source) => {
