@@ -17,6 +17,7 @@ import {
 } from "../../diagnostics/index.ts";
 import { closestMatch } from "./closest-match.ts";
 import { FrontmatterCodes } from "../diagnostic-codes.ts";
+import { daysInMonth } from "../parsing/inline-values.ts";
 import { toPlainData } from "../plain-data.ts";
 import type { DateValue, FrontmatterValue, MapEntry, MapValue } from "../values.ts";
 
@@ -150,19 +151,20 @@ function toContentDate({ text: dateText, year, month, day, time }: DateValue): C
 
 const NUMERIC_DATE = /^(\d{1,2})[-/.](\d{1,2})[-/.](\d{4})$/;
 
-/** Only suggests a date when it is clear which number is the day. */
+/** Only suggests a date that exists, when it is clear which number is the day. */
 function dateHint(written: string): string {
+  const fallback = "write the date as YYYY-MM-DD, with the year first";
   const match = NUMERIC_DATE.exec(written);
-  const first = Number(match?.[1]);
-  const second = Number(match?.[2]);
-  const dayIsFirst = first > 12 && first <= 31 && second <= 12;
-  const dayIsSecond = second > 12 && second <= 31 && first <= 12;
-  if (match === null || (!dayIsFirst && !dayIsSecond)) {
-    return "write the date as YYYY-MM-DD, with the year first";
-  }
-  const month = String(dayIsFirst ? second : first).padStart(2, "0");
-  const day = dayIsFirst ? first : second;
-  return `write it as ${match[3]}-${month}-${day}`;
+  if (match === null) return fallback;
+  const first = Number(match[1]);
+  const second = Number(match[2]);
+  const firstIsDay = first > 12;
+  const secondIsDay = second > 12;
+  if (firstIsDay === secondIsDay) return fallback;
+  const [day, month] = firstIsDay ? [first, second] : [second, first];
+  const year = Number(match[3]);
+  if (month < 1 || day > daysInMonth(year, month)) return fallback;
+  return `write it as ${match[3]}-${String(month).padStart(2, "0")}-${day}`;
 }
 
 function notADate(value: FrontmatterValue, path: string, expected: string): Checked<never> {
