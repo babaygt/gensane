@@ -1,5 +1,5 @@
-import { assertNever } from "../diagnostics/index.ts";
-import type { Inline } from "./ast.ts";
+import { assertNever } from "../../diagnostics/index.ts";
+import type { Inline } from "../ast.ts";
 
 /** The text of inline nodes without any formatting. */
 export function plainTextOf(inlines: readonly Inline[]): string {

@@ -1,4 +1,4 @@
-import type { Document, HeadingLevel } from "./ast.ts";
+import type { Document, HeadingLevel } from "../ast.ts";
 import { plainTextOf } from "./inline-text.ts";
 
 export interface TableOfContentsEntry {

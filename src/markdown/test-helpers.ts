@@ -1,5 +1,5 @@
 import type { SourceSpan } from "../diagnostics/index.ts";
-import { parseBlocks } from "./block-parser.ts";
+import { parseBlocks } from "./blocks/block-parser.ts";
 
 /** Removes position data, at any depth, so tests can compare tree structure only. */
 export function withoutSpans(value: unknown): unknown {

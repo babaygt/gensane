@@ -7,10 +7,10 @@ import {
   type DiagnosticCode,
   type SourceSpan,
   assertNever,
-} from "../diagnostics/index.ts";
-import type { Block, Document, Footnote, FootnoteDefinition, Inline, TableRow } from "./ast.ts";
-import { DiagnosticCodes } from "./diagnostic-codes.ts";
-import { normalizeLabel } from "./link-syntax.ts";
+} from "../../diagnostics/index.ts";
+import type { Block, Document, Footnote, FootnoteDefinition, Inline, TableRow } from "../ast.ts";
+import { DiagnosticCodes } from "../diagnostic-codes.ts";
+import { normalizeLabel } from "../inlines/link-syntax.ts";
 
 export interface FootnoteResolution {
   readonly document: Document;

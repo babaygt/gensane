@@ -1,8 +1,8 @@
 // Cases are adapted from the GitHub Flavored Markdown spec, section "Tables (extension)".
 import { describe, expect, it } from "vitest";
 import { parseBlocks } from "./block-parser.ts";
-import { DiagnosticCodes } from "./diagnostic-codes.ts";
-import { blocks } from "./test-helpers.ts";
+import { DiagnosticCodes } from "../diagnostic-codes.ts";
+import { blocks } from "../test-helpers.ts";
 
 const paragraph = (text: string) => ({ kind: "paragraph", text });
 const row = (...texts: string[]) => ({

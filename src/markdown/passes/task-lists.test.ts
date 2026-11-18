@@ -1,6 +1,6 @@
 // Cases are adapted from the GitHub Flavored Markdown spec, section "Task list items".
 import { describe, expect, it } from "vitest";
-import { markdownToHtml, parseMarkdown } from "./index.ts";
+import { markdownToHtml, parseMarkdown } from "../index.ts";
 
 function html(source: string): string {
   return markdownToHtml(source, "test.md").html;

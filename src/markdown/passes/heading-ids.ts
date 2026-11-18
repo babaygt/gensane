@@ -1,7 +1,7 @@
 /** Gives every heading a unique `id`, so that links can point at a section of a page. */
-import { assertNever } from "../diagnostics/index.ts";
-import type { Block, Document } from "./ast.ts";
-import { plainTextOf } from "./inline-text.ts";
+import { assertNever } from "../../diagnostics/index.ts";
+import type { Block, Document } from "../ast.ts";
+import { plainTextOf } from "../output/inline-text.ts";
 
 /** `What's New?` → `whats-new`. Letters of every alphabet are kept. */
 export function slugify(text: string): string {

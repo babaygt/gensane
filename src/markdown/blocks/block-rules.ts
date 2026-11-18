@@ -12,7 +12,7 @@
  * `---`. Gensane supports only ATX headings.
  */
 
-import { unescapeString } from "./character-references.ts";
+import { unescapeString } from "../inlines/character-references.ts";
 import { leadingIndent } from "./lines.ts";
 
 export type HeadingLevel = 1 | 2 | 3 | 4 | 5 | 6;

@@ -22,7 +22,7 @@ import {
   type SourcePosition,
   type SourceSpan,
   positionAt,
-} from "../diagnostics/index.ts";
+} from "../../diagnostics/index.ts";
 import type {
   Block,
   BlockQuote,
@@ -37,7 +37,7 @@ import type {
   TableCell,
   TableRow,
   TextSegment,
-} from "./ast.ts";
+} from "../ast.ts";
 import {
   type FenceOpen,
   type FootnoteDefinitionMatch,
@@ -52,7 +52,7 @@ import {
   matchFootnoteDefinition,
   matchListMarker,
 } from "./block-rules.ts";
-import { DiagnosticCodes } from "./diagnostic-codes.ts";
+import { DiagnosticCodes } from "../diagnostic-codes.ts";
 import { type HtmlBlockType, endsHtmlBlock, matchHtmlBlockStart } from "./html-rules.ts";
 import {
   type SourceLine,

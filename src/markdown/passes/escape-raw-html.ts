@@ -2,8 +2,8 @@
  * Turns all raw HTML in a tree into visible text. Used for the `rawHtml: "escape"` option,
  * for sites that should show HTML in their content instead of running it.
  */
-import { assertNever } from "../diagnostics/index.ts";
-import type { Block, Document, Inline, TableRow } from "./ast.ts";
+import { assertNever } from "../../diagnostics/index.ts";
+import type { Block, Document, Inline, TableRow } from "../ast.ts";
 
 export function escapeRawHtml(document: Document): Document {
   const footnotes = document.footnotes?.map((footnote) => ({
