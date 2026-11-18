@@ -66,7 +66,7 @@ export interface BlockParseResult {
 
 /** Parses the block structure of a Markdown file. `file` is only used in source spans. */
 export function parseBlocks(source: string, file: string): BlockParseResult {
-  const { blocks, diagnostics } = parseLines(splitLines(source), file);
+  const { blocks, diagnostics } = parseLines(splitLines(source), file, 0);
   const document: Document = {
     kind: "document",
     children: blocks,
@@ -82,12 +82,15 @@ interface LinesParseResult {
   readonly consumed: number;
 }
 
-function parseLines(lines: readonly SourceLine[], file: string): LinesParseResult {
-  return new BlockParser(lines, file).parse();
+function parseLines(lines: readonly SourceLine[], file: string, depth: number): LinesParseResult {
+  return new BlockParser(lines, file, depth).parse();
 }
 
 /** Indentation at which CommonMark would start an indented code block. */
 const CODE_INDENT = 4;
+
+/** Containers are parsed recursively, so unlimited nesting would overflow the call stack. */
+const MAX_NESTING_DEPTH = 256;
 
 /**
  * Single-use parser. The cursor and output lists are private mutable state, but they
@@ -96,13 +99,15 @@ const CODE_INDENT = 4;
 class BlockParser {
   readonly #file: string;
   readonly #lines: readonly SourceLine[];
+  readonly #depth: number;
   readonly #blocks: Block[] = [];
   readonly #diagnostics: Diagnostic[] = [];
   #index = 0;
 
-  constructor(lines: readonly SourceLine[], file: string) {
+  constructor(lines: readonly SourceLine[], file: string, depth: number) {
     this.#lines = lines;
     this.#file = file;
+    this.#depth = depth;
   }
 
   parse(): LinesParseResult {
@@ -150,10 +155,19 @@ class BlockParser {
       return { kind: "thematic-break", span: this.#span(line, line) };
     }
 
-    if (matchBlockQuote(line.text) !== undefined) return this.#parseBlockQuote();
-
     const marker = matchListMarker(line.text);
+    const isContainer = marker !== undefined || matchBlockQuote(line.text) !== undefined;
+    if (isContainer && this.#depth >= MAX_NESTING_DEPTH) {
+      this.#warn(
+        DiagnosticCodes.nestingTooDeep,
+        line,
+        `blocks are nested more than ${MAX_NESTING_DEPTH} levels deep; this line is read as text`,
+        "reduce the nesting of block quotes and lists",
+      );
+      return this.#parseParagraph();
+    }
     if (marker !== undefined) return this.#parseList(marker);
+    if (isContainer) return this.#parseBlockQuote();
 
     const alignments = this.#tableAlignmentsAt(this.#index);
     if (alignments !== undefined) return this.#parseTable(alignments);
@@ -413,7 +427,7 @@ class BlockParser {
     outer: readonly SourceLine[],
     inner: readonly SourceLine[],
   ): { children: Block[]; last: SourceLine } {
-    const { blocks, diagnostics, consumed } = parseLines(inner, this.#file);
+    const { blocks, diagnostics, consumed } = parseLines(inner, this.#file, this.#depth + 1);
     this.#diagnostics.push(...diagnostics);
     this.#index -= inner.length - consumed;
     const last = outer[consumed - 1] ?? this.#first(outer);

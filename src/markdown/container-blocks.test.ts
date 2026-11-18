@@ -3,6 +3,7 @@
 import { describe, expect, it } from "vitest";
 import { parseBlocks } from "./block-parser.ts";
 import { DiagnosticCodes } from "./diagnostic-codes.ts";
+import { markdownToHtml } from "./index.ts";
 import { blocks } from "./test-helpers.ts";
 
 const p = (text: string) => ({ kind: "paragraph", text });
@@ -244,5 +245,38 @@ describe("source spans in containers", () => {
         span: expect.objectContaining({ start: { line: 2, column: 5, offset: 9 } }),
       }),
     ]);
+  });
+});
+
+function quoteDepth(source: string): number {
+  let depth = 0;
+  let children = parseBlocks(source, "a.md").document.children;
+  while (children[0]?.kind === "block-quote") {
+    depth++;
+    children = children[0].children;
+  }
+  return depth;
+}
+
+describe("nesting limit", () => {
+  it("allows 256 levels without a warning", () => {
+    const source = `${"> ".repeat(256)}a`;
+    expect(quoteDepth(source)).toBe(256);
+    expect(parseBlocks(source, "a.md").diagnostics).toEqual([]);
+  });
+
+  it("reads deeper levels as text and warns", () => {
+    const source = `${"> ".repeat(257)}a`;
+    expect(quoteDepth(source)).toBe(256);
+    expect(parseBlocks(source, "a.md").diagnostics.map((d) => d.code)).toEqual([
+      DiagnosticCodes.nestingTooDeep,
+    ]);
+  });
+
+  it.each([
+    ["quotes", `${"> ".repeat(50_000)}a`],
+    ["lists", Array.from({ length: 400 }, (_, i) => `${" ".repeat(i * 2)}- x`).join("\n")],
+  ])("does not crash on very deep %s", (_, source) => {
+    expect(() => markdownToHtml(source, "a.md")).not.toThrow();
   });
 });
