@@ -5,6 +5,8 @@
 import { unescapeString } from "./character-references.ts";
 
 const MAX_LABEL_LENGTH = 999;
+/** The spec allows a limit here, because unclosed parentheses are slow to rule out. */
+const MAX_DESTINATION_PARENTHESES = 32;
 const ASCII_PUNCTUATION = /[!-/:-@[-`{-~]/;
 
 /** Labels match regardless of case and of how whitespace is written. */
@@ -67,8 +69,10 @@ function endOfBareDestination(text: string, pos: number): number | undefined {
     const ch = text[i] ?? "";
     if (ch <= " " || ch === "\x7f") break;
     if (ch === "\\" && ASCII_PUNCTUATION.test(text[i + 1] ?? "")) i++;
-    else if (ch === "(") depth++;
-    else if (ch === ")") {
+    else if (ch === "(") {
+      depth++;
+      if (depth > MAX_DESTINATION_PARENTHESES) return undefined;
+    } else if (ch === ")") {
       if (depth === 0) break;
       depth--;
     }

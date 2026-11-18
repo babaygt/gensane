@@ -136,6 +136,29 @@ describe("syntax tree", () => {
   });
 });
 
+const parens = (levels: number) => `${"(".repeat(levels)}b${")".repeat(levels)}`;
+
+describe("limits on hostile input", () => {
+  it("allows 32 levels of parentheses in a destination", () => {
+    expect(inline(`[a](${parens(32)})`)).toContain("<a href=");
+  });
+
+  it("reads deeper parentheses as text", () => {
+    expect(inline(`[a](${parens(33)})`)).not.toContain("<a href=");
+  });
+
+  // No timing assertions, which would be flaky: without the limits these inputs take far
+  // longer than Vitest's 5 second test timeout.
+  it("handles many unclosed destinations", () => {
+    expect(inline("[a](b".repeat(100_000))).toContain("[a](b[a](b");
+  });
+
+  it("handles thousands of nested images", () => {
+    const source = `${"![".repeat(100_000)}a${"](/u)".repeat(100_000)}`;
+    expect(html(source)).toContain("<img");
+  });
+});
+
 describe("source positions", () => {
   it("cover the whole link", () => {
     const [block] = parseMarkdown("x [a](/u) y", "a.md").document.children;

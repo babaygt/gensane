@@ -98,6 +98,8 @@ class InlineParser {
   };
   #tail: Entry = this.#head;
   #bracket: Bracket | undefined;
+  /** Set when images nest too deeply; all later brackets then stay as text. */
+  #tooDeep = false;
   #firstRun: DelimiterRun | undefined;
   #lastRun: DelimiterRun | undefined;
   #runCount = 0;
@@ -186,9 +188,10 @@ class InlineParser {
       return;
     }
     this.#bracket = opener.previous;
-    const target = opener.active ? this.#linkTarget(opener) : undefined;
+    const target = opener.active && !this.#tooDeep ? this.#linkTarget(opener) : undefined;
     const depth = target === undefined ? 0 : this.#depthAfter(opener.entry) + 1;
-    if (target === undefined || depth > MAX_EMPHASIS_DEPTH) {
+    this.#tooDeep ||= depth > MAX_EMPHASIS_DEPTH;
+    if (target === undefined || this.#tooDeep) {
       this.#pushLiteral(1);
       return;
     }
