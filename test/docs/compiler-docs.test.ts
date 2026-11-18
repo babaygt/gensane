@@ -1,19 +1,12 @@
 // Keeps the Markdown compiler documentation true: its examples are compiled, and everything it
 // refers to in the code must exist.
-import { existsSync, readFileSync, readdirSync } from "node:fs";
-import { dirname, join, resolve } from "node:path";
+import { readFileSync, readdirSync } from "node:fs";
+import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { DiagnosticCodes, markdownToHtml } from "../../src/markdown/index.ts";
 import { KNOWN_GAPS } from "../conformance/known-gaps.ts";
-import {
-  countExampleMarkers,
-  declaresSymbol,
-  findLinks,
-  findVerifiedExamples,
-  findWarningExamples,
-  isExternalLink,
-  linkedSymbol,
-} from "./doc-rules.ts";
+import { countExampleMarkers, findVerifiedExamples, findWarningExamples } from "./doc-rules.ts";
+import { checkLinks } from "./link-checks.ts";
 
 const packageRoot = join(import.meta.dirname, "..", "..");
 const docsFolder = join(packageRoot, "docs", "markdown-compiler");
@@ -30,20 +23,7 @@ const docsPage = (name: string): string =>
   pages.find((page) => page.name === `docs/markdown-compiler/${name}`)?.text ?? "";
 
 describe.each(pages)("$name", ({ path, text }) => {
-  const localLinks = findLinks(text).filter((link) => !isExternalLink(link.target));
-
-  it.each(localLinks.map((link) => [link.target, link] as const))("links to %s", (target) => {
-    expect(existsSync(resolve(dirname(path), target))).toBe(true);
-  });
-
-  const codeLinks = localLinks.flatMap((link) => {
-    const symbol = linkedSymbol(link);
-    return symbol === undefined ? [] : [[symbol, link.target] as const];
-  });
-  it.each(codeLinks)("%s exists in %s", (symbol, target) => {
-    const source = readFileSync(resolve(dirname(path), target), "utf8");
-    expect(declaresSymbol(source, symbol)).toBe(true);
-  });
+  checkLinks(path, text);
 
   it("checks every marked example", () => {
     const checked = findVerifiedExamples(text).length + findWarningExamples(text).length;
