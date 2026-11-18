@@ -54,6 +54,12 @@ describe("heading ids", () => {
     expect(html("# A\n\n> # A\n\n- # A")).toContain('id="a-2"');
   });
 
+  // No timing assertion, which would be flaky: counting from 1 for every repeated heading
+  // takes far longer than Vitest's 5 second test timeout on this input.
+  it("handles thousands of identical headings", () => {
+    expect(html("# A\n\n".repeat(100_000))).toContain('id="a-99999"');
+  });
+
   it("can be turned off", () => {
     expect(markdownToHtml("# A", "a.md", { headingIds: false }).html).toBe("<h1>A</h1>\n");
   });

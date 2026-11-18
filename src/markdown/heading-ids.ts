@@ -15,11 +15,18 @@ export function slugify(text: string): string {
 
 export function assignHeadingIds(document: Document): Document {
   const usedIds = new Set<string>();
+  // Continues counting where the last repeat of a slug stopped.
+  const nextNumbers = new Map<string, number>();
 
   function uniqueId(text: string): string {
     const slug = slugify(text);
+    let number = nextNumbers.get(slug) ?? 1;
     let id = slug;
-    for (let count = 1; usedIds.has(id); count++) id = `${slug}-${count}`;
+    while (usedIds.has(id)) {
+      id = `${slug}-${number}`;
+      number++;
+    }
+    nextNumbers.set(slug, number);
     usedIds.add(id);
     return id;
   }
