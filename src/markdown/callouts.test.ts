@@ -38,6 +38,10 @@ describe("callouts", () => {
     );
   });
 
+  it("works when nested in another block quote", () => {
+    expect(html("> > [!TIP]\n> > a")).toContain('<blockquote>\n<div class="callout callout-tip">');
+  });
+
   it("works when nested in a list", () => {
     expect(html("- > [!TIP]\n  > a")).toContain("callout-tip");
   });

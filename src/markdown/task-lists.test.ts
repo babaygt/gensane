@@ -31,6 +31,7 @@ describe("task lists", () => {
   it.each([
     ["- [ ]", "nothing after the marker"],
     ["- [ ]foo", "no space after the marker"],
+    ["- [ ] \n  foo", "the text is on the next line"],
     ["- [y] foo", "another character in the brackets"],
     ["- [  ] foo", "two spaces in the brackets"],
     ["- text [ ] foo", "not at the start"],
@@ -39,6 +40,12 @@ describe("task lists", () => {
     ["- # [ ] foo", "not in a paragraph"],
   ])("%j is not a task (%s)", (source) => {
     expect(html(source)).not.toContain("<input");
+  });
+
+  it("shows the checkbox only once in an item with several paragraphs", () => {
+    expect(html("- [x] a\n\n  b")).toBe(
+      `<ul>\n<li>\n<p>${checkedBox} a</p>\n<p>b</p>\n</li>\n</ul>\n`,
+    );
   });
 
   it("records the state on the list item", () => {
