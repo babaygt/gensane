@@ -70,6 +70,12 @@ describe("inline raw HTML", () => {
     expect(tag).toMatchObject({ kind: "raw-html", text: "<b>", span: { start: { offset: 2 } } });
   });
 
+  // No timing assertion, which would be flaky: without remembering that `-->` is missing,
+  // this input takes far longer than Vitest's 5 second test timeout.
+  it("handles many unclosed comments", () => {
+    expect(html("a <!--".repeat(100_000))).toContain("a &lt;!--a &lt;!--");
+  });
+
   it("uses the tag text in an image description", () => {
     expect(html("![a <b>](/u)")).toBe('<p><img src="/u" alt="a &lt;b&gt;" /></p>\n');
   });
@@ -91,6 +97,7 @@ describe('the rawHtml: "escape" option', () => {
     ["# <b>", "<h1>&lt;b&gt;</h1>\n"],
     ["> <b>", "<blockquote>\n<p>&lt;b&gt;</p>\n</blockquote>\n"],
     ["- <b>", "<ul>\n<li>&lt;b&gt;</li>\n</ul>\n"],
+    ["| <b> |\n| - |\n| <i> |", "<th>&lt;b&gt;</th>"],
     ["| <b> |\n| - |\n| <i> |", "<td>&lt;i&gt;</td>"],
   ])("%j", (source, expected) => {
     expect(escaped(source)).toContain(expected);
