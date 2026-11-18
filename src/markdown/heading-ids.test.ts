@@ -20,6 +20,7 @@ describe("slugify", () => {
     ["Über Größe", "über-größe"],
     ["日本語 タイトル", "日本語-タイトル"],
     ["Version 2.0", "version-20"],
+    ["cafe\u0301", "cafe\u0301"],
     ["???", "section"],
     ["", "section"],
   ])("%j → %j", (text, slug) => {
