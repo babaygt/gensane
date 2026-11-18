@@ -1,13 +1,13 @@
 import type { SourceSpan } from "../diagnostics/index.ts";
 import { parseBlocks } from "./block-parser.ts";
 
-/** Removes every `span`, at any depth, so tests can compare tree structure only. */
+/** Removes position data, at any depth, so tests can compare tree structure only. */
 export function withoutSpans(value: unknown): unknown {
   if (Array.isArray(value)) return value.map(withoutSpans);
   if (typeof value !== "object" || value === null) return value;
   return Object.fromEntries(
     Object.entries(value)
-      .filter(([key]) => key !== "span")
+      .filter(([key]) => key !== "span" && key !== "segments")
       .map(([key, v]) => [key, withoutSpans(v)]),
   );
 }
