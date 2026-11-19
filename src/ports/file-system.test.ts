@@ -104,6 +104,11 @@ describe.each([
       expect(await fileSystem.isFile(`${root}/b.md`)).toBe(false);
       expect(await fileSystem.isFile(`${root}/a.md/b.md`)).toBe(false);
     });
+
+    it("treats ./ and repeated slashes in a path as the same file", async () => {
+      const { fileSystem, root } = await setUp({ "gensane.config.ts": "" });
+      expect(await fileSystem.isFile(`${root}//./gensane.config.ts`)).toBe(true);
+    });
   });
 
   describe("readText", () => {
