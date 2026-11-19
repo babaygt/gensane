@@ -71,6 +71,10 @@ describe("countFrontmatterMarkers", () => {
     expect(countFrontmatterMarkers(page)).toBe(4);
   });
 
+  it("counts a marker with a missing or extra ending", () => {
+    expect(countFrontmatterMarkers("<!-- read -->\n<!-- report GS201 -->\n<!-- reported GS201 -->")).toBe(3);
+  });
+
   it("ignores other comments", () => {
     expect(countFrontmatterMarkers("<!-- example -->\n<!-- readers -->")).toBe(0);
   });
