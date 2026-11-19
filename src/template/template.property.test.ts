@@ -3,7 +3,7 @@
 import * as fc from "fast-check";
 import { describe, expect, it } from "vitest";
 import { positionAt } from "../diagnostics/index.ts";
-import { compileTemplate, renderTemplate } from "./index.ts";
+import { compileTemplate, compileTemplates, renderTemplate } from "./index.ts";
 import { tokenize } from "./lexing/lexer.ts";
 
 const templatePiece = fc.oneof(
@@ -11,6 +11,7 @@ const templatePiece = fc.oneof(
   fc.constantFrom("a", "page", "upper", "not", "and", "or", "true", "null", "0", "1.5", "+", "-"),
   fc.constantFrom(" ", "\n", "\r\n", "\r", "<p>", "/", "%", "==", "<", "@", "😀"),
   fc.constantFrom("if", "elif", "else", "endif", "for", "in", "endfor", "loop", "list"),
+  fc.constantFrom("include", "extends", "block", "endblock", '"page.html"', '"a.html"'),
   fc.string({ maxLength: 4 }),
 );
 
@@ -130,6 +131,31 @@ function expectedOutput(
     .join("");
 }
 
+const word = fc.stringMatching(/^[a-z]{0,3}$/);
+
+/** The text of each block in a base, a child and a grandchild. A child may leave a block out. */
+const blockTexts = fc.integer({ min: 1, max: 4 }).chain((count) =>
+  fc.record({
+    base: fc.array(word, { minLength: count, maxLength: count }),
+    child: fc.array(fc.option(word, { nil: undefined }), { minLength: count, maxLength: count }),
+    grandchild: fc.array(fc.option(word, { nil: undefined }), {
+      minLength: count,
+      maxLength: count,
+    }),
+    order: fc.shuffledSubarray(
+      Array.from({ length: count }, (_, index) => index),
+      { minLength: count },
+    ),
+  }),
+);
+
+function fillBlocks(texts: readonly (string | undefined)[], order: readonly number[]): string {
+  return order
+    .filter((index) => texts[index] !== undefined)
+    .map((index) => `{% block b${index} %}${texts[index] ?? ""}{% endblock %}`)
+    .join("\n");
+}
+
 function decodeHtml(html: string): string {
   return html
     .replaceAll("&lt;", "<")
@@ -224,6 +250,28 @@ describe("template properties", () => {
         expect(compiled.ok && renderTemplate(compiled.value, variables)).toMatchObject({
           ok: true,
           value: { html: expectedOutput(nodes, flags, lists) },
+        });
+      }),
+    );
+  });
+
+  it("fills each block from the closest template, like a simple model", () => {
+    fc.assert(
+      fc.property(blockTexts, ({ base, child, grandchild, order }) => {
+        const compiled = compileTemplates({
+          "base.html": base
+            .map((text, index) => `<${index}>{% block b${index} %}${text}{% endblock %}`)
+            .join(""),
+          "child.html": `{% extends "base.html" %}\n${fillBlocks(child, order)}`,
+          "grandchild.html": `{% extends "child.html" %}\n${fillBlocks(grandchild, order.toReversed())}`,
+        });
+        const template = compiled.ok ? compiled.value.get("grandchild.html") : undefined;
+        const expected = base
+          .map((text, index) => `<${index}>${grandchild[index] ?? child[index] ?? text}`)
+          .join("");
+        expect(template && renderTemplate(template, {})).toMatchObject({
+          ok: true,
+          value: { html: expected },
         });
       }),
     );

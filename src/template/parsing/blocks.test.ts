@@ -345,6 +345,24 @@ describe("includes and layouts", () => {
     );
   });
 
+  it("explains how to close a block", () => {
+    expect(parse("{% block a %}").diagnostics).toMatchObject([
+      { message: "this `block` is never closed", hint: "add `{% endblock %}` where it should end" },
+    ]);
+    expect(parse("{% endblock %}").diagnostics[0]?.hint).toBe(
+      "remove it, or add `{% block name %}` before it",
+    );
+  });
+
+  it("does not report a tag again when the lexer has reported its characters", () => {
+    expect(problems("{% include @ %}")).toEqual([]);
+    expect(problems("{% block @ %}x{% endblock %}")).toEqual([]);
+  });
+
+  it("leaves out a broken include", () => {
+    expect(parse('{% include "a.html" b %}').nodes).toEqual([]);
+  });
+
   it("keeps the block when its name is broken, so the end tag still matches", () => {
     expect(problems("{% block 1 %}x{% endblock %}")).toEqual([TemplateCodes.unexpectedToken]);
   });

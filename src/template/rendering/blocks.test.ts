@@ -234,6 +234,7 @@ describe("checking blocks before rendering", () => {
     "{% for x in a | nope %}{% endfor %}",
     "{% for x in a %}{{ x | nope }}{% endfor %}",
     "{% for x in a %}{% else %}{{ x | nope }}{% endfor %}",
+    "{% block a %}{{ x | nope }}{% endblock %}",
   ])("finds an unknown filter in %s", (source) => {
     expect(compileCodes(source)).toEqual([TemplateCodes.unknownFilter]);
   });

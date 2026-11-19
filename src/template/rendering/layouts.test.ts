@@ -76,6 +76,107 @@ describe("include", () => {
     expect(fileHtml(files, "a.html")).toBe("dd");
   });
 
+  it("points at the included file when it has a problem", () => {
+    const result = renderFile(
+      { "page.html": '{% include "b.html" %}', "b.html": "\n {{ missing }}" },
+      "page.html",
+    );
+    expect(result.ok ? [] : result.error).toMatchObject([
+      {
+        code: TemplateCodes.unknownVariable,
+        span: { file: "b.html", start: { line: 2, column: 5 } },
+      },
+    ]);
+  });
+
+  it("explains a template that does not exist", () => {
+    expect(
+      setProblems({ "page.html": '{% include "nav.html" %}', "partials/nav.html": "" }),
+    ).toMatchObject([
+      {
+        code: TemplateCodes.unknownTemplate,
+        message: 'there is no template named "nav.html"',
+        hint: 'did you mean "partials/nav.html"?',
+        span: { file: "page.html", start: { column: 12 } },
+      },
+    ]);
+  });
+
+  it("lists the templates when no name is close", () => {
+    expect(setProblems({ "page.html": '{% include "zzzzzzzz" %}', "a.html": "" })[0]?.hint).toBe(
+      "the templates are: page.html, a.html",
+    );
+  });
+
+  it("rejects a template that includes itself", () => {
+    expect(setProblems({ "a.html": 'x{% include "a.html" %}' })).toMatchObject([
+      {
+        code: TemplateCodes.templateCycle,
+        message: "templates cannot use each other in a circle: a.html → a.html",
+        hint: "remove one of the `include` or `extends` tags in the circle",
+        span: { start: { column: 13 } },
+      },
+    ]);
+  });
+
+  it("rejects templates that include each other, once", () => {
+    const problems = setProblems({
+      "a.html": '{% include "b.html" %}',
+      "b.html": '{% include "c.html" %}',
+      "c.html": '{% include "a.html" %}',
+    });
+    expect(problems.map((problem) => problem.message)).toEqual([
+      "templates cannot use each other in a circle: a.html → b.html → c.html → a.html",
+    ]);
+  });
+
+  it("reports a circle once, however many templates lead to it", () => {
+    expect(
+      setCodes({
+        "a.html": '{% include "c.html" %}',
+        "b.html": '{% include "c.html" %}',
+        "c.html": '{% include "c.html" %}',
+      }),
+    ).toEqual([TemplateCodes.templateCycle]);
+  });
+
+  it("names only the templates in the circle", () => {
+    const problems = setProblems({
+      "a.html": '{% include "b.html" %}',
+      "b.html": '{% include "c.html" %}',
+      "c.html": '{% include "b.html" %}',
+    });
+    expect(problems.map((problem) => problem.message)).toEqual([
+      "templates cannot use each other in a circle: b.html → c.html → b.html",
+    ]);
+  });
+
+  it("finds includes in every branch", () => {
+    for (const source of [
+      '{% if a %}{% else %}{% include "missing.html" %}{% endif %}',
+      '{% for a in b %}{% else %}{% include "missing.html" %}{% endfor %}',
+      '{% block a %}{% include "missing.html" %}{% endblock %}',
+    ]) {
+      expect(setCodes({ "page.html": source })).toEqual([TemplateCodes.unknownTemplate]);
+    }
+  });
+
+  it("allows many includes side by side", () => {
+    const files = { "page.html": '{% include "dot.html" %}'.repeat(100), "dot.html": "." };
+    expect(fileHtml(files, "page.html")).toBe(".".repeat(100));
+  });
+
+  it("reports the same mistake at the same place in two files", () => {
+    const result = renderFile(
+      { "page.html": '{{ x }}{% include "b.html" %}', "b.html": "{{ y }}" },
+      "page.html",
+    );
+    expect(result.ok ? [] : result.error.map((problem) => problem.span.file)).toEqual([
+      "b.html",
+      "page.html",
+    ]);
+  });
+
   it("rejects a circle of extends and include", () => {
     expect(
       setCodes({
@@ -169,11 +270,13 @@ describe("extends and blocks", () => {
 
   it("keeps its own blocks inside an included template", () => {
     const files = {
-      "base.html": '{% block a %}base{% endblock %}{% include "part.html" %}',
-      "part.html": "{% block a %}part{% endblock %}",
-      "child.html": '{% extends "base.html" %}{% block a %}child{% endblock %}',
+      "base.html":
+        '{% block a %}base{% endblock %}{% include "part.html" %}{% block b %}base{% endblock %}',
+      "part.html": "{% block a %}part{% endblock %}{% block b %}part{% endblock %}",
+      "child.html":
+        '{% extends "base.html" %}{% block a %}child{% endblock %}{% block b %}child{% endblock %}',
     };
-    expect(fileHtml(files, "child.html")).toBe("childpart");
+    expect(fileHtml(files, "child.html")).toBe("childpartpartchild");
   });
 
   it("allows comments and blank lines outside blocks in a child", () => {
@@ -205,8 +308,8 @@ describe("mistakes in layouts", () => {
   });
 
   it.each([
-    ["\n", { line: 3, column: 3 }, { line: 3, column: 8 }],
-    ["\r\n", { line: 3, column: 3 }, { line: 3, column: 8 }],
+    ["\n", { line: 3, column: 3, offset: 29 }, { line: 3, column: 8, offset: 34 }],
+    ["\r\n", { line: 3, column: 3, offset: 31 }, { line: 3, column: 8, offset: 36 }],
   ])(
     "points at the text itself, not the blank lines around it, with %j",
     (lineBreak, start, end) => {
@@ -221,6 +324,50 @@ describe("mistakes in layouts", () => {
     expect(
       setProblems({ "base.html": base(), "post.html": '{% extends "base.html" %} Hi' }),
     ).toMatchObject([{ span: { start: { line: 1, column: 27 }, end: { line: 1, column: 29 } } }]);
+  });
+
+  it.each([
+    ["after text", 'Hello{% extends "base.html" %}'],
+    ["after output", '{{ a }}{% extends "base.html" %}'],
+    ["twice", '{% extends "base.html" %}{% extends "base.html" %}'],
+    ["inside a block", '{% block content %}{% extends "base.html" %}{% endblock %}'],
+    ["inside a condition", '{% if a %}{% extends "base.html" %}{% endif %}'],
+  ])("rejects extends %s", (_, source) => {
+    expect(setProblems({ "base.html": base(), "post.html": source })).toMatchObject([
+      {
+        code: TemplateCodes.misplacedExtends,
+        message: "`extends` must come before everything else",
+        hint: "move it to the top of the template",
+      },
+    ]);
+  });
+
+  it("rejects two blocks with the same name", () => {
+    const source = "{% block a %}{% endblock %}{% if b %}{% block a %}{% endblock %}{% endif %}";
+    expect(setProblems({ "base.html": source })).toMatchObject([
+      {
+        code: TemplateCodes.duplicateBlock,
+        message: 'there is already a block named "a" in this template',
+        hint: "give each block its own name",
+        span: { start: { column: 47 } },
+      },
+    ]);
+  });
+
+  it("finds blocks with the same name in every branch", () => {
+    for (const branch of ["{% if b %}{% else %}", "{% for b in c %}{% else %}"]) {
+      const end = branch.startsWith("{% if") ? "{% endif %}" : "{% endfor %}";
+      const source = `{% block a %}{% endblock %}${branch}{% block a %}{% endblock %}${end}`;
+      expect(setCodes({ "base.html": source })).toEqual([TemplateCodes.duplicateBlock]);
+    }
+  });
+
+  it("puts the problems of how templates use each other in file order", () => {
+    const problems = setProblems({
+      "b.html": '{% include "missing.html" %}',
+      "a.html": "{% block x %}{% endblock %}{% block x %}{% endblock %}",
+    });
+    expect(problems.map((problem) => problem.span.file)).toEqual(["a.html", "b.html"]);
   });
 
   it("rejects a block that the parent does not have, and suggests one", () => {
