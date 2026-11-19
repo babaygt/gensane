@@ -159,6 +159,11 @@ describe("URLs", () => {
     expect(codes(files)).toEqual([]);
   });
 
+  it("doesn't warn about a date with a time on the same day", () => {
+    const source = "---\ntitle: Hello\ndate: 2026-11-17T09:30\n---\n";
+    expect(codes({ "blog/2026-11-17-hello.md": source })).toEqual([]);
+  });
+
   it("warns when the date in the file name isn't the date of the post", () => {
     expect(problems({ "blog/2026-11-16-hello.md": minimal.post })).toMatchObject([
       {
