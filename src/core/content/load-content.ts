@@ -230,7 +230,8 @@ class ContentLoader {
     data: MapValue,
     start: SourceSpan,
   ): Diagnostic[] {
-    if (fileDate === undefined || fileDate === date) return [];
+    // A file name has only the day, so a time of day doesn't count.
+    if (fileDate === undefined || fileDate === date.slice(0, 10)) return [];
     return [
       problem(
         CoreCodes.dateMismatch,
