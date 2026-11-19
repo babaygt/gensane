@@ -1,10 +1,12 @@
 import { describe, expect, it } from "vitest";
 import {
   countExampleMarkers,
+  countCoreMarkers,
   countFrontmatterMarkers,
   countTemplateMarkers,
   declaresSymbol,
   findCodeFences,
+  findCoreExamples,
   findFieldRows,
   findFrontmatterExamples,
   findLinks,
@@ -300,6 +302,75 @@ describe("findTemplateExamples", () => {
     const page = "<!-- renders -->\n<!-- reports GS1 -->\n<!-- render -->\n<!-- reported GS1 -->";
     expect(countTemplateMarkers(page)).toBe(4);
     expect(countTemplateMarkers("<!-- other -->\n<!-- prerender -->")).toBe(0);
+  });
+});
+
+describe("findCoreExamples", () => {
+  const site = [
+    "<!-- builds -->",
+    "```markdown blog/hello.md",
+    "---",
+    "title: Hello",
+    "---",
+    "```",
+    "```jinja post.html",
+    "{{ page.title }}",
+    "```",
+    "```json config",
+    '{ "perPage": 2 }',
+    "```",
+    "```text public",
+    "images/a.png",
+    "```",
+    "```text files",
+    "blog/hello/index.html",
+    "index.html",
+    "```",
+    "```html blog/hello/index.html",
+    "Hello",
+    "```",
+  ].join("\n");
+
+  it("reads the files of a site, and what it builds", () => {
+    expect(findCoreExamples(site)).toEqual([
+      {
+        kind: "builds",
+        code: undefined,
+        content: { "blog/hello.md": "---\ntitle: Hello\n---\n" },
+        templates: { "post.html": "{{ page.title }}" },
+        config: { perPage: 2 },
+        publicFiles: ["images/a.png"],
+        withoutTemplates: [],
+        files: ["blog/hello/index.html", "index.html"],
+        outputs: { "blog/hello/index.html": "Hello" },
+        problem: undefined,
+      },
+    ]);
+  });
+
+  it("reads a problem example", () => {
+    const page = "<!-- reports GS401 -->\n```markdown notes/a.md\nx\n```\n```text\nproblem\n```";
+    expect(findCoreExamples(page)[0]).toMatchObject({
+      kind: "reports",
+      code: "GS401",
+      content: { "notes/a.md": "x\n" },
+      problem: "problem",
+    });
+  });
+
+  it("reads the templates an example leaves out", () => {
+    const page = "<!-- reports GS410 -->\n```markdown a.md\nx\n```\n```text without\npost.html\n```\n```text\np\n```";
+    expect(findCoreExamples(page)[0]?.withoutTemplates).toEqual(["post.html"]);
+  });
+
+  it("rejects an example without files, or without what it shows", () => {
+    expect(() => findCoreExamples("<!-- builds -->\n```text files\nx\n```")).toThrow("without the files of a site");
+    expect(() => findCoreExamples("<!-- builds -->\n```markdown a.md\nx\n```")).toThrow("without the files it builds");
+    expect(() => findCoreExamples("<!-- reports GS401 -->\n```markdown a.md\nx\n```")).toThrow("without a text fence");
+  });
+
+  it("counts misspelled markers too", () => {
+    expect(countCoreMarkers("<!-- builds -->\n<!-- build -->\n<!-- reported GS1 -->\n<!-- builder -->")).toBe(3);
   });
 });
 

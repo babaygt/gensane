@@ -1,0 +1,190 @@
+# Code reference
+
+Every source file of the core and its most important functions. Select a name to open its file, then search for that name. Names
+starting with `#` are private methods of a class.
+
+## Public API and shared types
+
+### [`src/core/index.ts`](../../src/core/index.ts)
+
+The public entry point of the module.
+
+### [`src/core/build/build-site.ts`](../../src/core/build/build-site.ts)
+
+The whole build, from text to files.
+
+| Name                                                   | Purpose                                                     |
+| ------------------------------------------------------ | ----------------------------------------------------------- |
+| [`buildSite`](../../src/core/build/build-site.ts)      | Runs every step, and stops at the first step with errors    |
+| [`SiteConfig`](../../src/core/build/build-site.ts)     | The settings of a site                                      |
+| [`SiteInput`](../../src/core/build/build-site.ts)      | The content, the templates, the config and the public files |
+| [`BuiltSite`](../../src/core/build/build-site.ts)      | The files to write, sorted by path, and the warnings        |
+| [`withoutRepeats`](../../src/core/build/build-site.ts) | Reports a mistake that repeats on many pages once           |
+
+### [`src/core/diagnostic-codes.ts`](../../src/core/diagnostic-codes.ts)
+
+| Name                                              | Purpose                           |
+| ------------------------------------------------- | --------------------------------- |
+| [`CoreCodes`](../../src/core/diagnostic-codes.ts) | All problem codes, GS401 to GS415 |
+
+### [`src/core/problems.ts`](../../src/core/problems.ts)
+
+| Name                                        | Purpose                                                  |
+| ------------------------------------------- | -------------------------------------------------------- |
+| [`problem`](../../src/core/problems.ts)     | Makes a problem                                          |
+| [`startOf`](../../src/core/problems.ts)     | The start of a file, for problems without a better place |
+| [`inFileOrder`](../../src/core/problems.ts) | Sorts problems by file, then by position                 |
+
+## Content
+
+### [`src/core/content/load-content.ts`](../../src/core/content/load-content.ts)
+
+Content files to entries.
+
+| Name                                                      | Purpose                                                               |
+| --------------------------------------------------------- | --------------------------------------------------------------------- |
+| [`loadContent`](../../src/core/content/load-content.ts)   | Entry point                                                           |
+| [`ContentLoader`](../../src/core/content/load-content.ts) | Reads every file, in the order of their paths                         |
+| [`#loadFile`](../../src/core/content/load-content.ts)     | The type, the frontmatter, the body, the slug and the URL of one file |
+| [`moveBy`](../../src/core/content/load-content.ts)        | Moves body warnings below the frontmatter                             |
+| [`#checkDate`](../../src/core/content/load-content.ts)    | Warns about a file name date that isn't the post's day                |
+| [`#checkUrls`](../../src/core/content/load-content.ts)    | Two files with one URL                                                |
+
+### [`src/core/content/entries.ts`](../../src/core/content/entries.ts)
+
+| Name                                                | Purpose                                              |
+| --------------------------------------------------- | ---------------------------------------------------- |
+| [`ContentEntry`](../../src/core/content/entries.ts) | A union that ties each type of content to its fields |
+| [`EntryOf`](../../src/core/content/entries.ts)      | The entries of one type                              |
+
+### [`src/core/content/slugs.ts`](../../src/core/content/slugs.ts)
+
+| Name                                                  | Purpose                                     |
+| ----------------------------------------------------- | ------------------------------------------- |
+| [`slugify`](../../src/core/content/slugs.ts)          | Lowercase letters, digits and single dashes |
+| [`isValidSlug`](../../src/core/content/slugs.ts)      | Checks a written slug                       |
+| [`slugFromFileName`](../../src/core/content/slugs.ts) | Leaves out a date at the start              |
+
+### [`src/core/content/summary.ts`](../../src/core/content/summary.ts)
+
+| Name                                                 | Purpose                                        |
+| ---------------------------------------------------- | ---------------------------------------------- |
+| [`excerptOf`](../../src/core/content/summary.ts)     | Before the more marker, or the first paragraph |
+| [`readingTimeOf`](../../src/core/content/summary.ts) | Words divided by 200, at least 1 minute        |
+
+## Site
+
+### [`src/core/site/site-graph.ts`](../../src/core/site/site-graph.ts)
+
+Entries to routes.
+
+| Name                                                   | Purpose                                      |
+| ------------------------------------------------------ | -------------------------------------------- |
+| [`buildSiteGraph`](../../src/core/site/site-graph.ts)  | Entry point                                  |
+| [`listRoutes`](../../src/core/site/site-graph.ts)      | The pages of posts, tags, projects and talks |
+| [`GENERATED_PAGES`](../../src/core/site/site-graph.ts) | URLs that a page can't take                  |
+
+### [`src/core/site/routes.ts`](../../src/core/site/routes.ts)
+
+| Name                                          | Purpose                            |
+| --------------------------------------------- | ---------------------------------- |
+| [`Route`](../../src/core/site/routes.ts)      | A union of every kind of page      |
+| [`TEMPLATES`](../../src/core/site/routes.ts)  | The template for each kind of page |
+| [`Pagination`](../../src/core/site/routes.ts) | One page of a list                 |
+| [`Tag`](../../src/core/site/routes.ts)        | A tag and its posts                |
+
+### [`src/core/site/collections.ts`](../../src/core/site/collections.ts)
+
+| Name                                                 | Purpose                                     |
+| ---------------------------------------------------- | ------------------------------------------- |
+| [`collect`](../../src/core/site/collections.ts)      | Drafts, and the order of each list          |
+| [`TagCollector`](../../src/core/site/collections.ts) | Groups posts by tag, and chooses a spelling |
+
+### [`src/core/site/order.ts`](../../src/core/site/order.ts)
+
+| Name                                           | Purpose                                    |
+| ---------------------------------------------- | ------------------------------------------ |
+| [`compareText`](../../src/core/site/order.ts)  | Without caring about capital letters first |
+| [`compareDates`](../../src/core/site/order.ts) | A month before the days in it              |
+| [`compareOrder`](../../src/core/site/order.ts) | Entries with an `order` first              |
+
+### [`src/core/site/pagination.ts`](../../src/core/site/pagination.ts)
+
+| Name                                            | Purpose                        |
+| ----------------------------------------------- | ------------------------------ |
+| [`paginate`](../../src/core/site/pagination.ts) | Splits a list into pages       |
+| [`pageUrl`](../../src/core/site/pagination.ts)  | `/blog/`, then `/blog/page/2/` |
+
+## Rendering
+
+### [`src/core/build/page-data.ts`](../../src/core/build/page-data.ts)
+
+| Name                                                     | Purpose                                    |
+| -------------------------------------------------------- | ------------------------------------------ |
+| [`TemplateVariables`](../../src/core/build/page-data.ts) | The variables each template is given       |
+| [`#page`](../../src/core/build/page-data.ts)             | An entry as `page`, converted once         |
+| [`DEFAULT_TITLES`](../../src/core/build/page-data.ts)    | The title of a page without a content file |
+
+### [`src/core/build/output-paths.ts`](../../src/core/build/output-paths.ts)
+
+| Name                                                 | Purpose                                   |
+| ---------------------------------------------------- | ----------------------------------------- |
+| [`outputPath`](../../src/core/build/output-paths.ts) | `/blog/hello/` to `blog/hello/index.html` |
+
+## Feed and sitemap
+
+### [`src/core/feeds/feed-files.ts`](../../src/core/feeds/feed-files.ts)
+
+| Name                                              | Purpose                                              |
+| ------------------------------------------------- | ---------------------------------------------------- |
+| [`feedFiles`](../../src/core/feeds/feed-files.ts) | Decides whether to write them, and checks `site.url` |
+
+### [`src/core/feeds/atom.ts`](../../src/core/feeds/atom.ts)
+
+| Name                                        | Purpose                     |
+| ------------------------------------------- | --------------------------- |
+| [`atomFeed`](../../src/core/feeds/atom.ts)  | The 20 newest posts         |
+| [`FEED_SIZE`](../../src/core/feeds/atom.ts) | How many posts the feed has |
+
+### [`src/core/feeds/sitemap.ts`](../../src/core/feeds/sitemap.ts)
+
+| Name                                         | Purpose                                     |
+| -------------------------------------------- | ------------------------------------------- |
+| [`sitemap`](../../src/core/feeds/sitemap.ts) | Every page except the one for missing pages |
+
+### [`src/core/feeds/site-address.ts`](../../src/core/feeds/site-address.ts)
+
+| Name                                                    | Purpose                     |
+| ------------------------------------------------------- | --------------------------- |
+| [`siteAddressOf`](../../src/core/feeds/site-address.ts) | Reads and checks `site.url` |
+| [`absoluteUrl`](../../src/core/feeds/site-address.ts)   | A full address              |
+
+### [`src/core/feeds/feed-dates.ts`](../../src/core/feeds/feed-dates.ts)
+
+| Name                                                  | Purpose                                |
+| ----------------------------------------------------- | -------------------------------------- |
+| [`dateTime`](../../src/core/feeds/feed-dates.ts)      | With seconds and a time zone           |
+| [`dayOrDateTime`](../../src/core/feeds/feed-dates.ts) | A day on its own when there is no time |
+
+### [`src/core/feeds/xml.ts`](../../src/core/feeds/xml.ts)
+
+| Name                                       | Purpose                |
+| ------------------------------------------ | ---------------------- |
+| [`escapeXml`](../../src/core/feeds/xml.ts) | Makes text safe in XML |
+
+## Links
+
+### [`src/core/links/check-links.ts`](../../src/core/links/check-links.ts)
+
+Checks that links and images lead somewhere.
+
+| Name                                                       | Purpose                                               |
+| ---------------------------------------------------------- | ----------------------------------------------------- |
+| [`checkLinks`](../../src/core/links/check-links.ts)        | Entry point                                           |
+| [`LinkChecker`](../../src/core/links/check-links.ts)       | The checks                                            |
+| [`#checkLink`](../../src/core/links/check-links.ts)        | One link: its page or file, then the part of the page |
+| [`resolve`](../../src/core/links/check-links.ts)           | Resolves a relative link from its page                |
+| [`#fileOf`](../../src/core/links/check-links.ts)           | Finds the file a URL leads to                         |
+| [`#checkTemplate`](../../src/core/links/check-links.ts)    | Links written out in full in a template               |
+| [`#spanOf`](../../src/core/links/check-links.ts)           | Finds a link in the file it was written in            |
+| [`#checkPublicFiles`](../../src/core/links/check-links.ts) | A public file that would replace a written one        |
