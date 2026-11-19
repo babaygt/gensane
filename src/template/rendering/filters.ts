@@ -1,26 +1,11 @@
-/**
- * Filters are plain functions from a value to a new value, so anyone can write one. A filter
- * reports a mistake by throwing `FilterError`, and the interpreter turns that into a diagnostic.
- */
+/** Filters for text and single values, and the list of every built-in filter. */
+import {
+  type FilterDefinition,
+  FilterError,
+  type TemplateFilter,
+  defineFilter,
+} from "./filter-types.ts";
 import { SafeHtml, describeValue, isRecord, printableText } from "./values.ts";
-
-export type TemplateFilter = (value: unknown, ...filterArguments: unknown[]) => unknown;
-
-export class FilterError extends Error {
-  override readonly name = "FilterError";
-  readonly hint: string | undefined;
-
-  constructor(message: string, hint?: string) {
-    super(message);
-    this.hint = hint;
-  }
-}
-
-export interface FilterDefinition {
-  readonly apply: TemplateFilter;
-  readonly minimumArguments: number;
-  readonly maximumArguments: number;
-}
 
 function textInput(filterName: string, value: unknown): string {
   if (value === null || value === undefined) return "";
@@ -94,26 +79,18 @@ const raw: TemplateFilter = (value) => {
   throw new FilterError(`"raw" cannot print ${describeValue(value)}`);
 };
 
-function filter(
-  apply: TemplateFilter,
-  minimumArguments = 0,
-  maximumArguments = minimumArguments,
-): FilterDefinition {
-  return { apply, minimumArguments, maximumArguments };
-}
-
 export const builtInFilters: ReadonlyMap<string, FilterDefinition> = new Map([
-  ["upper", filter(textFilter("upper", (text) => text.toUpperCase()))],
-  ["lower", filter(textFilter("lower", (text) => text.toLowerCase()))],
-  ["capitalize", filter(textFilter("capitalize", capitalize))],
-  ["trim", filter(textFilter("trim", (text) => text.trim()))],
-  ["truncate", filter(truncate, 1, 2)],
-  ["default", filter(fallbackWhenEmpty, 1)],
-  ["length", filter(length)],
-  ["join", filter(join, 0, 1)],
-  ["first", filter((value) => itemsOf("first", value).at(0))],
-  ["last", filter((value) => itemsOf("last", value).at(-1))],
-  ["raw", filter(raw)],
+  ["upper", defineFilter(textFilter("upper", (text) => text.toUpperCase()))],
+  ["lower", defineFilter(textFilter("lower", (text) => text.toLowerCase()))],
+  ["capitalize", defineFilter(textFilter("capitalize", capitalize))],
+  ["trim", defineFilter(textFilter("trim", (text) => text.trim()))],
+  ["truncate", defineFilter(truncate, 1, 2)],
+  ["default", defineFilter(fallbackWhenEmpty, 1)],
+  ["length", defineFilter(length)],
+  ["join", defineFilter(join, 0, 1)],
+  ["first", defineFilter((value) => itemsOf("first", value).at(0))],
+  ["last", defineFilter((value) => itemsOf("last", value).at(-1))],
+  ["raw", defineFilter(raw)],
 ]);
 
 /** Custom filters can take any number of arguments, because only their author knows how many. */
@@ -121,7 +98,7 @@ export function withCustomFilters(
   custom: Readonly<Record<string, TemplateFilter>>,
 ): ReadonlyMap<string, FilterDefinition> {
   const entries = Object.entries(custom).map(
-    ([name, apply]) => [name, filter(apply, 0, Number.POSITIVE_INFINITY)] as const,
+    ([name, apply]) => [name, defineFilter(apply, 0, Number.POSITIVE_INFINITY)] as const,
   );
   return new Map([...builtInFilters, ...entries]);
 }

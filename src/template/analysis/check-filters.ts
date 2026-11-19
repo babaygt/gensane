@@ -5,7 +5,7 @@
 import { type Diagnostic, assertNever, closestMatch } from "../../diagnostics/index.ts";
 import type { Expression, FilterExpression, TemplateNode } from "../ast.ts";
 import { TemplateCodes } from "../diagnostic-codes.ts";
-import type { FilterDefinition } from "../rendering/filters.ts";
+import type { FilterDefinition } from "../rendering/filter-types.ts";
 
 export function checkFilters(
   nodes: readonly TemplateNode[],
