@@ -29,10 +29,12 @@ import { type FilterDefinition, FilterError } from "./filter-types.ts";
 import { Scope } from "./scope.ts";
 import {
   SafeHtml,
+  areEqual,
   describeValue,
   escapeHtml,
   isRecord,
   isTruthy,
+  ownField,
   printableText,
 } from "./values.ts";
 
@@ -61,11 +63,6 @@ function pathOf(expression: Expression): string | undefined {
   if (expression.kind !== "member") return undefined;
   const parent = pathOf(expression.object);
   return parent === undefined ? undefined : `${parent}.${expression.name}`;
-}
-
-function readField(object: unknown, key: string | number): unknown {
-  if (!Array.isArray(object) && !isRecord(object)) return undefined;
-  return Object.hasOwn(object, key) ? Reflect.get(object, key) : undefined;
 }
 
 class Interpreter {
@@ -184,7 +181,7 @@ class Interpreter {
     if (!this.#quiet && isRecord(object) && !Object.hasOwn(object, expression.name)) {
       this.#warnAboutMissingField(object, expression);
     }
-    return readField(object, expression.name);
+    return ownField(object, expression.name);
   }
 
   #warnAboutMissingField(
@@ -242,7 +239,7 @@ class Interpreter {
 
   #evaluateMember({ object, name }: MemberExpression): unknown {
     const value = this.#evaluate(object);
-    return value === FAILED ? FAILED : readField(value, name);
+    return value === FAILED ? FAILED : ownField(value, name);
   }
 
   #evaluateIndex({ object, index, span }: IndexExpression): unknown {
@@ -250,7 +247,7 @@ class Interpreter {
     const key = this.#evaluate(index);
     if (value === FAILED || key === FAILED) return FAILED;
     if (typeof key === "string" || (typeof key === "number" && Number.isInteger(key))) {
-      return readField(value, key);
+      return ownField(value, key);
     }
     this.#error(
       TemplateCodes.invalidIndex,
@@ -284,8 +281,8 @@ class Interpreter {
     const right = this.#evaluate(expression.right);
     if (left === FAILED || right === FAILED) return FAILED;
     const { operator } = expression;
-    if (operator === "==") return (left ?? null) === (right ?? null);
-    if (operator === "!=") return (left ?? null) !== (right ?? null);
+    if (operator === "==") return areEqual(left, right);
+    if (operator === "!=") return !areEqual(left, right);
     if (typeof left === "number" && typeof right === "number") {
       return this.#computeNumbers(expression, left, right);
     }
