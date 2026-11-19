@@ -121,10 +121,16 @@ describe("escaping", () => {
     expect(value("input | raw", { input: "<b>bold</b>" })).toBe("<b>bold</b>");
   });
 
-  it("rejects another filter after raw", () => {
-    expect(errorCodes("input | raw | upper", { input: "<b>" })).toEqual([
-      TemplateCodes.filterFailed,
+  it("rejects another filter after raw, and says what to do", () => {
+    const result = render("{{ input | raw | upper }}", { input: "<b>" });
+    expect(result.ok ? [] : result.error).toMatchObject([
+      { code: TemplateCodes.filterFailed, hint: "put `raw` last, after the other filters" },
     ]);
+  });
+
+  it("treats empty raw HTML as false", () => {
+    expect(value('not ("" | raw)')).toBe("true");
+    expect(value('not ("a" | raw)')).toBe("false");
   });
 });
 
@@ -285,6 +291,7 @@ describe("comparison", () => {
     ['1 == "1"', "false"],
     ["1 != 2", "true"],
     ["null == nothing", "true"],
+    ["null != nothing", "false"],
     ["1 < 2", "true"],
     ["2 < 2", "false"],
     ["2 <= 2", "true"],
@@ -340,6 +347,7 @@ describe("text filters", () => {
     ['"Hello" | lower', "hello"],
     ['"hello world" | capitalize', "Hello world"],
     ['"" | capitalize', ""],
+    ['"😀a" | capitalize', "😀a"],
     ['"  a  " | trim', "a"],
     ['"hello" | truncate(3)', "hel…"],
     ['"hello" | truncate(5)', "hello"],
@@ -475,6 +483,14 @@ describe("checking filters before rendering", () => {
   });
 
   it.each([
+    ['a | upper("x")', "remove the extra arguments"],
+    ["a | truncate", "add the missing arguments"],
+  ])("explains how to correct %s", (code, hint) => {
+    const result = compileTemplate(`{{ ${code} }}`, "page.html");
+    expect(result.ok ? undefined : result.error[0]?.hint).toBe(hint);
+  });
+
+  it.each([
     ['a | upper("x")', '"upper" takes no arguments, but got 1'],
     ["a | truncate", '"truncate" takes 1 to 2 arguments, but got 0'],
     ["a | truncate(1, 2, 3)", '"truncate" takes 1 to 2 arguments, but got 3'],
@@ -552,10 +568,19 @@ describe("reporting every problem", () => {
     expect(errorCodes("-missing")).toEqual([TemplateCodes.unknownVariable]);
     expect(errorCodes("not missing")).toEqual([TemplateCodes.unknownVariable]);
     expect(errorCodes("missing.a[0]")).toEqual([TemplateCodes.unknownVariable]);
+    expect(errorCodes("missing.a + 1")).toEqual([TemplateCodes.unknownVariable]);
     expect(errorCodes("list[missing]", { list: [] })).toEqual([TemplateCodes.unknownVariable]);
     expect(errorCodes("1 + missing")).toEqual([TemplateCodes.unknownVariable]);
     expect(errorCodes("missing and 1")).toEqual([TemplateCodes.unknownVariable]);
     expect(errorCodes('"a" | truncate(missing)')).toEqual([TemplateCodes.unknownVariable]);
+  });
+
+  it("does not run a filter on a value that failed", () => {
+    const template = compiled("{{ missing.a | mine }}", { mine: failWithTypeError });
+    const result = renderTemplate(template, {});
+    expect(result.ok ? [] : result.error.map((problem) => problem.code)).toEqual([
+      TemplateCodes.unknownVariable,
+    ]);
   });
 
   it("keeps warnings together with errors, in file order", () => {

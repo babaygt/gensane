@@ -180,6 +180,14 @@ describe("mistakes", () => {
     );
   });
 
+  it("points at the opening of a tag without a name", () => {
+    expect(parse("a {% %}").diagnostics[0]?.span.start.column).toBe(3);
+  });
+
+  it("does not report a tag whose name the lexer has already reported", () => {
+    expect(problems("{% @ %}")).toEqual([]);
+  });
+
   it("names the unknown tag", () => {
     expect(parse("{% nothing %}").diagnostics[0]?.message).toBe('there is no tag named "nothing"');
   });
@@ -227,6 +235,17 @@ describe("limits", () => {
     ).join("+");
     expect(problems(`{{ ${allowed} }}`)).toEqual([]);
     expect(problems(`{{ ${allowed}+a }}`)).toEqual([TemplateCodes.expressionTooLong]);
+  });
+
+  it("allows exactly the longest expression", () => {
+    const parts = Array.from({ length: 500 }, () => "a").join("+");
+    expect(problems(`{{ -${parts} }}`)).toEqual([]);
+    expect(problems(`{{ - -${parts} }}`)).toEqual([TemplateCodes.expressionTooLong]);
+  });
+
+  it("counts only nesting, not values side by side", () => {
+    const parts = Array.from({ length: MAX_EXPRESSION_DEPTH + 1 }, () => "(a)").join(" + ");
+    expect(problems(`{{ ${parts} }}`)).toEqual([]);
   });
 
   it("survives extremely deep nesting", () => {
