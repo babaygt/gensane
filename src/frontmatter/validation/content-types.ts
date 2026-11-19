@@ -76,6 +76,7 @@ const project = object({
   links: withDefault(listOf(object({ name: text(), url: url() })), []),
   status: optional(choice("active", "paused", "archived")),
   featured: withDefault(boolean(), false),
+  draft: withDefault(boolean(), false),
   cover: optional(text()),
   order: optional(integer()),
 });

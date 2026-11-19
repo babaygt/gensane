@@ -5,7 +5,6 @@
  */
 import {
   type Diagnostic,
-  type DiagnosticCode,
   type Result,
   type SourcePosition,
   type SourceSpan,
@@ -27,6 +26,7 @@ import {
   renderHtml,
 } from "../../markdown/index.ts";
 import { CoreCodes } from "../diagnostic-codes.ts";
+import { inFileOrder, problem, startOf } from "../problems.ts";
 import type { ContentEntry, EntryDetails } from "./entries.ts";
 import { isValidSlug, slugFromFileName, slugify } from "./slugs.ts";
 import { excerptOf, readingTimeOf } from "./summary.ts";
@@ -65,24 +65,7 @@ const HOME_PAGE = "index.md";
 
 interface LoadedFile {
   readonly entry: ContentEntry | undefined;
-  /** What to point at when the URL clashes with another one. */
-  readonly urlSpan: SourceSpan;
   readonly problems: readonly Diagnostic[];
-}
-
-function startOf(file: string): SourceSpan {
-  const start: SourcePosition = { line: 1, column: 1, offset: 0 };
-  return { file, start, end: start };
-}
-
-function problem(
-  code: DiagnosticCode,
-  message: string,
-  span: SourceSpan,
-  hint: string,
-  severity: Diagnostic["severity"] = "error",
-): Diagnostic {
-  return { code, severity, message, span, hint };
 }
 
 function typeOf(path: string): ContentType | undefined {
@@ -115,11 +98,8 @@ function entryOf<Type extends ContentType>(
   return { type, fields, ...details } as ContentEntry;
 }
 
-function inFileOrder(diagnostics: readonly Diagnostic[]): Diagnostic[] {
-  return diagnostics.toSorted(({ span: first }, { span: second }) => {
-    if (first.file !== second.file) return first.file < second.file ? -1 : 1;
-    return first.start.offset - second.start.offset;
-  });
+function failedWith(problems: readonly Diagnostic[]): LoadedFile {
+  return { entry: undefined, problems };
 }
 
 class ContentLoader {
@@ -145,14 +125,9 @@ class ContentLoader {
   #loadFile(path: string, source: string): LoadedFile {
     const file = `${this.#folder}/${path}`;
     const start = startOf(file);
-    const failed = (problems: readonly Diagnostic[]): LoadedFile => ({
-      entry: undefined,
-      urlSpan: start,
-      problems,
-    });
 
     if (!path.endsWith(".md")) {
-      return failed([
+      return failedWith([
         problem(
           CoreCodes.notMarkdown,
           "this file isn't Markdown, so it isn't part of the site",
@@ -164,7 +139,7 @@ class ContentLoader {
     }
     const type = typeOf(path);
     if (type === undefined) {
-      return failed([
+      return failedWith([
         problem(
           CoreCodes.unknownFolder,
           `there is no type of content for "${path}"`,
@@ -175,9 +150,9 @@ class ContentLoader {
     }
 
     const parsed = parseFrontmatter(source, file);
-    if (!parsed.ok) return failed(parsed.error);
+    if (!parsed.ok) return failedWith(parsed.error);
     const checked = validateContent(type, parsed.value.data);
-    if (!checked.ok) return failed(checked.error);
+    if (!checked.ok) return failedWith(checked.error);
 
     const { data, body, bodyStart } = parsed.value;
     const { value: fields, extra, warnings } = checked.value;
@@ -194,14 +169,14 @@ class ContentLoader {
     let slug = fromName.slug;
     if (slugField !== undefined) {
       if (!isValidSlug(slugField)) {
-        return failed([...problems, this.#invalidSlug(slugField, slugSpan ?? start)]);
+        return failedWith([...problems, this.#invalidSlug(slugField, slugSpan ?? start)]);
       }
       slug = slugField;
     }
 
     const prefix = URL_PREFIXES[type];
     if (slug === "" && prefix !== undefined) {
-      return failed([
+      return failedWith([
         ...problems,
         problem(
           CoreCodes.noSlug,
@@ -224,6 +199,7 @@ class ContentLoader {
       file: path,
       slug,
       url,
+      urlSpan: slugField === undefined ? start : (slugSpan ?? start),
       extra,
       html,
       tableOfContents: buildTableOfContents(markdown.document),
@@ -232,7 +208,6 @@ class ContentLoader {
     };
     return {
       entry: entryOf(type, fields, details),
-      urlSpan: slugField === undefined ? start : (slugSpan ?? start),
       problems,
     };
   }
@@ -271,7 +246,7 @@ class ContentLoader {
   #checkUrls(files: readonly LoadedFile[]): Diagnostic[] {
     const owners = new Map<string, string>();
     const problems: Diagnostic[] = [];
-    for (const { entry, urlSpan } of files) {
+    for (const { entry } of files) {
       if (entry?.url === undefined) continue;
       const owner = owners.get(entry.url);
       if (owner === undefined) {
@@ -282,7 +257,7 @@ class ContentLoader {
         problem(
           CoreCodes.duplicateUrl,
           `${entry.url} is already the URL of "${this.#folder}/${owner}"`,
-          urlSpan,
+          entry.urlSpan,
           "rename one of the files, or give one of them a `slug:`",
         ),
       );
