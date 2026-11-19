@@ -100,7 +100,7 @@ export type FrontmatterExample =
 
 /** A misspelled marker is counted too, so it fails instead of leaving its example unchecked. */
 export function countFrontmatterMarkers(page: string): number {
-  return page.match(/^<!--\s*(?:reads|valid|reports)\b.*-->$/gm)?.length ?? 0;
+  return page.match(/^<!--\s*(?:reads?|valid|reports?|reported)\b.*-->$/gm)?.length ?? 0;
 }
 
 /**
