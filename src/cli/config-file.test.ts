@@ -149,6 +149,14 @@ describe("a config that can't be loaded", () => {
       "fix the mistake in the config; running it with node shows where it is",
     ],
     [
+      "another package not installed",
+      nodeError(
+        "ERR_MODULE_NOT_FOUND",
+        "Cannot find package 'date-fns' imported from /site/gensane.config.ts",
+      ),
+      "install the package the config imports, or correct its name",
+    ],
+    [
       "a mistake in JavaScript",
       new SyntaxError("Unexpected end of input"),
       "fix the mistake in the config; running it with node shows where it is",

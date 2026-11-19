@@ -114,6 +114,12 @@ describe("settings it doesn't know", () => {
     ]);
   });
 
+  it("lists the settings of markdown when none is close", () => {
+    expect(problemsOf({ markdown: { tables: true } })[0]?.hint).toBe(
+      "the settings of markdown are rawHtml and headingIds",
+    );
+  });
+
   it("warns about a site setting that looks misspelled, because the templates would not see it", () => {
     expect(problemsOf({ site: { titel: "Ada's notes" } })).toEqual([
       {
@@ -159,6 +165,7 @@ describe("values of the wrong kind", () => {
     [{ site: { title: 5 } }, '"site.title" must be text, but 5 is a number'],
     [{ site: { url: true } }, '"site.url" must be text, but true is true or false'],
     [{ site: { description: ["a"] } }, '"site.description" must be text, but it is a list'],
+    [{ site: { title: {} } }, '"site.title" must be text, but it is a group of settings'],
     [
       { site: { author: 5 } },
       '"site.author" must be text or a group of settings with a "name", but 5 is a number',
@@ -181,6 +188,15 @@ describe("values of the wrong kind", () => {
     expect(problemsOf(config)[0]?.code).toBe(ConfigCodes.wrongValue);
   });
 
+  it.each([
+    ["a big number", 10n, "10 is a number"],
+    ["a symbol", Symbol("ten"), "it is a symbol"],
+  ])("reports perPage as %s", (_, perPage, found) => {
+    expect(messagesOf({ perPage })).toEqual([
+      `"perPage" must be a whole number above 0, but ${found}`,
+    ]);
+  });
+
   it("reports a filter that a template couldn't name", () => {
     expect(problemsOf({ filters: { "to-upper": shout } })).toEqual([
       {
@@ -190,6 +206,10 @@ describe("values of the wrong kind", () => {
         hint: 'name it "to_upper"',
       },
     ]);
+  });
+
+  it("suggests a filter name that doesn't start with a digit", () => {
+    expect(problemsOf({ filters: { "1st": shout } })[0]?.hint).toBe('name it "_1st"');
   });
 });
 
