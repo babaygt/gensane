@@ -11,4 +11,5 @@ export const CoreCodes = {
   reservedUrl: "GS407",
   tagWithoutUrl: "GS408",
   tagSpelling: "GS409",
+  missingTemplate: "GS410",
 } as const satisfies Record<string, DiagnosticCode>;

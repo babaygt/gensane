@@ -27,6 +27,7 @@ import { interpret } from "./rendering/interpreter.ts";
 export { TemplateCodes } from "./diagnostic-codes.ts";
 export { FilterError, type TemplateFilter } from "./rendering/filter-types.ts";
 export { MAX_INCLUDE_DEPTH } from "./rendering/interpreter.ts";
+export { SafeHtml } from "./rendering/values.ts";
 
 export interface CompileOptions {
   /** Extra filters, which can also replace built-in ones. */
