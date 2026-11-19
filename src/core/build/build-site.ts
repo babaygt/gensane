@@ -9,6 +9,7 @@ import { type TemplateFilter, compileTemplates, renderTemplate } from "../../tem
 import { loadContent } from "../content/load-content.ts";
 import { CoreCodes } from "../diagnostic-codes.ts";
 import { feedFiles } from "../feeds/feed-files.ts";
+import { checkLinks } from "../links/check-links.ts";
 import { inFileOrder, problem, startOf } from "../problems.ts";
 import { compareStrings } from "../site/order.ts";
 import { type Route, TEMPLATES } from "../site/routes.ts";
@@ -38,6 +39,8 @@ export interface SiteInput {
   readonly content: Readonly<Record<string, string>>;
   /** Each template by its name, which `include` and `extends` use. */
   readonly templates: Readonly<Record<string, string>>;
+  /** The paths of the files in the `public` folder, which are copied as they are. */
+  readonly publicFiles?: readonly string[];
 }
 
 export interface OutputFile {
@@ -127,5 +130,17 @@ export function buildSite(input: SiteInput): Result<BuiltSite, readonly Diagnost
     graph.value.graph,
     config.configFile ?? "gensane.config.ts",
   );
-  return finish([...files, ...feeds.files], [...problems, ...feeds.problems]);
+  const allFiles = [...files, ...feeds.files];
+  const found = [...problems, ...feeds.problems];
+  if (hasErrors(found)) return finish(allFiles, found);
+  const links = checkLinks({
+    entries: loaded.value.entries,
+    drafts: config.drafts ?? false,
+    contentFolder: config.contentFolder ?? "content",
+    content: input.content,
+    templates: input.templates,
+    files: new Map(allFiles.map((file) => [file.path, file.content])),
+    publicFiles: input.publicFiles ?? [],
+  });
+  return finish(allFiles, [...found, ...links]);
 }

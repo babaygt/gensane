@@ -14,4 +14,7 @@ export const CoreCodes = {
   missingTemplate: "GS410",
   noSiteUrl: "GS411",
   invalidSiteUrl: "GS412",
+  brokenLink: "GS413",
+  missingAnchor: "GS414",
+  publicFileClash: "GS415",
 } as const satisfies Record<string, DiagnosticCode>;
