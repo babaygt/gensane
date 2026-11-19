@@ -88,6 +88,24 @@ describe.each([
     });
   });
 
+  describe("isFile", () => {
+    it("is true for a file", async () => {
+      const { fileSystem, root } = await setUp({ "gensane.config.ts": "" });
+      expect(await fileSystem.isFile(`${root}/gensane.config.ts`)).toBe(true);
+    });
+
+    it("is false for a folder", async () => {
+      const { fileSystem, root } = await setUp({ "content/a.md": "" });
+      expect(await fileSystem.isFile(`${root}/content`)).toBe(false);
+    });
+
+    it("is false for something that doesn't exist, even inside a file", async () => {
+      const { fileSystem, root } = await setUp({ "a.md": "" });
+      expect(await fileSystem.isFile(`${root}/b.md`)).toBe(false);
+      expect(await fileSystem.isFile(`${root}/a.md/b.md`)).toBe(false);
+    });
+  });
+
   describe("readText", () => {
     it("reads a file as UTF-8", async () => {
       const { fileSystem, root } = await setUp({ "a.md": "Grüße, 日本 ✓" });
@@ -173,7 +191,8 @@ type Operation =
   | { readonly kind: "copy"; readonly from: string; readonly to: string }
   | { readonly kind: "remove"; readonly folder: string }
   | { readonly kind: "list"; readonly folder: string }
-  | { readonly kind: "read"; readonly path: string };
+  | { readonly kind: "read"; readonly path: string }
+  | { readonly kind: "isFile"; readonly path: string };
 
 const folder = fc.constantFrom("", "a", "a/b", "c");
 const fileName = fc.constantFrom("x.txt", "y.txt");
@@ -191,6 +210,7 @@ const operation: fc.Arbitrary<Operation> = fc.oneof(
   }),
   fc.record({ kind: fc.constant("list" as const), folder: fc.oneof(folder, filePath) }),
   fc.record({ kind: fc.constant("read" as const), path: filePath }),
+  fc.record({ kind: fc.constant("isFile" as const), path: fc.oneof(folder, filePath) }),
 );
 
 /** What an operation gave back, or that it failed. */
@@ -208,6 +228,8 @@ async function run(fileSystem: FileSystem, root: string, step: Operation): Promi
         return await fileSystem.listFiles(at(step.folder));
       case "read":
         return await fileSystem.readText(at(step.path));
+      case "isFile":
+        return await fileSystem.isFile(at(step.path));
     }
   } catch {
     return "failed";
