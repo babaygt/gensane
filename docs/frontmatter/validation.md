@@ -96,8 +96,8 @@ hint: add a line such as `url: ...`
 Custom fields are allowed, so an unknown field isn't a mistake by itself. [`typoWarnings`](../../src/frontmatter/validation/schema.ts) only warns
 when a field looks like a misspelling of a known field that this file hasn't used yet.
 
-[`closestMatch`](../../src/frontmatter/validation/closest-match.ts) makes that decision with
-[`editDistance`](../../src/frontmatter/validation/closest-match.ts), the number of single-character changes between two words. Swapping two
+[`closestMatch`](../../src/diagnostics/closest-match.ts) makes that decision with
+[`editDistance`](../../src/diagnostics/closest-match.ts), the number of single-character changes between two words. Swapping two
 neighbouring letters counts as one change, because that is the most common typo. A word is close enough when the distance is at most a third of the
 longer word, and always allows at least one change.
 
