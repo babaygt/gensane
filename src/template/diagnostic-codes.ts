@@ -27,4 +27,10 @@ export const TemplateCodes = {
   notPrintable: "GS335",
   invalidIndex: "GS336",
   notIterable: "GS337",
+  unknownTemplate: "GS340",
+  templateCycle: "GS341",
+  misplacedExtends: "GS342",
+  contentOutsideBlock: "GS343",
+  duplicateBlock: "GS344",
+  unknownBlock: "GS345",
 } as const satisfies Record<string, DiagnosticCode>;

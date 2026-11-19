@@ -25,6 +25,11 @@ export function checkFilters(
           ]),
           ...checkFilters(node.otherwise, filters),
         ];
+      case "include":
+      case "extends":
+        return [];
+      case "block":
+        return checkFilters(node.body, filters);
       case "for":
         return [
           ...checkExpression(node.iterable, filters),

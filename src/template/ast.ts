@@ -116,4 +116,36 @@ export interface ForNode {
   readonly span: SourceSpan;
 }
 
-export type TemplateNode = TextNode | OutputNode | IfNode | ForNode;
+/** `{% include "partials/nav.html" %}` */
+export interface IncludeNode {
+  readonly kind: "include";
+  readonly template: string;
+  readonly templateSpan: SourceSpan;
+  readonly span: SourceSpan;
+}
+
+/** `{% extends "base.html" %}`, which must come before everything else */
+export interface ExtendsNode {
+  readonly kind: "extends";
+  readonly template: string;
+  readonly templateSpan: SourceSpan;
+  readonly span: SourceSpan;
+}
+
+/** `{% block content %}`: a part that a template which extends this one can replace */
+export interface BlockNode {
+  readonly kind: "block";
+  readonly name: string;
+  readonly nameSpan: SourceSpan;
+  readonly body: readonly TemplateNode[];
+  readonly span: SourceSpan;
+}
+
+export type TemplateNode =
+  | TextNode
+  | OutputNode
+  | IfNode
+  | ForNode
+  | IncludeNode
+  | ExtendsNode
+  | BlockNode;

@@ -1,5 +1,5 @@
 import type { Diagnostic } from "../diagnostics/index.ts";
-import { type TemplateFilter, compileTemplate, renderTemplate } from "./index.ts";
+import { type TemplateFilter, compileTemplate, compileTemplates, renderTemplate } from "./index.ts";
 
 type Variables = Readonly<Record<string, unknown>>;
 
@@ -46,4 +46,31 @@ export function compileCodes(
 ): string[] {
   const result = compileTemplate(source, "page.html", { filters });
   return result.ok ? [] : result.error.map((problem) => problem.code);
+}
+
+type Files = Readonly<Record<string, string>>;
+
+/** Renders one template of a set of files. */
+export function renderFile(files: Files, name: string, variables: Variables = {}) {
+  const result = compileTemplates(files);
+  if (!result.ok) throw new Error(result.error[0]?.message);
+  const template = result.value.get(name);
+  if (template === undefined) throw new Error(`No template named ${name}`);
+  return renderTemplate(template, variables);
+}
+
+export function fileHtml(files: Files, name: string, variables: Variables = {}): string {
+  const result = renderFile(files, name, variables);
+  if (!result.ok) throw new Error(result.error[0]?.message);
+  return result.value.html;
+}
+
+/** The problems of compiling a set of files. */
+export function setProblems(files: Files): readonly Diagnostic[] {
+  const result = compileTemplates(files);
+  return result.ok ? [] : result.error;
+}
+
+export function setCodes(files: Files): string[] {
+  return setProblems(files).map((problem) => problem.code);
 }
