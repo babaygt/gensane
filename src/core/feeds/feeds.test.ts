@@ -63,6 +63,7 @@ describe("the site URL", () => {
     ["https://example.com/", "https://example.com/blog/a/"],
     ["https://ada.github.io/notes", "https://ada.github.io/notes/blog/a/"],
     ["https://ada.github.io/notes/", "https://ada.github.io/notes/blog/a/"],
+    ["http://localhost:8080", "http://localhost:8080/blog/a/"],
   ])("joins %s with the URL of a page", (url, address) => {
     const sitemap = fileOf({ "blog/a.md": minimal.post }, { site: { url } }, "sitemap.xml");
     expect(sitemap).toContain(`<loc>${address}</loc>`);
@@ -214,5 +215,15 @@ describe("the sitemap", () => {
   it("writes a date without a time as the day", () => {
     const sitemap = fileOf({ "blog/a.md": minimal.post }, { site }, "sitemap.xml");
     expect(sitemap).toContain("<lastmod>2026-11-17</lastmod>");
+  });
+
+  it("writes months and days with two digits", () => {
+    const post = "---\ntitle: A\ndate: 2026-03-07\n---\n";
+    expect(fileOf({ "blog/a.md": post }, { site }, "sitemap.xml")).toContain(
+      "<lastmod>2026-03-07</lastmod>",
+    );
+    expect(fileOf({ "blog/a.md": post }, { site }, "feed.xml")).toContain(
+      "<published>2026-03-07T00:00:00Z</published>",
+    );
   });
 });
