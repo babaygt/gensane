@@ -1,7 +1,8 @@
 /**
  * A tree-walking interpreter: it visits the syntax tree and computes each node's value directly.
  * A problem produces the value `FAILED`, which spreads through the expression around it, so one
- * mistake is reported once and the rest of the template still runs.
+ * mistake is reported once and the rest of the template still runs. Inside a loop, the same
+ * mistake at the same place is reported only for the first item.
  */
 import {
   type Diagnostic,
@@ -15,6 +16,8 @@ import type {
   BinaryExpression,
   Expression,
   FilterExpression,
+  ForNode,
+  IfNode,
   IndexExpression,
   LogicalExpression,
   MemberExpression,
@@ -23,6 +26,7 @@ import type {
 } from "../ast.ts";
 import { TemplateCodes } from "../diagnostic-codes.ts";
 import { type FilterDefinition, FilterError } from "./filter-types.ts";
+import { Scope } from "./scope.ts";
 import {
   SafeHtml,
   describeValue,
@@ -65,21 +69,27 @@ function readField(object: unknown, key: string | number): unknown {
 }
 
 class Interpreter {
-  readonly #variables: Readonly<Record<string, unknown>>;
   readonly #filters: ReadonlyMap<string, FilterDefinition>;
   readonly #diagnostics: Diagnostic[] = [];
+  readonly #reported = new Set<string>();
+  #scope: Scope;
+  /** Conditions and the lists of loops may read missing fields without a warning. */
+  #quiet = false;
 
   constructor(
     variables: Readonly<Record<string, unknown>>,
     filters: ReadonlyMap<string, FilterDefinition>,
   ) {
-    this.#variables = variables;
+    this.#scope = new Scope(variables);
     this.#filters = filters;
   }
 
   run(nodes: readonly TemplateNode[]): InterpreterResult {
-    const html = nodes.map((node) => this.#renderNode(node)).join("");
-    return { html, diagnostics: this.#diagnostics };
+    return { html: this.#renderNodes(nodes), diagnostics: this.#diagnostics };
+  }
+
+  #renderNodes(nodes: readonly TemplateNode[]): string {
+    return nodes.map((node) => this.#renderNode(node)).join("");
   }
 
   #renderNode(node: TemplateNode): string {
@@ -88,9 +98,59 @@ class Interpreter {
         return node.value;
       case "output":
         return this.#print(node.expression);
+      case "if":
+        return this.#renderIf(node);
+      case "for":
+        return this.#renderFor(node);
       default:
         return assertNever(node);
     }
+  }
+
+  #renderIf({ branches, otherwise }: IfNode): string {
+    for (const { condition, body } of branches) {
+      const value = this.#evaluateQuietly(condition);
+      if (value === FAILED) return "";
+      if (isTruthy(value)) return this.#renderNodes(body);
+    }
+    return this.#renderNodes(otherwise);
+  }
+
+  #renderFor({ variable, iterable, body, otherwise }: ForNode): string {
+    const list = this.#evaluateQuietly(iterable);
+    if (list === FAILED) return "";
+    if (list !== null && list !== undefined && !Array.isArray(list)) {
+      this.#error(
+        TemplateCodes.notIterable,
+        `a loop needs a list, but found ${describeValue(list)}`,
+        iterable.span,
+        "use a list here, such as `page.tags`",
+      );
+      return "";
+    }
+    const items: readonly unknown[] = Array.isArray(list) ? list : [];
+    if (items.length === 0) return this.#renderNodes(otherwise);
+
+    const outside = this.#scope;
+    const html = items.map((item, index) => {
+      const loop = {
+        index: index + 1,
+        first: index === 0,
+        last: index === items.length - 1,
+        length: items.length,
+      };
+      this.#scope = new Scope({ [variable]: item, loop }, outside);
+      return this.#renderNodes(body);
+    });
+    this.#scope = outside;
+    return html.join("");
+  }
+
+  #evaluateQuietly(expression: Expression): unknown {
+    this.#quiet = true;
+    const value = this.#evaluate(expression);
+    this.#quiet = false;
+    return value;
   }
 
   #print(expression: Expression): string {
@@ -121,7 +181,7 @@ class Interpreter {
     if (expression.kind !== "member") return this.#evaluate(expression);
     const object = this.#evaluateAndWarn(expression.object);
     if (object === FAILED) return FAILED;
-    if (isRecord(object) && !Object.hasOwn(object, expression.name)) {
+    if (!this.#quiet && isRecord(object) && !Object.hasOwn(object, expression.name)) {
       this.#warnAboutMissingField(object, expression);
     }
     return readField(object, expression.name);
@@ -132,7 +192,7 @@ class Interpreter {
     { object: parent, name, nameSpan }: MemberExpression,
   ): void {
     const suggestion = closestMatch(name, Object.keys(object));
-    this.#diagnostics.push({
+    this.#report({
       code: TemplateCodes.missingField,
       severity: "warning",
       message: `"${pathOf(parent) ?? "this value"}" has no field "${name}"`,
@@ -168,8 +228,9 @@ class Interpreter {
   }
 
   #readVariable(name: string, span: SourceSpan): unknown {
-    if (Object.hasOwn(this.#variables, name)) return this.#variables[name];
-    const known = Object.keys(this.#variables);
+    const found = this.#scope.lookup(name);
+    if (found !== undefined) return found.value;
+    const known = this.#scope.names();
     const suggestion = closestMatch(name, known);
     const listed = known.slice(0, MAX_LISTED_VARIABLES).join(", ");
     let hint = "no variables are available here";
@@ -291,7 +352,14 @@ class Interpreter {
   }
 
   #error(code: DiagnosticCode, message: string, span: SourceSpan, hint: string): void {
-    this.#diagnostics.push({ code, severity: "error", message, span, hint });
+    this.#report({ code, severity: "error", message, span, hint });
+  }
+
+  #report(diagnostic: Diagnostic): void {
+    const key = `${diagnostic.code} ${diagnostic.span.start.offset}`;
+    if (this.#reported.has(key)) return;
+    this.#reported.add(key);
+    this.#diagnostics.push(diagnostic);
   }
 }
 

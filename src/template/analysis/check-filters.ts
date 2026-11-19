@@ -17,6 +17,20 @@ export function checkFilters(
         return [];
       case "output":
         return checkExpression(node.expression, filters);
+      case "if":
+        return [
+          ...node.branches.flatMap((branch) => [
+            ...checkExpression(branch.condition, filters),
+            ...checkFilters(branch.body, filters),
+          ]),
+          ...checkFilters(node.otherwise, filters),
+        ];
+      case "for":
+        return [
+          ...checkExpression(node.iterable, filters),
+          ...checkFilters(node.body, filters),
+          ...checkFilters(node.otherwise, filters),
+        ];
       default:
         return assertNever(node);
     }

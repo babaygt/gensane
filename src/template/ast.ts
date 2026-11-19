@@ -92,4 +92,28 @@ export interface OutputNode {
   readonly span: SourceSpan;
 }
 
-export type TemplateNode = TextNode | OutputNode;
+/** An `if` or `elif`, and what it shows. */
+export interface ConditionalBranch {
+  readonly condition: Expression;
+  readonly body: readonly TemplateNode[];
+}
+
+/** `{% if %}`, any number of `{% elif %}`, and an optional `{% else %}` */
+export interface IfNode {
+  readonly kind: "if";
+  readonly branches: readonly ConditionalBranch[];
+  readonly otherwise: readonly TemplateNode[];
+  readonly span: SourceSpan;
+}
+
+/** `{% for post in posts %}`, with an optional `{% else %}` for an empty list */
+export interface ForNode {
+  readonly kind: "for";
+  readonly variable: string;
+  readonly iterable: Expression;
+  readonly body: readonly TemplateNode[];
+  readonly otherwise: readonly TemplateNode[];
+  readonly span: SourceSpan;
+}
+
+export type TemplateNode = TextNode | OutputNode | IfNode | ForNode;
