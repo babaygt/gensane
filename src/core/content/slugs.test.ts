@@ -58,6 +58,8 @@ describe("slugFromFileName", () => {
     ["2026-11-17.md", { slug: "", date: "2026-11-17" }],
     ["2026-1-17-hello.md", { slug: "2026-1-17-hello", date: undefined }],
     ["20261117-hello.md", { slug: "20261117-hello", date: undefined }],
+    ["2026-11-17hello.md", { slug: "2026-11-17hello", date: undefined }],
+    ["hello-2026-11-17.md", { slug: "hello-2026-11-17", date: undefined }],
   ])("%s", (name, expected) => {
     expect(slugFromFileName(name)).toEqual(expected);
   });
