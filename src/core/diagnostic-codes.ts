@@ -1,0 +1,11 @@
+import type { DiagnosticCode } from "../diagnostics/index.ts";
+
+/** Codes for problems found while building a site. The core uses the GS4xx range. */
+export const CoreCodes = {
+  unknownFolder: "GS401",
+  notMarkdown: "GS402",
+  invalidSlug: "GS403",
+  noSlug: "GS404",
+  duplicateUrl: "GS405",
+  dateMismatch: "GS406",
+} as const satisfies Record<string, DiagnosticCode>;

@@ -31,6 +31,7 @@ cover: /images/compiler.png
 | Field         | Required | Kind of value | When left out |
 | ------------- | -------- | ------------- | ------------- |
 | `title`       | Yes      | Text          |               |
+| `slug`        | No       | Text          | File name     |
 | `date`        | Yes      | Date          |               |
 | `updated`     | No       | Date          | Empty         |
 | `description` | No       | Text          | Empty         |
@@ -51,6 +52,7 @@ description: Who I am and what I build
 | Field         | Required | Kind of value | When left out |
 | ------------- | -------- | ------------- | ------------- |
 | `title`       | Yes      | Text          |               |
+| `slug`        | No       | Text          | File name     |
 | `description` | No       | Text          | Empty         |
 | `draft`       | No       | True or false | `false`       |
 
@@ -77,6 +79,7 @@ order: 1
 | Field         | Required | Kind of value                            | When left out |
 | ------------- | -------- | ---------------------------------------- | ------------- |
 | `title`       | Yes      | Text                                     |               |
+| `slug`        | No       | Text                                     | File name     |
 | `description` | No       | Text                                     | Empty         |
 | `stack`       | No       | List of text                             | Empty list    |
 | `repo`        | No       | Web address                              | Empty         |
@@ -169,6 +172,9 @@ order: 1
 **Text must be text.** `title: 1984` is an error rather than a quiet conversion, and the hint shows the quotes to add.
 
 **An end can't come before the start.** Days are only compared when both dates have one, so a job from `2024-06-15` to `2024-06` is allowed.
+
+**`slug` sets the URL.** Posts, pages and projects get their URL from the file name, and `slug: my-post` replaces it. A slug can only
+use lowercase letters, digits and single dashes.
 
 **Custom fields are allowed.** Fields that the type doesn't define are kept for templates.
 

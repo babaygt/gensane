@@ -50,6 +50,7 @@ const endsAfterStart: FieldRule<{
 
 const post = object({
   title: text(),
+  slug: optional(text()),
   date: fullDate(),
   updated: optional(fullDate()),
   description: optional(text()),
@@ -60,12 +61,14 @@ const post = object({
 
 const page = object({
   title: text(),
+  slug: optional(text()),
   description: optional(text()),
   draft: withDefault(boolean(), false),
 });
 
 const project = object({
   title: text(),
+  slug: optional(text()),
   description: optional(text()),
   stack: tags(),
   repo: optional(url()),
