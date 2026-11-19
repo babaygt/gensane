@@ -44,6 +44,11 @@ function show(nodes: readonly TemplateNode[]): string {
           const otherwise = node.otherwise.length > 0 ? ` else [${show(node.otherwise)}]` : "";
           return `for ${node.variable} in ${showExpression(node.iterable)} [${show(node.body)}]${otherwise}`;
         }
+        case "include":
+        case "extends":
+          return `${node.kind} ${JSON.stringify(node.template)}`;
+        case "block":
+          return `block ${node.name} [${show(node.body)}]`;
       }
     })
     .join(" ");
@@ -242,8 +247,14 @@ describe("mistakes in blocks", () => {
     ["{% endfi %}", 'did you mean "endif"?'],
     ["{% elseif a %}", 'did you mean "elif"?'],
     ["{% elsif a %}", 'did you mean "elif"?'],
-    ["{% nothing %}", "the tags are: if, elif, else, endif, for and endfor"],
-    ["{% %}", "the tags are: if, elif, else, endif, for and endfor"],
+    [
+      "{% nothing %}",
+      "the tags are: if, elif, else, endif, for, endfor, include, extends, block and endblock",
+    ],
+    [
+      "{% %}",
+      "the tags are: if, elif, else, endif, for, endfor, include, extends, block and endblock",
+    ],
   ])("suggests a tag for %s", (source, hint) => {
     expect(parse(source).diagnostics[0]?.hint).toBe(hint);
   });
@@ -268,6 +279,80 @@ describe("mistakes in blocks", () => {
 function nested(depth: number): string {
   return "{% if a %}".repeat(depth) + "x" + "{% endif %}".repeat(depth);
 }
+
+describe("includes and layouts", () => {
+  it("reads an include", () => {
+    expect(structure('a{% include "partials/toc.html" %}b')).toBe(
+      '"a" include "partials/toc.html" "b"',
+    );
+  });
+
+  it("reads extends", () => {
+    expect(structure('{% extends "base.html" %}')).toBe('extends "base.html"');
+  });
+
+  it("reads a block and what it shows by default", () => {
+    expect(structure("{% block content %}x{{ a }}{% endblock %}")).toBe('block content ["x" {a}]');
+  });
+
+  it("reads blocks inside blocks and other tags", () => {
+    expect(
+      structure(
+        '{% block page %}{% if a %}{% block title %}{% include "t.html" %}{% endblock %}{% endif %}{% endblock %}',
+      ),
+    ).toBe('block page [if a [block title [include "t.html"]]]');
+  });
+
+  it("points at the name of the template", () => {
+    const [node] = parse('{% include "toc.html" %}').nodes;
+    expect(node?.kind === "include" && node.templateSpan).toMatchObject({
+      start: { column: 12 },
+      end: { column: 22 },
+    });
+  });
+
+  it.each([
+    ["{% include %}", TemplateCodes.unexpectedToken],
+    ["{% include toc %}", TemplateCodes.unexpectedToken],
+    ['{% include "a" "b" %}', TemplateCodes.unexpectedToken],
+    ["{% extends 1 %}", TemplateCodes.unexpectedToken],
+    ['{% extends "a" b %}', TemplateCodes.unexpectedToken],
+    ["{% block %}{% endblock %}", TemplateCodes.unexpectedToken],
+    ['{% block "a" %}{% endblock %}', TemplateCodes.unexpectedToken],
+    ["{% block a b %}{% endblock %}", TemplateCodes.unexpectedToken],
+    ["{% block a %}{% endblock a %}", TemplateCodes.unexpectedToken],
+    ["{% block a %}", TemplateCodes.unclosedBlock],
+    ["{% endblock %}", TemplateCodes.noOpenBlock],
+    ["{% block a %}{% else %}{% endblock %}", TemplateCodes.noOpenBlock],
+    ["{% if a %}{% block b %}{% endif %}", TemplateCodes.unclosedBlock],
+    ["{% inlcude 'a' %}", TemplateCodes.unknownTag],
+  ])("%s", (source, code) => {
+    expect(problems(source)).toEqual([code]);
+  });
+
+  it("says what an include needs", () => {
+    expect(parse("{% include toc %}").diagnostics).toMatchObject([
+      {
+        message: "expected the name of a template in quotes, but found `toc`",
+        hint: "add the name of a template in quotes here",
+      },
+    ]);
+  });
+
+  it("says what a block needs", () => {
+    expect(parse("{% block %}{% endblock %}").diagnostics[0]?.message).toBe(
+      "expected the name of the block, but found the end of the tag",
+    );
+  });
+
+  it("keeps the block when its name is broken, so the end tag still matches", () => {
+    expect(problems("{% block 1 %}x{% endblock %}")).toEqual([TemplateCodes.unexpectedToken]);
+  });
+
+  it("suggests include for a misspelled tag", () => {
+    expect(parse("{% inlcude 'a' %}").diagnostics[0]?.hint).toBe('did you mean "include"?');
+  });
+});
 
 describe("limits on blocks", () => {
   it("limits the nesting of blocks", () => {
