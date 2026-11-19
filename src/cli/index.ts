@@ -6,3 +6,4 @@ export {
   readSiteFolder,
   writeSite,
 } from "./site-folder.ts";
+export { type LoadedConfig, loadConfig } from "./config-file.ts";

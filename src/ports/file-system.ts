@@ -8,6 +8,8 @@ export interface FileSystem {
    * between their parts, sorted. Empty when the folder doesn't exist.
    */
   listFiles(folder: string): Promise<string[]>;
+  /** Whether there is a file at the path. A folder isn't a file. */
+  isFile(path: string): Promise<boolean>;
   /** Fails when the file doesn't exist. */
   readText(path: string): Promise<string>;
   /** Writes a file, making its folders first. */
