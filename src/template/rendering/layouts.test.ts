@@ -187,6 +187,42 @@ describe("extends and blocks", () => {
 });
 
 describe("mistakes in layouts", () => {
+  it.each([
+    ["text", "Hello"],
+    ["output", "{{ title }}"],
+    ["a condition", "{% if a %}{% block content %}{% endblock %}{% endif %}"],
+    ["an include", '{% include "base.html" %}'],
+  ])("rejects %s outside every block of a child", (_, outside) => {
+    const files = { "base.html": base(), "post.html": `{% extends "base.html" %}${outside}` };
+    expect(setProblems(files)).toMatchObject([
+      {
+        code: TemplateCodes.contentOutsideBlock,
+        message: "this is outside every block, so it is never shown",
+        hint: 'put it inside a `{% block %}`, because this template extends "base.html"',
+        span: { file: "post.html", start: { column: 26 } },
+      },
+    ]);
+  });
+
+  it.each([
+    ["\n", { line: 3, column: 3 }, { line: 3, column: 8 }],
+    ["\r\n", { line: 3, column: 3 }, { line: 3, column: 8 }],
+  ])(
+    "points at the text itself, not the blank lines around it, with %j",
+    (lineBreak, start, end) => {
+      const child = `{% extends "base.html" %}${lineBreak}${lineBreak}  Hello  ${lineBreak}`;
+      expect(setProblems({ "base.html": base(), "post.html": child })).toMatchObject([
+        { code: TemplateCodes.contentOutsideBlock, span: { start, end } },
+      ]);
+    },
+  );
+
+  it("points at text on the same line as extends", () => {
+    expect(
+      setProblems({ "base.html": base(), "post.html": '{% extends "base.html" %} Hi' }),
+    ).toMatchObject([{ span: { start: { line: 1, column: 27 }, end: { line: 1, column: 29 } } }]);
+  });
+
   it("rejects a block that the parent does not have, and suggests one", () => {
     const files = {
       "base.html": base(),

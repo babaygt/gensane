@@ -9,10 +9,12 @@
 import {
   type Diagnostic,
   type DiagnosticCode,
+  type SourcePosition,
   type SourceSpan,
   closestMatch,
+  positionAt,
 } from "../../diagnostics/index.ts";
-import type { BlockNode, ExtendsNode, TemplateNode } from "../ast.ts";
+import type { BlockNode, ExtendsNode, TemplateNode, TextNode } from "../ast.ts";
 import { TemplateCodes } from "../diagnostic-codes.ts";
 
 export interface Layout {
@@ -64,6 +66,24 @@ function isBlank(node: TemplateNode): boolean {
 function extendsOf(nodes: readonly TemplateNode[]): ExtendsNode | undefined {
   const first = nodes.find((node) => !isBlank(node));
   return first?.kind === "extends" ? first : undefined;
+}
+
+/** The position a number of characters into a text node. */
+function positionIn({ value, span }: TextNode, index: number): SourcePosition {
+  const inside = positionAt(value, index);
+  return {
+    line: span.start.line + inside.line - 1,
+    column: inside.line === 1 ? span.start.column + inside.column - 1 : inside.column,
+    offset: span.start.offset + index,
+  };
+}
+
+/** For text, only the part that isn't blank, so that a problem doesn't point at an empty line. */
+function contentSpan(node: TemplateNode): SourceSpan {
+  if (node.kind !== "text") return node.span;
+  const start = node.value.length - node.value.trimStart().length;
+  const end = node.value.trimEnd().length;
+  return { file: node.span.file, start: positionIn(node, start), end: positionIn(node, end) };
 }
 
 function listed(names: readonly string[]): string {
@@ -213,7 +233,7 @@ class TemplateLinker {
       this.#report(
         TemplateCodes.contentOutsideBlock,
         "this is outside every block, so it is never shown",
-        node.span,
+        contentSpan(node),
         `put it inside a \`{% block %}\`, because this template extends "${parent}"`,
       );
     }
