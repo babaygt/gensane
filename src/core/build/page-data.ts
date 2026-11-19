@@ -7,7 +7,7 @@ import type { Pagination, Route, RouteKind, Tag } from "../site/routes.ts";
 export type TemplateData = Readonly<Record<string, unknown>>;
 
 /** The title of a page that has no content file of its own. */
-const DEFAULT_TITLES: Readonly<Partial<Record<RouteKind, string>>> = {
+export const DEFAULT_TITLES: Readonly<Partial<Record<RouteKind, string>>> = {
   home: "Home",
   blog: "Blog",
   tags: "Tags",

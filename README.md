@@ -3,12 +3,13 @@
 A static site generator for developers who want a blog and portfolio online in minutes,
 with nothing to learn but Markdown.
 
-> **Status:** early development. The Markdown compiler, the frontmatter parser and the template language are
-> finished, but gensane can't build a site yet and isn't published on npm.
+> **Status:** early development. The Markdown compiler, the frontmatter parser, the template language and the core
+> that joins them into a site are finished. The command line program comes next, so gensane can't build a site from a
+> folder yet, and it isn't published on npm.
 
 ## What works today
 
-All three parts are written by hand, with no runtime dependencies.
+Every part is written by hand, with no runtime dependencies.
 
 A **Markdown compiler**:
 
@@ -45,10 +46,21 @@ A **template language** for layouts:
 
 Read the [template language documentation](docs/template/README.md) to see how it works.
 
+A **core** that joins them into a site:
+
+- [Content](docs/core/content.md) becomes posts, projects, talks, experience, education and pages, with clean URLs, excerpts and reading times.
+- [Every page the site needs](docs/core/site.md): lists split into pages, tags, previous and next, and an about page.
+- [An Atom feed and a sitemap](docs/core/feeds.md).
+- [Broken links and missing images](docs/core/links.md) stop the build, with a hint where they were written.
+- The same files always give exactly the same site.
+
+Read the [core documentation](docs/core/README.md) to see how it works.
+
 ## Planned
 
 - `npx gensane init`: scaffold a site with blog, projects, talks, experience and education
-- Tags, pagination, RSS, sitemap and client-side search, with no server needed
+- `gensane build` and `gensane dev`, with live reload
+- Client-side search, with no server needed
 - A default theme and ready-made deploy configs for GitHub Pages, Cloudflare, Netlify and Vercel
 
 ## Development
@@ -82,6 +94,12 @@ src/
     parsing/     tokens to a syntax tree
     analysis/    checks before rendering
     rendering/   the interpreter and filters
+  core/          content and templates to the files of a site
+    content/     content files to entries
+    site/        every page of the site
+    build/       rendering each page
+    feeds/       the feed and the sitemap
+    links/       checking links and images
   index.ts       public API
 test/
   architecture/  tests that enforce module boundaries

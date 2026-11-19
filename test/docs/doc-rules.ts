@@ -181,6 +181,83 @@ export function findTemplateExamples(page: string): TemplateExample[] {
   });
 }
 
+export interface CoreExample {
+  readonly kind: "builds" | "reports";
+  /** The problem code of a `reports` example. */
+  readonly code: string | undefined;
+  /** Content files by their path inside the content folder. */
+  readonly content: Readonly<Record<string, string>>;
+  /** Templates by name, which replace the plain ones the test supplies. */
+  readonly templates: Readonly<Record<string, string>>;
+  readonly config: Readonly<Record<string, unknown>>;
+  readonly publicFiles: readonly string[];
+  /** Plain templates that the example leaves out, to show what happens without them. */
+  readonly withoutTemplates: readonly string[];
+  /** For `builds`: the exact list of files, if the example shows it. */
+  readonly files: readonly string[] | undefined;
+  /** For `builds`: the exact content of the files the example shows. */
+  readonly outputs: Readonly<Record<string, string>>;
+  /** For `reports`: the exact problem. */
+  readonly problem: string | undefined;
+}
+
+/** A misspelled marker is counted too, so it fails instead of leaving its example unchecked. */
+export function countCoreMarkers(page: string): number {
+  return page.match(/^<!--\s*(?:builds?|built|reports?|reported)\b.*-->$/gm)?.length ?? 0;
+}
+
+const CORE_INPUTS = /^(markdown|jinja) (\S+)$|^json config$|^text (?:public|without)$/;
+const CORE_OUTPUTS = /^text files$|^(html|xml) (\S+)$/;
+
+/**
+ * `builds` and `reports GS405` go before the files of a small site: `markdown blog/hello.md` for a
+ * content file, `jinja post.html` for a template, `json config`, `text public` for the files in
+ * the `public` folder, and `text without` for plain templates that the example leaves out. `builds` ends with `text files`, the exact list of files the site writes,
+ * and with `html <path>` or `xml <path>` for the exact content of a file. `reports` ends with a
+ * `text` fence that shows the exact problem.
+ */
+export function findCoreExamples(page: string): CoreExample[] {
+  const fences = findCodeFences(page);
+  return fences.flatMap((fence, index): CoreExample[] => {
+    const marker = /^(builds|reports (GS\d+))$/.exec(fence.marker ?? "");
+    if (marker === null) return [];
+    const content: Record<string, string> = {};
+    const templates: Record<string, string> = {};
+    let config: Record<string, unknown> = {};
+    let publicFiles: string[] = [];
+    let withoutTemplates: string[] = [];
+    let next = index;
+    for (let input = fences[next]; input !== undefined && CORE_INPUTS.test(input.info); input = fences[next]) {
+      const [language = "", name = ""] = input.info.split(" ");
+      if (language === "markdown") content[name] = `${input.text}\n`;
+      else if (language === "jinja") templates[name] = input.text;
+      else if (language === "json") config = JSON.parse(input.text);
+      else if (name === "public") publicFiles = input.text.split("\n").filter((line) => line !== "");
+      else withoutTemplates = input.text.split("\n").filter((line) => line !== "");
+      next++;
+    }
+    if (next === index) throw new Error(`Example without the files of a site:\n${fence.text}`);
+    const base = { content, templates, config, publicFiles, withoutTemplates };
+    if (marker[1] !== "builds") {
+      const output = fences[next];
+      if (output?.info !== "text") throw new Error(`Example without a text fence after it:\n${fence.text}`);
+      return [{ kind: "reports", code: marker[2], ...base, files: undefined, outputs: {}, problem: output.text }];
+    }
+    let files: string[] | undefined;
+    const outputs: Record<string, string> = {};
+    for (let output = fences[next]; output !== undefined && CORE_OUTPUTS.test(output.info); output = fences[next]) {
+      const [, path] = output.info.split(" ");
+      if (path === "files") files = output.text.split("\n").filter((line) => line !== "");
+      else outputs[path ?? ""] = output.text;
+      next++;
+    }
+    if (files === undefined && Object.keys(outputs).length === 0) {
+      throw new Error(`Example without the files it builds:\n${fence.text}`);
+    }
+    return [{ kind: "builds", code: undefined, ...base, files, outputs, problem: undefined }];
+  });
+}
+
 /** The part of a page from a heading up to the next heading of the same level. */
 export function findSection(page: string, heading: string): string {
   const level = /^#+/.exec(heading)?.[0] ?? "";
