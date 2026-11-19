@@ -59,5 +59,6 @@ export function renderTemplate(
   variables: Readonly<Record<string, unknown>>,
 ): Result<RenderedTemplate, readonly Diagnostic[]> {
   const { html, diagnostics } = interpret(template.nodes, variables, template.filters);
-  return hasErrors(diagnostics) ? err(diagnostics) : ok({ html, warnings: diagnostics });
+  const problems = inFileOrder(diagnostics);
+  return hasErrors(problems) ? err(problems) : ok({ html, warnings: problems });
 }

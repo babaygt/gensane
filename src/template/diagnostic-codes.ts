@@ -13,6 +13,10 @@ export const TemplateCodes = {
   nestingTooDeep: "GS313",
   expressionTooLong: "GS314",
   chainedComparison: "GS315",
+  unclosedBlock: "GS316",
+  noOpenBlock: "GS317",
+  misplacedBranch: "GS318",
+  reservedName: "GS319",
   unknownFilter: "GS320",
   wrongArgumentCount: "GS321",
   unknownVariable: "GS330",
@@ -22,4 +26,5 @@ export const TemplateCodes = {
   filterFailed: "GS334",
   notPrintable: "GS335",
   invalidIndex: "GS336",
+  notIterable: "GS337",
 } as const satisfies Record<string, DiagnosticCode>;
