@@ -116,9 +116,9 @@ The schemas and how they combine. The [validation page](validation.md) lists eac
 | [`endsAfterStart`](../../src/frontmatter/validation/content-types.ts)      | Rejects an end before the start         |
 | [`isBefore`](../../src/frontmatter/validation/content-types.ts)            | Compares two dates of any precision     |
 
-### [`src/frontmatter/validation/closest-match.ts`](../../src/frontmatter/validation/closest-match.ts)
+### [`src/diagnostics/closest-match.ts`](../../src/diagnostics/closest-match.ts)
 
 | Name                                                                  | Purpose                                   |
 | --------------------------------------------------------------------- | ----------------------------------------- |
-| [`editDistance`](../../src/frontmatter/validation/closest-match.ts)   | Counts the changes between two words      |
-| [`closestMatch`](../../src/frontmatter/validation/closest-match.ts)   | Finds the word that was probably meant    |
+| [`editDistance`](../../src/diagnostics/closest-match.ts)   | Counts the changes between two words      |
+| [`closestMatch`](../../src/diagnostics/closest-match.ts)   | Finds the word that was probably meant    |

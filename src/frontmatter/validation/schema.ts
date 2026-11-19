@@ -12,10 +12,10 @@ import {
   type DiagnosticCode,
   type Result,
   type SourceSpan,
+  closestMatch,
   err,
   ok,
 } from "../../diagnostics/index.ts";
-import { closestMatch } from "./closest-match.ts";
 import { FrontmatterCodes } from "../diagnostic-codes.ts";
 import { daysInMonth } from "../parsing/inline-values.ts";
 import { toPlainData } from "../plain-data.ts";
