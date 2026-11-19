@@ -8,6 +8,7 @@ import type { MarkdownOptions } from "../../markdown/index.ts";
 import { type TemplateFilter, compileTemplates, renderTemplate } from "../../template/index.ts";
 import { loadContent } from "../content/load-content.ts";
 import { CoreCodes } from "../diagnostic-codes.ts";
+import { feedFiles } from "../feeds/feed-files.ts";
 import { inFileOrder, problem, startOf } from "../problems.ts";
 import { compareStrings } from "../site/order.ts";
 import { type Route, TEMPLATES } from "../site/routes.ts";
@@ -27,6 +28,8 @@ export interface SiteConfig {
   readonly filters?: Readonly<Record<string, TemplateFilter>>;
   /** Where the content files are, for the paths in problems. Defaults to `content`. */
   readonly contentFolder?: string;
+  /** The config file, for problems with the config. Defaults to `gensane.config.ts`. */
+  readonly configFile?: string;
 }
 
 export interface SiteInput {
@@ -119,5 +122,10 @@ export function buildSite(input: SiteInput): Result<BuiltSite, readonly Diagnost
       ),
     );
   }
-  return finish(files, problems);
+  const feeds = feedFiles(
+    config.site ?? {},
+    graph.value.graph,
+    config.configFile ?? "gensane.config.ts",
+  );
+  return finish([...files, ...feeds.files], [...problems, ...feeds.problems]);
 }

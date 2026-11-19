@@ -12,4 +12,6 @@ export const CoreCodes = {
   tagWithoutUrl: "GS408",
   tagSpelling: "GS409",
   missingTemplate: "GS410",
+  noSiteUrl: "GS411",
+  invalidSiteUrl: "GS412",
 } as const satisfies Record<string, DiagnosticCode>;
