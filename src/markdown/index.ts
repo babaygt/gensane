@@ -41,7 +41,7 @@ export type {
 } from "./ast.ts";
 export { DiagnosticCodes } from "./diagnostic-codes.ts";
 export { escapeHtml, renderHtml } from "./output/render-html.ts";
-export type { TableOfContentsEntry } from "./output/table-of-contents.ts";
+export { type TableOfContentsEntry, buildTableOfContents } from "./output/table-of-contents.ts";
 
 export type ParseResult = BlockParseResult;
 
