@@ -81,6 +81,11 @@ describe.each([
       const { fileSystem, root } = await setUp({ "content/a.md": "" });
       expect(await fileSystem.listFiles(`${root}/content/`)).toEqual(["a.md"]);
     });
+
+    it("fails for a path that is a file, not a folder", async () => {
+      const { fileSystem, root } = await setUp({ "content/a.md": "" });
+      await expect(fileSystem.listFiles(`${root}/content/a.md`)).rejects.toThrow("ENOTDIR");
+    });
   });
 
   describe("readText", () => {
@@ -106,6 +111,12 @@ describe.each([
       const { fileSystem, root } = await setUp({ "a.txt": "old" });
       await fileSystem.writeText(`${root}/a.txt`, "new");
       expect(await fileSystem.readText(`${root}/a.txt`)).toBe("new");
+    });
+
+    it("treats ./ and repeated slashes in a path as the same file", async () => {
+      const { fileSystem, root } = await setUp({});
+      await fileSystem.writeText(`${root}/dist//./a.txt`, "A");
+      expect(await fileSystem.readText(`${root}/dist/a.txt`)).toBe("A");
     });
   });
 
@@ -149,6 +160,11 @@ describe("MemoryFileSystem", () => {
     expect(await fileSystem.readText("site/content/./a.md")).toBe("A");
     expect(await fileSystem.listFiles("site")).toEqual(["content/a.md"]);
   });
+
+  it("lists every file for the folder .", async () => {
+    const fileSystem = new MemoryFileSystem({ "b.md": "", "site/a.md": "" });
+    expect(await fileSystem.listFiles(".")).toEqual(["b.md", "site/a.md"]);
+  });
 });
 
 /** A random operation, on a small set of names so that operations often meet the same files. */
@@ -168,8 +184,12 @@ const filePath = fc
 const operation: fc.Arbitrary<Operation> = fc.oneof(
   fc.record({ kind: fc.constant("write" as const), path: filePath, content: fc.string() }),
   fc.record({ kind: fc.constant("copy" as const), from: filePath, to: filePath }),
-  fc.record({ kind: fc.constant("remove" as const), folder: fc.constantFrom("a", "a/b", "c") }),
-  fc.record({ kind: fc.constant("list" as const), folder }),
+  // Listing or removing a file must behave as on a disk too.
+  fc.record({
+    kind: fc.constant("remove" as const),
+    folder: fc.oneof(fc.constantFrom("a", "a/b", "c"), filePath),
+  }),
+  fc.record({ kind: fc.constant("list" as const), folder: fc.oneof(folder, filePath) }),
   fc.record({ kind: fc.constant("read" as const), path: filePath }),
 );
 
@@ -200,7 +220,7 @@ it("the in-memory file system gives the same results as the disk for any operati
       const disk = await onDisk({});
       const memory = await inMemory({});
       for (const step of operations) {
-        // A file and a folder can't have the same name on a disk, and no operation here makes one.
+        // A file and a folder can't have the same name on a disk, so the names of files and folders differ.
         expect(await run(memory.fileSystem, memory.root, step)).toEqual(
           await run(disk.fileSystem, disk.root, step),
         );

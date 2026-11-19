@@ -87,6 +87,7 @@ describe("outputFolderProblem", () => {
     ["site", "is the site folder itself"],
     ["site/", "is the site folder itself"],
     ["elsewhere/dist", "isn't inside the site folder"],
+    [".", "isn't inside the site folder"],
     ["site/../dist", "isn't inside the site folder"],
     ["site/content", "would replace content/"],
     ["site/public/dist", "would replace public/"],
