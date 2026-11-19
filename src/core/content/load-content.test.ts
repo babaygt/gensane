@@ -122,6 +122,10 @@ describe("URLs", () => {
     },
   );
 
+  it("needs no URL for talks, experience and education", () => {
+    expect(codes({ "talks/日本.md": minimal.talk })).toEqual([]);
+  });
+
   it("accepts a file name without letters when it has a slug field", () => {
     expect(entryOf({ "blog/日本.md": post("", "slug: japan\n") }, "blog/日本.md").url).toBe(
       "/blog/japan/",
@@ -220,7 +224,7 @@ describe("fields and body", () => {
     expect(result).toMatchObject([
       {
         severity: "warning",
-        span: { file: "content/blog/a.md", start: { line: 7, column: 5 } },
+        span: { file: "content/blog/a.md", start: { line: 7, column: 5, offset: 48 } },
       },
     ]);
   });
@@ -232,6 +236,33 @@ describe("fields and body", () => {
       "content/blog/a.md",
       "content/talks/b.md",
       "content/talks/b.md",
+    ]);
+  });
+
+  it("fails when there is an error, and keeps the warnings with the errors", () => {
+    const files = { "blog/a.md": "---\n---\n", "pages/z.md": `${minimal.page}Text[^x]\n` };
+    const result = loadContent(files);
+    expect(result.ok).toBe(false);
+    expect(result.ok ? [] : result.error.map((problem) => problem.severity)).toEqual([
+      "error",
+      "error",
+      "warning",
+    ]);
+  });
+
+  it("passes on the warnings about frontmatter", () => {
+    expect(codes({ "pages/a.md": "---\ntitle: A\ndescripton: typo\n---\n" })).toEqual(["GS224"]);
+  });
+
+  it("sorts a clash of URLs in with the other problems", () => {
+    const files = {
+      "blog/a.md": minimal.post,
+      "blog/b.md": post("", "slug: a\n"),
+      "pages/cover.png": "",
+    };
+    expect(problems(files).map((found) => [found.span.file, found.code])).toEqual([
+      ["content/blog/b.md", CoreCodes.duplicateUrl],
+      ["content/pages/cover.png", CoreCodes.notMarkdown],
     ]);
   });
 
@@ -259,6 +290,17 @@ describe("excerpt", () => {
     expect(entryOf({ "blog/a.md": post("# Only a heading\n") }, "blog/a.md").excerpt).toBe("");
   });
 
+  it("finds a marker with spaces around it", () => {
+    const body = "One\n\nTwo\n\n  <!-- more -->  \n\nThree\n";
+    const entry = entryOf({ "blog/a.md": post(body) }, "blog/a.md");
+    expect(entry.excerpt).toBe(markdownToHtml("One\n\nTwo\n", "x.md").html);
+  });
+
+  it("doesn't take other HTML for the marker", () => {
+    const entry = entryOf({ "blog/a.md": post("One\n\nTwo\n\n<div>x</div>\n") }, "blog/a.md");
+    expect(entry.excerpt).toBe(markdownToHtml("One\n", "x.md").html);
+  });
+
   it("ignores a marker inside other content", () => {
     const entry = entryOf({ "blog/a.md": post("One\n\n> <!-- more -->\n") }, "blog/a.md");
     expect(entry.excerpt).toBe(markdownToHtml("One\n", "x.md").html);
@@ -278,7 +320,17 @@ describe("reading time", () => {
   });
 
   it("counts the words of the text, not the HTML around them", () => {
-    const body = `${words(150)}\n\n**${words(50)}** [link](https://example.com)\n`;
+    const body = `${words(199)} [link](https://example.com "a long title here")\n`;
+    expect(entryOf({ "blog/a.md": post(body) }, "blog/a.md").readingTime).toBe(1);
+  });
+
+  it("doesn't split a word with emphasis inside it", () => {
+    const body = `${words(199)} one*two*\n`;
+    expect(entryOf({ "blog/a.md": post(body) }, "blog/a.md").readingTime).toBe(1);
+  });
+
+  it("counts the words of separate blocks and table cells apart", () => {
+    const body = `${words(199)}\n\n| a | b |\n| - | - |\n`;
     expect(entryOf({ "blog/a.md": post(body) }, "blog/a.md").readingTime).toBe(2);
   });
 });
