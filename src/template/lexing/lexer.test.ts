@@ -61,6 +61,22 @@ describe("delimiters", () => {
     expect(tokens('{{ "}}" }}')).toEqual(["outputOpen", ["string", "}}"], "outputClose", "end"]);
   });
 
+  it("does not end the output at an escaped quote inside a string", () => {
+    expect(tokens(String.raw`{{ "a\"}}" }}`)).toEqual([
+      "outputOpen",
+      ["string", 'a"}}'],
+      "outputClose",
+      "end",
+    ]);
+  });
+
+  it.each(["\n", "\r"])(
+    "does not look for the end of a string past the line break %j",
+    (lineBreak) => {
+      expect(problems(`{{ "open${lineBreak}}} " }}`)).toEqual([TemplateCodes.unterminatedString]);
+    },
+  );
+
   it("does not end the output at the closing delimiter of a tag", () => {
     expect(problems("{{ a %} }}")).toEqual([TemplateCodes.unexpectedCharacter]);
   });
@@ -218,6 +234,14 @@ describe("delimiters that are never closed", () => {
 
   it("reports one problem, not one for each character after it", () => {
     expect(problems("{{ title\n<p>@ & $</p>")).toEqual([TemplateCodes.unclosedDelimiter]);
+  });
+
+  it("stops at the opening of a tag", () => {
+    const result = tokenize("{{ a {% b %}", "page.html");
+    expect(result.diagnostics.map((diagnostic) => diagnostic.code)).toEqual([
+      TemplateCodes.unclosedDelimiter,
+    ]);
+    expect(result.tokens.map(brief)).toEqual(["tagOpen", ["name", "b"], "tagClose", "end"]);
   });
 
   it("continues at the next delimiter", () => {
