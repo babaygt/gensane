@@ -138,6 +138,13 @@ describe("the page variable", () => {
     expect(html).toBe("<p>Intro</p>\n|1|first-part:First part second:Second ");
   });
 
+  it("is the same value as the post in a list, so a list can mark the current page", () => {
+    const content = { "blog/a.md": post("2026-01-01"), "blog/b.md": post("2026-01-02") };
+    const template =
+      "{% for item in collections.posts %}{% if item == page %}[{{ item.slug }}]{% else %}{{ item.slug }}{% endif %}{% endfor %}";
+    expect(render("blog/a/index.html", "post.html", template, content)).toBe("b[a]");
+  });
+
   it("gives dates to the date filter", () => {
     const html = render(
       "blog/hello/index.html",
@@ -244,6 +251,17 @@ describe("the other variables", () => {
     expect(html).toBe("Testing /tags/testing/ 1");
   });
 
+  it("uses the Markdown settings of the config", () => {
+    const html = render(
+      "blog/a/index.html",
+      "post.html",
+      "{{ page.html }}",
+      { "blog/a.md": post("2026-01-01", "", "<b>hi</b>\n") },
+      { markdown: { rawHtml: "escape" } },
+    );
+    expect(html).toContain("&lt;b&gt;");
+  });
+
   it("uses filters from the config", () => {
     const html = render(
       "404.html",
@@ -305,6 +323,30 @@ describe("problems", () => {
     const templates = { ...plainTheme, "post.html": "{{ missing }}" };
     const content = { "blog/a.md": post("2026-01-01"), "blog/b.md": post("2026-01-02") };
     expect(problemsOf({ content, templates }).map((problem) => problem.code)).toEqual(["GS330"]);
+  });
+
+  it("reports the same mistake in two templates, at the same place, twice", () => {
+    const templates = { ...plainTheme, "post.html": "{{ missing }}", "blog.html": "{{ missing }}" };
+    const content = { "blog/a.md": post("2026-01-01") };
+    expect(problemsOf({ content, templates }).map((problem) => problem.span.file)).toEqual([
+      "blog.html",
+      "post.html",
+    ]);
+  });
+
+  it("keeps the warnings about content when a later step fails", () => {
+    const content = { "blog/2026-01-02-a.md": post("2026-01-01"), "pages/blog.md": minimal.page };
+    expect(
+      problemsOf({ content })
+        .map((problem) => problem.code)
+        .toSorted(),
+    ).toEqual([CoreCodes.dateMismatch, CoreCodes.reservedUrl]);
+    const templates = { ...plainTheme, "post.html": "{{ page.title | nope }}" };
+    expect(
+      problemsOf({ content: { "blog/2026-01-02-a.md": post("2026-01-01") }, templates })
+        .map((problem) => problem.code)
+        .toSorted(),
+    ).toEqual(["GS320", CoreCodes.dateMismatch]);
   });
 
   it("reports the problems of the content, and stops before rendering", () => {
