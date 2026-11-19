@@ -320,6 +320,18 @@ describe("mistakes in layouts", () => {
     },
   );
 
+  it("reports a run of content outside the blocks once", () => {
+    const child =
+      '{% extends "base.html" %}\n<h1>{{ title }}</h1>\n{% block content %}{% endblock %}\nend';
+    expect(setProblems({ "base.html": base(), "post.html": child })).toMatchObject([
+      {
+        code: TemplateCodes.contentOutsideBlock,
+        span: { start: { line: 2, column: 1 }, end: { line: 2, column: 21 } },
+      },
+      { code: TemplateCodes.contentOutsideBlock, span: { start: { line: 4, column: 1 } } },
+    ]);
+  });
+
   it("points at text on the same line as extends", () => {
     expect(
       setProblems({ "base.html": base(), "post.html": '{% extends "base.html" %} Hi' }),
