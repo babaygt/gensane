@@ -2,12 +2,14 @@ import { describe, expect, it } from "vitest";
 import {
   countExampleMarkers,
   countFrontmatterMarkers,
+  countTemplateMarkers,
   declaresSymbol,
   findCodeFences,
   findFieldRows,
   findFrontmatterExamples,
   findLinks,
   findSection,
+  findTemplateExamples,
   findVerifiedExamples,
   findWarningExamples,
   isExternalLink,
@@ -218,3 +220,86 @@ describe("declaresSymbol", () => {
     expect(declaresSymbol(source, symbol)).toBe(false);
   });
 });
+
+describe("findTemplateExamples", () => {
+  it("reads a template, its variables and the html it renders", () => {
+    const page = [
+      "<!-- renders -->",
+      "```jinja",
+      "{{ a }}",
+      "```",
+      "```json",
+      '{ "a": 1 }',
+      "```",
+      "```html",
+      "1",
+      "```",
+    ].join("\n");
+    expect(findTemplateExamples(page)).toEqual([
+      {
+        kind: "renders",
+        code: undefined,
+        files: { "page.html": "{{ a }}" },
+        name: "page.html",
+        variables: { a: 1 },
+        output: "1",
+      },
+    ]);
+  });
+
+  it("reads several named files, and renders the one the marker names", () => {
+    const page = [
+      "<!-- renders post.html -->",
+      "```jinja base.html",
+      "B",
+      "```",
+      "```jinja post.html",
+      "P",
+      "```",
+      "```html",
+      "x",
+      "```",
+    ].join("\n");
+    expect(findTemplateExamples(page)[0]).toMatchObject({
+      files: { "base.html": "B", "post.html": "P" },
+      name: "post.html",
+      variables: {},
+    });
+  });
+
+  it("renders the first file when the marker names none", () => {
+    const page = "<!-- renders -->\n```jinja a.html\nA\n```\n```jinja b.html\nB\n```\n```html\nA\n```";
+    expect(findTemplateExamples(page)[0]?.name).toBe("a.html");
+  });
+
+  it("reads a problem example with its code and expected text", () => {
+    const page = "<!-- reports GS320 -->\n```jinja\n{{ a | b }}\n```\n```text\nproblem\n```";
+    expect(findTemplateExamples(page)[0]).toMatchObject({
+      kind: "reports",
+      code: "GS320",
+      output: "problem",
+    });
+  });
+
+  it("rejects an example without its output", () => {
+    expect(() => findTemplateExamples("<!-- renders -->\n```jinja\nx\n```")).toThrow(
+      "without a html fence",
+    );
+    expect(() => findTemplateExamples("<!-- reports GS301 -->\n```jinja\nx\n```")).toThrow(
+      "without a text fence",
+    );
+  });
+
+  it("rejects a marker without a template", () => {
+    expect(() => findTemplateExamples("<!-- renders -->\n```html\nx\n```")).toThrow(
+      "without a jinja fence",
+    );
+  });
+
+  it("counts misspelled markers too", () => {
+    const page = "<!-- renders -->\n<!-- reports GS1 -->\n<!-- render -->\n<!-- reported GS1 -->";
+    expect(countTemplateMarkers(page)).toBe(4);
+    expect(countTemplateMarkers("<!-- other -->\n<!-- prerender -->")).toBe(0);
+  });
+});
+

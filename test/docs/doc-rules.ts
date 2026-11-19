@@ -129,6 +129,58 @@ export function findFrontmatterExamples(page: string): FrontmatterExample[] {
   });
 }
 
+export interface TemplateExample {
+  readonly kind: "renders" | "reports";
+  /** The problem code of a `reports` example. */
+  readonly code: string | undefined;
+  /** Each template by its file name, in the order they are shown. */
+  readonly files: Readonly<Record<string, string>>;
+  /** The template to render. */
+  readonly name: string;
+  readonly variables: Readonly<Record<string, unknown>>;
+  readonly output: string;
+}
+
+/** A misspelled marker is counted too, so it fails instead of leaving its example unchecked. */
+export function countTemplateMarkers(page: string): number {
+  return page.match(/^<!--\s*(?:renders?|rendered|reports?|reported)\b.*-->$/gm)?.length ?? 0;
+}
+
+/**
+ * `renders` and `reports GS320` go before one or more `jinja` fences. A fence can name its file after
+ * the language, such as `jinja base.html`, and the first file is rendered unless the marker names
+ * another one: `renders post.html`. An optional `json` fence holds the variables. `renders` ends
+ * with an `html` fence, and `reports` with a `text` fence that shows the exact problem.
+ */
+export function findTemplateExamples(page: string): TemplateExample[] {
+  const fences = findCodeFences(page);
+  return fences.flatMap((fence, index): TemplateExample[] => {
+    const marker = /^(renders|reports (GS\d+))(?: (\S+))?$/.exec(fence.marker ?? "");
+    if (marker === null) return [];
+    const files: Record<string, string> = {};
+    let next = index;
+    for (let file = fences[next]; file?.info.split(" ")[0] === "jinja"; file = fences[next]) {
+      files[file.info.split(" ")[1] ?? "page.html"] = file.text;
+      next++;
+    }
+    const [first] = Object.keys(files);
+    if (first === undefined) throw new Error(`Example without a jinja fence:\n${fence.text}`);
+    let variables = {};
+    if (fences[next]?.info === "json") {
+      variables = JSON.parse(fences[next]?.text ?? "{}");
+      next++;
+    }
+    const kind = marker[1] === "renders" ? "renders" : "reports";
+    const outputLanguage = kind === "renders" ? "html" : "text";
+    const output = fences[next];
+    if (output?.info !== outputLanguage) {
+      throw new Error(`Example without a ${outputLanguage} fence after it:\n${fence.text}`);
+    }
+    const name = marker[3] ?? first;
+    return [{ kind, code: marker[2], files, name, variables, output: output.text }];
+  });
+}
+
 /** The part of a page from a heading up to the next heading of the same level. */
 export function findSection(page: string, heading: string): string {
   const level = /^#+/.exec(heading)?.[0] ?? "";
