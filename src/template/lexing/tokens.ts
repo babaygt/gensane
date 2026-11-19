@@ -43,6 +43,4 @@ export type Token =
   | Delimiter<"tagClose">
   /** Marks a mistake the lexer has reported, so that the parser doesn't report it again. */
   | Delimiter<"invalid">
-  /** Marks a mistake the lexer has reported, so that the parser doesn't report it again. */
-  | Delimiter<"invalid">
   | Delimiter<"end">;

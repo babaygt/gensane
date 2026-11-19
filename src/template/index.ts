@@ -11,15 +11,12 @@ import { checkFilters } from "./analysis/check-filters.ts";
 import type { TemplateNode } from "./ast.ts";
 import { tokenize } from "./lexing/lexer.ts";
 import { parseTemplate } from "./parsing/parser.ts";
-import {
-  type FilterDefinition,
-  type TemplateFilter,
-  withCustomFilters,
-} from "./rendering/filters.ts";
+import type { FilterDefinition, TemplateFilter } from "./rendering/filter-types.ts";
+import { withCustomFilters } from "./rendering/filters.ts";
 import { interpret } from "./rendering/interpreter.ts";
 
 export { TemplateCodes } from "./diagnostic-codes.ts";
-export { FilterError, type TemplateFilter } from "./rendering/filters.ts";
+export { FilterError, type TemplateFilter } from "./rendering/filter-types.ts";
 
 export interface CompileOptions {
   /** Extra filters, which can also replace built-in ones. */

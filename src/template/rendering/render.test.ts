@@ -6,6 +6,7 @@ import {
   compileTemplate,
   renderTemplate,
 } from "../index.ts";
+import { compileCodes, compiled, errorCodes, html, render, value } from "../test-helpers.ts";
 
 const repeat: TemplateFilter = (input, times) => String(input).repeat(Number(times));
 
@@ -20,36 +21,6 @@ const failWithTypeError: TemplateFilter = () => {
 const failWithText: TemplateFilter = () => {
   throw "plain text";
 };
-
-function compiled(source: string, filters: Readonly<Record<string, TemplateFilter>> = {}) {
-  const result = compileTemplate(source, "page.html", { filters });
-  if (!result.ok) throw new Error(result.error[0]?.message);
-  return result.value;
-}
-
-function render(source: string, variables: Readonly<Record<string, unknown>> = {}) {
-  return renderTemplate(compiled(source), variables);
-}
-
-function html(source: string, variables: Readonly<Record<string, unknown>> = {}): string {
-  const result = render(source, variables);
-  if (!result.ok) throw new Error(result.error[0]?.message);
-  return result.value.html;
-}
-
-function value(code: string, variables: Readonly<Record<string, unknown>> = {}): string {
-  return html(`{{ ${code} }}`, variables);
-}
-
-function errorCodes(code: string, variables: Readonly<Record<string, unknown>> = {}): string[] {
-  const result = render(`{{ ${code} }}`, variables);
-  return result.ok ? [] : result.error.map((problem) => problem.code);
-}
-
-function compileCodes(source: string, filters: Readonly<Record<string, TemplateFilter>> = {}) {
-  const result = compileTemplate(source, "page.html", { filters });
-  return result.ok ? [] : result.error.map((problem) => problem.code);
-}
 
 describe("compiling", () => {
   it("collects the problems of every stage in file order", () => {

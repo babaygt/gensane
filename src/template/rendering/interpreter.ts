@@ -22,7 +22,7 @@ import type {
   UnaryExpression,
 } from "../ast.ts";
 import { TemplateCodes } from "../diagnostic-codes.ts";
-import { type FilterDefinition, FilterError } from "./filters.ts";
+import { type FilterDefinition, FilterError } from "./filter-types.ts";
 import {
   SafeHtml,
   describeValue,
