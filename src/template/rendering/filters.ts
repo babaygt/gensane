@@ -1,10 +1,12 @@
 /** Filters for text and single values, and the list of every built-in filter. */
+import { dateFilter } from "./dates.ts";
 import {
   type FilterDefinition,
   FilterError,
   type TemplateFilter,
   defineFilter,
 } from "./filter-types.ts";
+import { reverse, skip, sort, take, where } from "./list-filters.ts";
 import { SafeHtml, describeValue, isRecord, printableText } from "./values.ts";
 
 function textInput(filterName: string, value: unknown): string {
@@ -91,6 +93,12 @@ export const builtInFilters: ReadonlyMap<string, FilterDefinition> = new Map([
   ["first", defineFilter((value) => itemsOf("first", value).at(0))],
   ["last", defineFilter((value) => itemsOf("last", value).at(-1))],
   ["raw", defineFilter(raw)],
+  ["where", defineFilter(where, 1, 2)],
+  ["take", defineFilter(take, 1)],
+  ["skip", defineFilter(skip, 1)],
+  ["sort", defineFilter(sort, 0, 1)],
+  ["reverse", defineFilter(reverse)],
+  ["date", defineFilter(dateFilter, 1)],
 ]);
 
 /** Custom filters can take any number of arguments, because only their author knows how many. */
