@@ -224,19 +224,33 @@ class TemplateLinker {
     const available = ancestors.flatMap((file) =>
       blocksOf(this.#files.get(file) ?? []).map((block) => block.name),
     );
+    let outside: TemplateNode[] = [];
     for (const node of nodes) {
-      if (isBlank(node) || node.kind === "extends") continue;
-      if (node.kind === "block") {
-        if (!available.includes(node.name)) this.#reportUnknownBlock(node, parent, available);
+      if (node.kind !== "block" && node.kind !== "extends") {
+        outside.push(node);
         continue;
       }
-      this.#report(
-        TemplateCodes.contentOutsideBlock,
-        "this is outside every block, so it is never shown",
-        contentSpan(node),
-        `put it inside a \`{% block %}\`, because this template extends "${parent}"`,
-      );
+      this.#reportOutside(outside, parent);
+      outside = [];
+      if (node.kind === "block" && !available.includes(node.name)) {
+        this.#reportUnknownBlock(node, parent, available);
+      }
     }
+    this.#reportOutside(outside, parent);
+  }
+
+  /** Everything between two blocks is one problem, such as a whole line of HTML. */
+  #reportOutside(nodes: readonly TemplateNode[], parent: string): void {
+    const content = nodes.filter((node) => !isBlank(node));
+    const [first] = content;
+    const last = content.at(-1);
+    if (first === undefined || last === undefined) return;
+    this.#report(
+      TemplateCodes.contentOutsideBlock,
+      "this is outside every block, so it is never shown",
+      { file: first.span.file, start: contentSpan(first).start, end: contentSpan(last).end },
+      `put it inside a \`{% block %}\`, because this template extends "${parent}"`,
+    );
   }
 
   #reportUnknownBlock(block: BlockNode, parent: string, available: readonly string[]): void {
