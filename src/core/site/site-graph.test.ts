@@ -32,6 +32,11 @@ function manyPosts(count: number, extra = ""): Record<string, string> {
   return files;
 }
 
+function homePageFile(graph: SiteGraph): string | undefined {
+  const [home] = graph.routes;
+  return home?.kind === "home" ? home.page?.file : "no home";
+}
+
 const urls = (entries: readonly { readonly url: string | undefined }[]) =>
   entries.map((entry) => entry.url);
 
@@ -79,8 +84,8 @@ describe("collections", () => {
 
   it("lists featured projects first, then by order, then by title", () => {
     const files = {
-      "projects/a.md": "---\ntitle: banana\n---\n",
-      "projects/b.md": "---\ntitle: Apple\n---\n",
+      "projects/a.md": "---\ntitle: Banana\n---\n",
+      "projects/b.md": "---\ntitle: apple\n---\n",
       "projects/c.md": "---\ntitle: Zed\norder: 2\n---\n",
       "projects/d.md": "---\ntitle: Yak\norder: 1\n---\n",
       "projects/e.md": "---\ntitle: Xylophone\nfeatured: true\n---\n",
@@ -92,6 +97,14 @@ describe("collections", () => {
       "/projects/b/",
       "/projects/a/",
     ]);
+  });
+
+  it("lists posts on the same day by their time", () => {
+    const files = {
+      "blog/a.md": post("2026-01-01T09:00:00Z"),
+      "blog/b.md": post("2026-01-01T18:00:00Z"),
+    };
+    expect(urls(graphOf(files).collections.posts)).toEqual(["/blog/b/", "/blog/a/"]);
   });
 
   it("lists talks newest first", () => {
@@ -123,6 +136,11 @@ describe("collections", () => {
       "education/b.md",
       "education/a.md",
     ]);
+  });
+
+  it("lists pages by their URL, not their file name", () => {
+    const files = { "pages/a.md": "---\ntitle: A\nslug: zebra\n---\n", "pages/b.md": minimal.page };
+    expect(urls(graphOf(files).collections.pages)).toEqual(["/b/", "/zebra/"]);
   });
 
   it("lists pages by URL, without the home page", () => {
@@ -161,22 +179,47 @@ describe("tags", () => {
 
   it("lists tags with the same URL together, under the spelling most posts use", () => {
     const files = {
-      "blog/a.md": post("2026-01-01", "tags: [TypeScript]\n"),
-      "blog/b.md": post("2026-01-02", "tags: [TypeScript]\n"),
-      "blog/c.md": post("2026-01-03", "tags: [typescript]\n"),
+      "blog/a.md": post("2026-01-01", "tags: [typescript]\n"),
+      "blog/b.md": post("2026-01-02", "tags: [typescript]\n"),
+      "blog/c.md": post("2026-01-03", "tags: [TypeScript]\n"),
     };
     const [tag] = graphOf(files).collections.tags;
-    expect([tag?.name, tag?.posts.length]).toEqual(["TypeScript", 3]);
+    expect([tag?.name, tag?.posts.length]).toEqual(["typescript", 3]);
     expect(graphProblems(files)).toMatchObject([
       {
         code: CoreCodes.tagSpelling,
         severity: "warning",
         message:
-          'the tag "typescript" is listed as "TypeScript", because both have the URL /tags/typescript/',
+          'the tag "TypeScript" is listed as "typescript", because both have the URL /tags/typescript/',
         hint: "write the tag the same way in every post",
         span: { file: "content/blog/c.md" },
       },
     ]);
+  });
+
+  it("counts a spelling once for each post, even when a post repeats it", () => {
+    const files = {
+      "blog/a.md": post("2026-01-01", "tags: [Ab, Ab]\n"),
+      "blog/b.md": post("2026-01-02", "tags: [ab]\n"),
+      "blog/c.md": post("2026-01-03", "tags: [ab]\n"),
+    };
+    expect(graphOf(files).collections.tags[0]?.name).toBe("ab");
+  });
+
+  it("warns at the first file, in file order, that uses another spelling", () => {
+    const files = {
+      "blog/a.md": post("2026-01-01", "tags: [ab]\n"),
+      "blog/b.md": post("2026-01-02", "tags: [ab]\n"),
+      "blog/c.md": post("2026-01-03", "tags: [ab]\n"),
+      "blog/m.md": post("2026-01-04", "tags: [Ab]\n"),
+      "blog/z.md": post("2026-01-05", "tags: [Ab]\n"),
+    };
+    expect(graphProblems(files).map((problem) => problem.span.file)).toEqual(["content/blog/m.md"]);
+  });
+
+  it("sorts tags by the name people see", () => {
+    const files = { "blog/a.md": post("2026-01-01", "tags: [a+, a b]\n") };
+    expect(graphOf(files).collections.tags.map((tag) => tag.name)).toEqual(["a b", "a+"]);
   });
 
   it("chooses the first spelling in sorted order when both are used equally", () => {
@@ -288,6 +331,22 @@ describe("routes", () => {
     expect(graphOf({}).routes.map((route) => route.url)).toEqual(["/", "/404.html"]);
   });
 
+  it("has a home page without content when there is no index.md", () => {
+    const [home] = graphOf({ "pages/now.md": minimal.page }).routes;
+    expect(home?.kind === "home" && home.page).toBeUndefined();
+  });
+
+  it("leaves a draft out of the home page, unless drafts are shown", () => {
+    const files = { "index.md": "---\ntitle: Home\ndraft: true\n---\n" };
+    expect(homePageFile(graphOf(files))).toBeUndefined();
+    expect(homePageFile(graphOf(files, { drafts: true }))).toBe("index.md");
+  });
+
+  it("refuses a number of posts per page below 1", () => {
+    expect(() => buildSiteGraph([], { perPage: 0 })).toThrow("perPage");
+    expect(() => buildSiteGraph([], { perPage: 1.5 })).toThrow("perPage");
+  });
+
   it("gives the home page the content of index.md", () => {
     const [home] = graphOf({ "index.md": minimal.page }).routes;
     expect(home?.kind === "home" && home.page?.file).toBe("index.md");
@@ -301,6 +360,14 @@ describe("routes", () => {
     ]);
     const about = routes.find((route) => route.kind === "about");
     expect(about?.kind === "about" && about.page?.file).toBe("pages/about.md");
+  });
+
+  it.each([
+    ["experience", { "experience/a.md": minimal.experience }],
+    ["education", { "education/a.md": minimal.education }],
+  ])("makes an about page for %s alone", (_, files) => {
+    const routes = graphOf(files).routes;
+    expect(routes.find((route) => route.url === "/about/")?.kind).toBe("about");
   });
 
   it("makes an about page from pages/about.md alone", () => {
