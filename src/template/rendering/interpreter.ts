@@ -12,12 +12,15 @@ import {
   assertNever,
   closestMatch,
 } from "../../diagnostics/index.ts";
+import type { Layout } from "../analysis/link-templates.ts";
 import type {
   BinaryExpression,
+  BlockNode,
   Expression,
   FilterExpression,
   ForNode,
   IfNode,
+  IncludeNode,
   IndexExpression,
   LogicalExpression,
   MemberExpression,
@@ -44,12 +47,16 @@ export interface InterpreterResult {
 }
 
 export function interpret(
-  nodes: readonly TemplateNode[],
+  layout: Layout,
   variables: Readonly<Record<string, unknown>>,
   filters: ReadonlyMap<string, FilterDefinition>,
+  layouts: ReadonlyMap<string, Layout>,
 ): InterpreterResult {
-  return new Interpreter(variables, filters).run(nodes);
+  return new Interpreter(variables, filters, layouts).run(layout);
 }
+
+/** Templates can't include each other in a circle, but a long chain could still overflow the stack. */
+export const MAX_INCLUDE_DEPTH = 32;
 
 const FAILED = Symbol("failed");
 
@@ -67,22 +74,36 @@ function pathOf(expression: Expression): string | undefined {
 
 class Interpreter {
   readonly #filters: ReadonlyMap<string, FilterDefinition>;
+  readonly #layouts: ReadonlyMap<string, Layout>;
   readonly #diagnostics: Diagnostic[] = [];
   readonly #reported = new Set<string>();
   #scope: Scope;
   /** Conditions and the lists of loops may read missing fields without a warning. */
   #quiet = false;
+  /** The blocks of the template being shown, which may come from templates that extend it. */
+  #blocks: ReadonlyMap<string, readonly TemplateNode[]> = new Map();
+  #includeDepth = 0;
 
   constructor(
     variables: Readonly<Record<string, unknown>>,
     filters: ReadonlyMap<string, FilterDefinition>,
+    layouts: ReadonlyMap<string, Layout>,
   ) {
     this.#scope = new Scope(variables);
     this.#filters = filters;
+    this.#layouts = layouts;
   }
 
-  run(nodes: readonly TemplateNode[]): InterpreterResult {
-    return { html: this.#renderNodes(nodes), diagnostics: this.#diagnostics };
+  run(layout: Layout): InterpreterResult {
+    return { html: this.#renderLayout(layout), diagnostics: this.#diagnostics };
+  }
+
+  #renderLayout({ nodes, blocks }: Layout): string {
+    const outside = this.#blocks;
+    this.#blocks = blocks;
+    const html = this.#renderNodes(nodes);
+    this.#blocks = outside;
+    return html;
   }
 
   #renderNodes(nodes: readonly TemplateNode[]): string {
@@ -99,6 +120,12 @@ class Interpreter {
         return this.#renderIf(node);
       case "for":
         return this.#renderFor(node);
+      case "include":
+        return this.#renderInclude(node);
+      case "block":
+        return this.#renderBlock(node);
+      case "extends":
+        return "";
       default:
         return assertNever(node);
     }
@@ -141,6 +168,29 @@ class Interpreter {
     });
     this.#scope = outside;
     return html.join("");
+  }
+
+  /** An included template sees the variables at the place where it is included. */
+  #renderInclude({ template, span }: IncludeNode): string {
+    if (this.#includeDepth >= MAX_INCLUDE_DEPTH) {
+      this.#error(
+        TemplateCodes.nestingTooDeep,
+        `templates are included more than ${MAX_INCLUDE_DEPTH} levels deep`,
+        span,
+        "include fewer templates inside each other",
+      );
+      return "";
+    }
+    const layout = this.#layouts.get(template);
+    if (layout === undefined) throw new InternalError(`Unchecked template: ${template}`);
+    this.#includeDepth++;
+    const html = this.#renderLayout(layout);
+    this.#includeDepth--;
+    return html;
+  }
+
+  #renderBlock({ name, body }: BlockNode): string {
+    return this.#renderNodes(this.#blocks.get(name) ?? body);
   }
 
   #evaluateQuietly(expression: Expression): unknown {
@@ -353,7 +403,8 @@ class Interpreter {
   }
 
   #report(diagnostic: Diagnostic): void {
-    const key = `${diagnostic.code} ${diagnostic.span.start.offset}`;
+    const { code, span } = diagnostic;
+    const key = `${code} ${span.file} ${span.start.offset}`;
     if (this.#reported.has(key)) return;
     this.#reported.add(key);
     this.#diagnostics.push(diagnostic);

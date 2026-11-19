@@ -17,6 +17,7 @@ import {
 } from "../../diagnostics/index.ts";
 import type {
   BinaryOperator,
+  BlockNode,
   ConditionalBranch,
   Expression,
   ForNode,
@@ -54,7 +55,18 @@ const LITERAL_NAMES: ReadonlyMap<string, boolean | null> = new Map([
 ]);
 const OPERATOR_NAMES: ReadonlySet<string> = new Set(["and", "or", "not"]);
 
-const TAG_NAMES = ["if", "elif", "else", "endif", "for", "endfor"];
+const TAG_NAMES = [
+  "if",
+  "elif",
+  "else",
+  "endif",
+  "for",
+  "endfor",
+  "include",
+  "extends",
+  "block",
+  "endblock",
+];
 const LISTED_TAGS = `${TAG_NAMES.slice(0, -1).join(", ")} and ${TAG_NAMES.at(-1)}`;
 /** Tags that continue or close a block, and what a stray one would need before it. */
 const BRANCH_TAGS: ReadonlyMap<string, { readonly block: string; readonly opening: string }> =
@@ -63,18 +75,27 @@ const BRANCH_TAGS: ReadonlyMap<string, { readonly block: string; readonly openin
     ["else", { block: "`if` or `for`", opening: "an `if` or a `for`" }],
     ["endif", { block: "`if`", opening: "`{% if condition %}`" }],
     ["endfor", { block: "`for`", opening: "`{% for item in list %}`" }],
+    ["endblock", { block: "`block`", opening: "`{% block name %}`" }],
   ]);
 
 /** A block that has been opened and not closed yet. */
 interface OpenBlock {
-  readonly kind: "if" | "for";
+  readonly kind: "if" | "for" | "block";
   /** Whether its `{% else %}` has been read. */
   inOtherwise: boolean;
 }
 
+/** The tags that can continue each kind of block before its end tag. */
+const BRANCHES: Readonly<Record<OpenBlock["kind"], readonly string[]>> = {
+  if: ["elif", "else"],
+  for: ["else"],
+  block: [],
+};
+
 function accepts(block: OpenBlock, tagName: string): boolean {
-  const branches = block.kind === "if" ? ["elif", "else"] : ["else"];
-  return tagName === `end${block.kind}` || (!block.inOtherwise && branches.includes(tagName));
+  return (
+    tagName === `end${block.kind}` || (!block.inOtherwise && BRANCHES[block.kind].includes(tagName))
+  );
 }
 
 /** An `else` or `elif` after the `else` of the same block. */
@@ -174,6 +195,10 @@ class TemplateParser {
     const { name } = tag;
     if (name.kind === "name" && name.value === "if") return this.#parseIf(tag);
     if (name.kind === "name" && name.value === "for") return this.#parseFor(tag);
+    if (name.kind === "name" && name.value === "block") return this.#parseBlock(tag);
+    if (name.kind === "name" && (name.value === "include" || name.value === "extends")) {
+      return this.#parseReference(tag, name.value);
+    }
     if (name.kind !== "invalid") this.#reportUnknownTag(tag);
     return this.#skipTo(tag.close);
   }
@@ -238,6 +263,32 @@ class TemplateParser {
     }
     this.#closeBlock(block, tag);
     return { kind: "for", variable, iterable, body, otherwise, span: this.#tagSpan(tag) };
+  }
+
+  #parseBlock(tag: TagStart): BlockNode | undefined {
+    const name = this.#current();
+    if (!this.#failed && name.kind !== "name") this.#failExpected("the name of the block");
+    if (!this.#failed) this.#index++;
+    this.#endTag(tag.close);
+    const block = this.#openBlock("block", tag);
+    if (block === undefined) return undefined;
+
+    const body = this.#parseBody();
+    this.#closeBlock(block, tag);
+    const blockName = name.kind === "name" ? name.value : "";
+    return { kind: "block", name: blockName, nameSpan: name.span, body, span: this.#tagSpan(tag) };
+  }
+
+  /** `include` and `extends` name a template in quotes, so it can be checked before rendering. */
+  #parseReference(tag: TagStart, kind: "include" | "extends"): TemplateNode | undefined {
+    const name = this.#current();
+    if (!this.#failed && name.kind !== "string") {
+      this.#failExpected("the name of a template in quotes");
+    }
+    if (!this.#failed) this.#index++;
+    this.#endTag(tag.close);
+    if (this.#failed || name.kind !== "string") return undefined;
+    return { kind, template: name.value, templateSpan: name.span, span: this.#tagSpan(tag) };
   }
 
   #loopVariable(): string {
