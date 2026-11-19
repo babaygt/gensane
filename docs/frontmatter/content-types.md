@@ -87,6 +87,7 @@ order: 1
 | `links`       | No       | List of `name` (text) and `url` (web address) | Empty list |
 | `status`      | No       | `active`, `paused` or `archived`         | Empty         |
 | `featured`    | No       | True or false                            | `false`       |
+| `draft`       | No       | True or false                            | `false`       |
 | `cover`       | No       | Text                                     | Empty         |
 | `order`       | No       | Whole number                             | Empty         |
 

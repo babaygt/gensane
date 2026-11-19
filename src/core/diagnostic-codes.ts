@@ -8,4 +8,7 @@ export const CoreCodes = {
   noSlug: "GS404",
   duplicateUrl: "GS405",
   dateMismatch: "GS406",
+  reservedUrl: "GS407",
+  tagWithoutUrl: "GS408",
+  tagSpelling: "GS409",
 } as const satisfies Record<string, DiagnosticCode>;

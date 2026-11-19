@@ -1,3 +1,4 @@
+import type { SourceSpan } from "../../diagnostics/index.ts";
 import type { ContentFields, ContentType } from "../../frontmatter/index.ts";
 import type { TableOfContentsEntry } from "../../markdown/index.ts";
 
@@ -7,6 +8,8 @@ interface EntryDetails {
   readonly slug: string;
   /** Talks, experience and education are only shown in lists, so they have no URL. */
   readonly url: string | undefined;
+  /** Where the URL was chosen: the `slug:` field, or else the start of the file. */
+  readonly urlSpan: SourceSpan;
   /** Fields that the type of content doesn't define, for templates. */
   readonly extra: Readonly<Record<string, unknown>>;
   readonly html: string;
@@ -25,3 +28,5 @@ export type ContentEntry = {
 }[ContentType];
 
 export type { EntryDetails };
+
+export type EntryOf<Type extends ContentType> = Extract<ContentEntry, { readonly type: Type }>;
