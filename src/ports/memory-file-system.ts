@@ -43,6 +43,10 @@ export class MemoryFileSystem implements FileSystem {
       .toSorted();
   }
 
+  async isFile(path: string): Promise<boolean> {
+    return this.#files.has(normalize(path));
+  }
+
   async readText(path: string): Promise<string> {
     return new TextDecoder().decode(this.bytesOf(path));
   }

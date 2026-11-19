@@ -1,9 +1,13 @@
-import { copyFile, mkdir, readFile, readdir, rm, writeFile } from "node:fs/promises";
+import { copyFile, mkdir, readFile, readdir, rm, stat, writeFile } from "node:fs/promises";
 import { dirname, join, relative, sep } from "node:path";
 import type { FileSystem } from "./file-system.ts";
 
+function codeOf(error: unknown): unknown {
+  return error instanceof Error && "code" in error ? error.code : undefined;
+}
+
 function isMissing(error: unknown): boolean {
-  return error instanceof Error && "code" in error && error.code === "ENOENT";
+  return codeOf(error) === "ENOENT";
 }
 
 /** The real disk. */
@@ -17,6 +21,16 @@ export class NodeFileSystem implements FileSystem {
         .toSorted();
     } catch (error) {
       if (isMissing(error)) return [];
+      throw error;
+    }
+  }
+
+  async isFile(path: string): Promise<boolean> {
+    try {
+      return (await stat(path)).isFile();
+    } catch (error) {
+      // A path that goes through a file, such as `a.md/b.md`, fails with ENOTDIR.
+      if (isMissing(error) || codeOf(error) === "ENOTDIR") return false;
       throw error;
     }
   }

@@ -1,4 +1,4 @@
-// Public API of the `gensane` package. Grows as modules land (defineConfig comes with the config loader).
+// Public API of the `gensane` package. Grows as modules land.
 export type {
   Diagnostic,
   DiagnosticCode,
@@ -6,3 +6,9 @@ export type {
   SourcePosition,
   SourceSpan,
 } from "./diagnostics/index.ts";
+export {
+  type Author,
+  type GensaneConfig,
+  type SiteSettings,
+  defineConfig,
+} from "./config/index.ts";
