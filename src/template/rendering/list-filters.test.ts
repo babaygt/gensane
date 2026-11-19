@@ -25,6 +25,10 @@ const posts = [
   },
 ];
 
+function onNewYear(time: string) {
+  return { text: "", year: 2026, month: 1, day: 1, time };
+}
+
 /** The titles of the posts that a list expression gives, in order. */
 function titles(code: string, variables: Variables = { posts }): string {
   return html(
@@ -58,6 +62,10 @@ describe("where", () => {
 
   it("gives an empty list for nothing", () => {
     expect(value('page.posts | where("draft") | length', { page: {} })).toBe("0");
+  });
+
+  it("only reads the fields of the items themselves", () => {
+    expect(titles('posts | where("constructor")')).toBe("");
   });
 
   it.each([
@@ -115,6 +123,15 @@ describe("sort and reverse", () => {
 
   it("sorts dates, with a month before the days in it", () => {
     expect(titles('posts | sort("date")')).toBe("apple,Cherry,Banana,date");
+  });
+
+  it("sorts dates on the same day by their time", () => {
+    const list = [
+      { title: "late", date: onNewYear("18:00:00Z") },
+      { title: "early", date: onNewYear("08:00:00Z") },
+      { title: "noon", date: onNewYear("12:00:00Z") },
+    ];
+    expect(titles('posts | sort("date")', { posts: list })).toBe("early,noon,late");
   });
 
   it("puts items without the field last", () => {

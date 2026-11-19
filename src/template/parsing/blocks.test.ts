@@ -131,6 +131,15 @@ describe("mistakes in blocks", () => {
     ["{% if a %}{% else %}{% else %}{% endif %}", TemplateCodes.misplacedBranch],
     ["{% if a %}{% else %}{% elif b %}{% endif %}", TemplateCodes.misplacedBranch],
     ["{% for a in b %}{% else %}{% else %}{% endfor %}", TemplateCodes.misplacedBranch],
+    ["{% for a in b %}{% else %}{% elif c %}{% endfor %}", TemplateCodes.noOpenBlock],
+    [
+      "{% if a %}{% else %}{% for b in c %}{% elif d %}{% endfor %}{% endif %}",
+      TemplateCodes.noOpenBlock,
+    ],
+    [
+      "{% if a %}{% if b %}{% else %}{% else %}{% endif %}{% endif %}",
+      TemplateCodes.misplacedBranch,
+    ],
     ["{% if %}{% endif %}", TemplateCodes.expectedValue],
     ["{% if a b %}{% endif %}", TemplateCodes.unexpectedToken],
     ["{% if a %}{% elif %}{% endif %}", TemplateCodes.expectedValue],
@@ -219,6 +228,8 @@ describe("mistakes in blocks", () => {
     expect(problems("{% if a @ %}x{% endif %}")).toEqual([]);
     expect(problems("{% for a in @ %}x{% endfor %}")).toEqual([]);
     expect(problems("{% if a %}{% endif @ %}")).toEqual([]);
+    expect(problems("{% for @ in b %}x{% endfor %}")).toEqual([]);
+    expect(problems("{% if a %}{% else if @ %}{% endif %}")).toEqual([]);
   });
 
   it("suggests elif for else if", () => {
@@ -274,6 +285,11 @@ describe("limits on blocks", () => {
 
   it("counts only nesting, not blocks side by side", () => {
     expect(problems("{% if a %}{% endif %}".repeat(MAX_BLOCK_DEPTH + 1))).toEqual([]);
+  });
+
+  it("reads nothing more after blocks are nested too deeply", () => {
+    const source = `${"{% if a %}".repeat(MAX_BLOCK_DEPTH + 1)}{% elif + %}{{ + }}`;
+    expect(problems(source)).toEqual([TemplateCodes.nestingTooDeep]);
   });
 
   it("survives extremely deep nesting", () => {

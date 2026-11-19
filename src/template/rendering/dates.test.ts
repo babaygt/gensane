@@ -41,6 +41,10 @@ describe("formatting dates", () => {
     expect(formatted("MMM", date)).toBe(name.slice(0, 3));
   });
 
+  it("writes the year with four digits", () => {
+    expect(formatted("yyyy", { text: "", year: 999, month: 1, day: 1 })).toBe("0999");
+  });
+
   it("formats a month without a day", () => {
     expect(formatted("MMMM yyyy", month)).toBe("June 2024");
   });
@@ -109,6 +113,21 @@ describe("mistakes with dates", () => {
 
   it("needs exactly one format", () => {
     expect(compileCodes("{{ a | date }}")).toEqual([TemplateCodes.wrongArgumentCount]);
+  });
+});
+
+describe("values that only look like dates", () => {
+  it.each([
+    ["a month after December", { text: "", year: 2026, month: 13, day: 1 }],
+    ["a month before January", { text: "", year: 2026, month: 0, day: 1 }],
+    ["a day that is not a whole number", { text: "", year: 2026, month: 1, day: 1.5 }],
+    ["a year that is not a whole number", { text: "", year: 2026.5, month: 1 }],
+    ["no text", { year: 2026, month: 1, day: 1 }],
+    ["a time that is not text", { text: "", year: 2026, month: 1, day: 1, time: 10 }],
+  ])("does not treat %s as a date", (_, date) => {
+    expect(problem("yyyy", date)[0]?.message).toBe(
+      '"date" needs a date, but found a group of fields',
+    );
   });
 });
 

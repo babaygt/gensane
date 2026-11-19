@@ -56,7 +56,7 @@ describe("conditions", () => {
   });
 
   it("reports an unknown variable in a condition once, and shows no branch", () => {
-    const source = "{% if missing %}a{% else %}b{% endif %}";
+    const source = "{% if missing %}{{ 1 / 0 }}{% else %}{{ 1 / 0 }}{% endif %}";
     expect(renderCodes(source)).toEqual([TemplateCodes.unknownVariable]);
   });
 
@@ -98,6 +98,7 @@ describe("loops", () => {
     const source = "{% for tag in page.tags %}{{ tag }}{% else %}no tags{% endfor %}";
     expect(html(source, { page: {} })).toBe("no tags");
     expect(renderProblems(source, { page: {} })).toEqual([]);
+    expect(html(source, { page: { tags: null } })).toBe("no tags");
   });
 
   it("is silent about a missing field passed to a filter in the list", () => {
@@ -148,9 +149,9 @@ describe("loops", () => {
   });
 
   it("reports an unknown list once, and shows nothing", () => {
-    expect(renderCodes("{% for x in missing %}a{% else %}b{% endfor %}")).toEqual([
-      TemplateCodes.unknownVariable,
-    ]);
+    expect(
+      renderCodes("{% for x in missing %}{{ 1 / 0 }}{% else %}{{ 1 / 0 }}{% endfor %}"),
+    ).toEqual([TemplateCodes.unknownVariable]);
   });
 
   it("reports a mistake inside the body once, not once for each item", () => {
@@ -180,7 +181,9 @@ describe("loops", () => {
 
   it("handles a very long list", () => {
     const list = Array.from({ length: 100_000 }, (_, index) => index);
-    expect(html("{% for x in list %}.{% endfor %}", { list })).toHaveLength(100_000);
+    expect(html("{% for x in list %}{{ dot }}{% endfor %}", { list, dot: "." })).toHaveLength(
+      100_000,
+    );
   });
 });
 
