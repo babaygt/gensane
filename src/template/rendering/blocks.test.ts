@@ -100,6 +100,11 @@ describe("loops", () => {
     expect(renderProblems(source, { page: {} })).toEqual([]);
   });
 
+  it("is silent about a missing field passed to a filter in the list", () => {
+    const source = "{% for tag in page.tags | sort %}{{ tag }}{% endfor %}";
+    expect(renderProblems(source, { page: {} })).toEqual([]);
+  });
+
   it("tells each item where it is in the loop", () => {
     const source =
       "{% for x in list %}{{ loop.index }}/{{ loop.length }}" +
