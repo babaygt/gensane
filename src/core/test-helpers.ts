@@ -35,3 +35,20 @@ export function problems(files: Readonly<Record<string, string>>): readonly Diag
 export function codes(files: Readonly<Record<string, string>>): string[] {
   return problems(files).map((problem) => problem.code);
 }
+
+/** A template for every kind of page, each printing the title, so that a site always builds. */
+export const plainTheme: Readonly<Record<string, string>> = Object.fromEntries(
+  [
+    "home",
+    "post",
+    "blog",
+    "tag",
+    "tags",
+    "project",
+    "projects",
+    "talks",
+    "about",
+    "page",
+    "404",
+  ].map((name) => [`${name}.html`, `<h1>{{ page.title }}</h1>`]),
+);

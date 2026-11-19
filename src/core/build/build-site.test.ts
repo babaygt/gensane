@@ -1,23 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { type BuiltSite, CoreCodes, type SiteInput, buildSite } from "../index.ts";
-import { minimal } from "../test-helpers.ts";
-
-/** A template for every kind of page, each printing the title, so that a site always builds. */
-const plainTheme: Readonly<Record<string, string>> = Object.fromEntries(
-  [
-    "home",
-    "post",
-    "blog",
-    "tag",
-    "tags",
-    "project",
-    "projects",
-    "talks",
-    "about",
-    "page",
-    "404",
-  ].map((name) => [`${name}.html`, `<h1>{{ page.title }}</h1>`]),
-);
+import { minimal, plainTheme } from "../test-helpers.ts";
 
 function built(input: Partial<SiteInput>): BuiltSite {
   const result = buildSite({ content: {}, templates: plainTheme, ...input });
@@ -41,8 +24,10 @@ function render(
   return fileOf(site, path);
 }
 
+/** The site has an address, so that no test here expects the warning about a missing one. */
 function problemsOf(input: Partial<SiteInput>) {
-  const result = buildSite({ content: {}, templates: plainTheme, ...input });
+  const config = { site: { url: "https://example.com" } };
+  const result = buildSite({ content: {}, templates: plainTheme, config, ...input });
   return result.ok ? result.value.warnings : result.error;
 }
 
