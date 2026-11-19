@@ -101,6 +101,35 @@ describe("links in content", () => {
     );
   });
 
+  it("leaves a relative link alone where there is no page to start from", () => {
+    const content = { "talks/a.md": `${minimal.talk}[notes](notes.pdf)\n` };
+    expect(codesOf({ content })).toEqual([]);
+  });
+
+  it("checks the links of a draft when drafts are shown", () => {
+    const content = { "blog/a.md": post("[x](/nowhere/)\n", "draft: true\n") };
+    expect(codesOf({ content, config: { drafts: true } })).toEqual([CoreCodes.brokenLink]);
+  });
+
+  it("names the content folder of the config", () => {
+    const content = { "blog/a.md": post("[x](/nowhere/)\n") };
+    const [found] = problemsOf({ content, config: { contentFolder: "site/content" } });
+    expect(found?.span.file).toBe("site/content/blog/a.md");
+  });
+
+  it("points at the start of the file when the link is written differently", () => {
+    const content = { "blog/a.md": post("[x](/nowhere&amp;x/)\n") };
+    expect(problemsOf({ content })).toMatchObject([
+      { span: { start: { line: 1, column: 1 }, end: { line: 1, column: 1 } } },
+    ]);
+  });
+
+  it("doesn't check links once building has found an error", () => {
+    const content = { "blog/a.md": post("[x](/nowhere/)\n") };
+    const templates = { ...theme, "404.html": "{{ 1 / 0 }}" };
+    expect(codesOf({ content, templates })).toEqual(["GS333"]);
+  });
+
   it("checks links in HTML written in the Markdown", () => {
     const content = { "blog/a.md": post('<a href="/nowhere/">x</a>\n') };
     expect(codesOf({ content })).toEqual([CoreCodes.brokenLink]);
@@ -137,6 +166,11 @@ describe("images and files", () => {
         hint: 'did you mean "/images/me.jpeg"?',
       },
     ]);
+  });
+
+  it("reads an ampersand in an address", () => {
+    const content = { "blog/a.md": post("![logo](/files/a&b.png)\n") };
+    expect(codesOf({ content, publicFiles: ["files/a&b.png"] })).toEqual([]);
   });
 
   it("reads spaces and other characters written as %20", () => {
@@ -205,6 +239,11 @@ describe("links to a part of a page", () => {
     ]);
   });
 
+  it("reads an ampersand in an id", () => {
+    const content = { "blog/a.md": post('[x](#a&b)\n\n<span id="a&amp;b"></span>\n') };
+    expect(codesOf({ content })).toEqual([]);
+  });
+
   it("explains a missing part when nothing is close", () => {
     const content = { "blog/a.md": post("[down](#zzzzzz)\n") };
     expect(problemsOf({ content })[0]?.hint).toBe(
@@ -230,6 +269,11 @@ describe("links in templates", () => {
     ]);
   });
 
+  it("reads an ampersand written in a template", () => {
+    const templates = { ...theme, "404.html": '<img src="/files/a&amp;b.png">' };
+    expect(codesOf({ templates, publicFiles: ["files/a&b.png"] })).toEqual([]);
+  });
+
   it("checks templates that no page uses, such as partials", () => {
     const templates = { ...theme, "nav.html": '<a href="/nowhere/">x</a>' };
     expect(codesOf({ templates })).toEqual([CoreCodes.brokenLink]);
@@ -238,6 +282,7 @@ describe("links in templates", () => {
   it.each([
     '<a href="{{ page.url }}">x</a>',
     '<a href="/blog/{{ page.title }}/">x</a>',
+    '<a href="/blog/{% if true %}x{% endif %}/">x</a>',
     '<a href="relative/">x</a>',
     '<img src="https://example.org/x.png">',
     '<a href="/">home</a>',
