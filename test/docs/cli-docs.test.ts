@@ -10,7 +10,7 @@ import { pathToFileURL } from "node:url";
 import { afterAll, describe, expect, it } from "vitest";
 import { ExitCode } from "../../src/cli/index.ts";
 import { ConfigCodes, checkConfig } from "../../src/config/index.ts";
-import { TEMPLATES } from "../../src/core/index.ts";
+import { TEMPLATES, themeCss, themeOf } from "../../src/core/index.ts";
 import {
   type CliExample,
   type CliStep,
@@ -185,6 +185,23 @@ describe("the documentation is complete", () => {
     const settings = hint.replace("the settings are ", "").split(/, | and /);
     expect(settings.length).toBeGreaterThan(1);
     for (const setting of settings) expect(docsPage("config.md")).toContain(`### \`${setting}\``);
+  });
+
+  it("lists every file of the default theme", () => {
+    const table = findSection(docsPage("theme.md"), "## The files");
+    const listed = [...table.matchAll(/^\| `([^`]+)`/gm)].map(([, file]) => file);
+    const shipped = readdirSync(join(packageRoot, "themes", "default"), { recursive: true })
+      .map(String)
+      .filter((file) => file.includes("."))
+      .map((file) => file.split("\\").join("/"));
+    expect(listed.toSorted()).toEqual(shipped.toSorted());
+  });
+
+  it("lists every custom property the settings file writes", () => {
+    const table = findSection(docsPage("theme.md"), "## Custom properties");
+    const listed = [...table.matchAll(/^\| `--([a-z-]+)`/gm)].map(([, name]) => name);
+    const written = [...themeCss(themeOf({})).matchAll(/  --([a-z-]+):/g)].map(([, name]) => name);
+    expect(listed).toEqual([...new Set(written)]);
   });
 
   it("covers every source file in the code reference", () => {
