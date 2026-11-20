@@ -53,7 +53,7 @@ sitemap.xml
 `/` are checked. A problem points at the first place the link is written in the file.
 
 **Templates.** Links that are written out in full, such as `<a href="/about/">`, are checked at their exact place in the template, even in
-templates that no page uses. Links built with `{{ }}`, such as `{{ post.url }}`, come from the pages themselves.
+templates that no page uses. So are the stylesheets, scripts and media a template loads, in `<link>`, `<script>` and `<source>`. Links built with `{{ }}`, such as `{{ post.url }}`, come from the pages themselves.
 
 **Drafts.** A link to a draft that isn't published is broken, and the hint says it is a draft. The links inside such a draft aren't checked.
 

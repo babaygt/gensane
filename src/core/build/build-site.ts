@@ -110,7 +110,19 @@ export function buildSite(input: SiteInput): Result<BuiltSite, readonly Diagnost
   if (!templates.ok) return finish([], [...warnings, ...templates.error]);
 
   const theme = themeOf(config.theme);
-  const variables = new TemplateVariables(config.site ?? {}, theme, graph.value.graph.collections);
+  // The feed only needs the entries, so whether there is one is known before any page is rendered.
+  const feeds = feedFiles(
+    config.site ?? {},
+    graph.value.graph,
+    config.configFile ?? "gensane.config.ts",
+  );
+  const variables = new TemplateVariables({
+    site: config.site ?? {},
+    theme,
+    collections: graph.value.graph.collections,
+    routes: graph.value.graph.routes,
+    feed: feeds.files.some(({ path }) => path === "feed.xml") ? "/feed.xml" : undefined,
+  });
   const files: OutputFile[] = [];
   const problems: Diagnostic[] = [...warnings];
   const missing = new Map<string, Route>();
@@ -139,11 +151,6 @@ export function buildSite(input: SiteInput): Result<BuiltSite, readonly Diagnost
       ),
     );
   }
-  const feeds = feedFiles(
-    config.site ?? {},
-    graph.value.graph,
-    config.configFile ?? "gensane.config.ts",
-  );
   const allFiles = [...files, ...feeds.files, { path: THEME_CSS_PATH, content: themeCss(theme) }];
   const found = [...problems, ...feeds.problems];
   if (hasErrors(found)) return finish(allFiles, found);

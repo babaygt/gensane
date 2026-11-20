@@ -18,6 +18,18 @@ export const DEFAULT_TITLES: Readonly<Partial<Record<RouteKind, string>>> = {
   "not-found": "Page not found",
 };
 
+/** The pages a site's menu leads to, in this order, when the site has them. */
+const NAVIGATION: readonly RouteKind[] = ["blog", "projects", "talks", "about"];
+
+export interface VariableSources {
+  readonly site: TemplateData;
+  readonly theme: Theme;
+  readonly collections: Collections;
+  readonly routes: readonly Route[];
+  /** The address of the feed, when the site has one. */
+  readonly feed: string | undefined;
+}
+
 /**
  * Converts each entry once, so the same post is the same value in `collections.posts`,
  * in `pagination.items` and as `page`.
@@ -25,12 +37,19 @@ export const DEFAULT_TITLES: Readonly<Partial<Record<RouteKind, string>>> = {
 export class TemplateVariables {
   readonly #site: TemplateData;
   readonly #theme: TemplateData;
+  readonly #navigation: readonly TemplateData[];
+  readonly #feed: string | undefined;
   readonly #pages = new Map<ContentEntry, TemplateData>();
   readonly #collections: TemplateData;
 
-  constructor(site: TemplateData, theme: Theme, collections: Collections) {
+  constructor({ site, theme, collections, routes, feed }: VariableSources) {
     this.#site = site;
     this.#theme = { ...theme };
+    this.#feed = feed;
+    this.#navigation = NAVIGATION.flatMap((kind) => {
+      const route = routes.find((found) => found.kind === kind);
+      return route === undefined ? [] : [{ title: DEFAULT_TITLES[kind], url: route.url }];
+    });
     this.#collections = {
       posts: collections.posts.map((entry) => this.#page(entry)),
       projects: collections.projects.map((entry) => this.#page(entry)),
@@ -47,6 +66,8 @@ export class TemplateVariables {
     return {
       site: this.#site,
       theme: this.#theme,
+      navigation: this.#navigation,
+      feed: this.#feed,
       collections: this.#collections,
       page: this.#pageOf(route),
       pagination: "pagination" in route ? this.#pagination(route.pagination) : undefined,

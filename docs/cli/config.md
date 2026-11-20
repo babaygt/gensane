@@ -153,7 +153,8 @@ index.html
 ### `markdown`
 
 Settings of the [Markdown compiler](../markdown-compiler/README.md): `rawHtml` is `"allow"` (the default) to pass HTML in Markdown
-through, or `"escape"` to show it as text; `headingIds` is `false` to leave out the ids of headings.
+through, or `"escape"` to show it as text; `headingIds` is `false` to leave out the ids of headings; `highlight` colors code blocks at
+build time.
 
 <!-- runs -->
 ```ts gensane.config.ts
@@ -179,6 +180,49 @@ Built 3 pages into dist in 8 ms, with no warnings.
 ```html dist/about/index.html
 <p>I like &lt;b&gt;bold&lt;/b&gt; ideas.</p>
 ```
+
+A `highlight` function gets the code and the language of each code block and gives back the HTML for inside `<code>`, or `undefined`
+to leave the block as it is. A highlighter such as [Shiki](https://shiki.style) fits in a few lines; this one only marks comments:
+
+<!-- runs -->
+```ts gensane.config.ts
+import { defineConfig } from "gensane";
+
+export default defineConfig({
+  site: { url: "https://example.com" },
+  markdown: {
+    highlight: (code, language) =>
+      language === "sh" ? code.replace(/^(#.*)$/m, '<span class="comment">$1</span>') : undefined,
+  },
+});
+```
+
+````markdown content/pages/about.md
+---
+title: About
+---
+```sh
+# install
+npm install gensane
+```
+````
+
+```jinja theme/about.html
+{{ page.html }}
+```
+
+```console
+$ gensane build
+Built 3 pages into dist in 8 ms, with no warnings.
+```
+
+```html dist/about/index.html
+<pre><code class="language-sh"><span class="comment"># install</span>
+npm install gensane
+</code></pre>
+```
+
+A real highlighter must escape `<`, `&` and `"` in the code itself, as Shiki does.
 
 ### `filters`
 
