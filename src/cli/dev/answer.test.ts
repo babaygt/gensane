@@ -124,6 +124,7 @@ describe("typeOf", () => {
     ["CNAME", "application/octet-stream"],
     [".well-known/thing", "application/octet-stream"],
     ["archive.tar.gz", "application/octet-stream"],
+    ["png", "application/octet-stream"],
   ])("%s is %s", (path, type) => {
     expect(typeOf(path)).toBe(type);
   });

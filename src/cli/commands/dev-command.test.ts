@@ -3,7 +3,12 @@ import { get } from "node:http";
 import { createServer } from "node:net";
 import { afterEach, describe, expect, it } from "vitest";
 import { TEMPLATES } from "../../core/index.ts";
-import { ManualWatcher, MemoryFileSystem, MemoryTerminal } from "../../ports/index.ts";
+import {
+  ManualWatcher,
+  MemoryFileSystem,
+  MemoryTerminal,
+  type ModuleLoader,
+} from "../../ports/index.ts";
 import { ExitCode } from "../environment.ts";
 import { runCli } from "../run-cli.ts";
 
@@ -34,6 +39,7 @@ async function startDev(
     default: { site: { url: "https://example.com" } },
   },
   args: readonly string[] = ["--port", "0"],
+  moduleLoader: ModuleLoader = { load: async () => config },
 ) {
   const fileSystem = new MemoryFileSystem({
     ...plainTheme,
@@ -45,7 +51,7 @@ async function startDev(
   const stop = new AbortController();
   const exit = runCli(["dev", ...args], {
     fileSystem,
-    moduleLoader: { load: async () => config },
+    moduleLoader,
     clock: { now: () => new Date(0) },
     terminal,
     watcher,
@@ -183,6 +189,42 @@ describe("gensane dev", () => {
     page.close();
   });
 
+  it("adds the reload script only to pages, not to the feed", async () => {
+    const dev = await startDev({ "site/content/blog/hello.md": HELLO });
+    const feed = await fetchText(`${dev.address}/feed.xml`);
+    expect(feed.body).toMatch(/^<\?xml/);
+    expect(feed.body).not.toContain("<script>");
+  });
+
+  it("builds once more for a change that comes while a build is running, and names that change", async () => {
+    const config = { default: { site: { url: "https://example.com" } } };
+    let loads = 0;
+    let release: (() => void) | undefined;
+    let gate = Promise.resolve();
+    const dev = await startDev({ "site/content/blog/hello.md": HELLO }, config, ["--port", "0"], {
+      load: async () => {
+        loads++;
+        await gate;
+        return config;
+      },
+    });
+    gate = new Promise((resolve) => {
+      release = resolve;
+    });
+    dev.watcher.change("content/blog/hello.md");
+    await waitFor(() => loads === 2);
+    dev.watcher.change("theme/post.html");
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    gate = Promise.resolve();
+    release?.();
+
+    await waitFor(() => dev.output().match(/Rebuilt/g)?.length === 2);
+    expect(dev.output().split("\n").slice(-2)).toEqual([
+      "content/blog/hello.md changed. Rebuilt 4 pages in 0 ms, with no warnings.",
+      "theme/post.html changed. Rebuilt 4 pages in 0 ms, with no warnings.",
+    ]);
+  });
+
   it("serves the files of the public folder as they are", async () => {
     const dev = await startDev({ "site/public/images/me.png": PICTURE });
     const response = await fetch(`${dev.address}/images/me.png`);
@@ -222,6 +264,24 @@ describe("gensane dev", () => {
     await expect(fetch(`${dev.address}/`)).rejects.toThrow("fetch failed");
     page.close();
   });
+});
+
+it("stops at once when it is asked to stop before it has started, such as by Ctrl+C during the first build", async () => {
+  const stop = new AbortController();
+  stop.abort();
+  const watcher = new ManualWatcher();
+  const code = await runCli(["dev", "--port", "0"], {
+    fileSystem: new MemoryFileSystem(plainTheme),
+    moduleLoader: { load: async () => ({}) },
+    clock: { now: () => new Date(0) },
+    terminal: new MemoryTerminal(),
+    watcher,
+    stopped: stop.signal,
+    siteFolder: "site",
+    version: "1.2.3",
+  });
+  expect(code).toBe(ExitCode.success);
+  expect(watcher.watching).toBe(0);
 });
 
 describe("mistakes", () => {
