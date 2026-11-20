@@ -78,6 +78,14 @@ is left out, with a [warning](diagnostics.md).
 With `rawHtml: "escape"`, [`escapeRawHtml`](../../src/markdown/passes/escape-raw-html.ts) replaces HTML blocks with paragraphs and
 inline HTML with text. Because this is a separate pass, the renderer needs no options.
 
+## Highlighting code
+
+With a `highlight` function, [`highlightCode`](../../src/markdown/passes/highlight-code.ts) gives it the text and the language of
+every code block, also inside lists, quotes and footnotes. The function returns the HTML for the inside of `<code>`, such as the output
+of a highlighter like Shiki, and the block becomes that HTML; `undefined` leaves the block as it is. The pass runs after raw HTML is
+escaped, so the highlighted HTML is kept even with `rawHtml: "escape"`. Code is colored at build time, so readers get no JavaScript
+for it.
+
 ## Output
 
 [`renderHtml`](../../src/markdown/output/render-html.ts) is the only code that produces HTML, so escaping is handled in one place

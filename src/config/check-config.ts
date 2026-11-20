@@ -21,7 +21,7 @@ export interface CheckedConfig {
 
 const SETTINGS = ["site", "perPage", "markdown", "filters", "theme"];
 const SITE_SETTINGS = ["title", "url", "description", "author"];
-const MARKDOWN_SETTINGS = ["rawHtml", "headingIds"];
+const MARKDOWN_SETTINGS = ["rawHtml", "headingIds", "highlight"];
 const FILTER_NAME = /^[A-Za-z_]\w*$/;
 const EXPORT_HINT = "end the config with `export default defineConfig({ ... })`";
 
@@ -149,6 +149,15 @@ class ConfigCheck {
       if (name === "rawHtml") {
         if (setting === "allow" || setting === "escape") continue;
         this.wrongValue(path, '"allow" or "escape"', setting, 'write "allow" or "escape"');
+      } else if (name === "highlight") {
+        if (typeof setting !== "function") {
+          this.wrongValue(
+            path,
+            "a function",
+            setting,
+            "write a function, such as (code, language) => undefined",
+          );
+        }
       } else if (name === "headingIds") {
         if (typeof setting !== "boolean")
           this.wrongValue(path, "true or false", setting, "write true or false");

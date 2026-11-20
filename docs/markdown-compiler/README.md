@@ -29,6 +29,7 @@ produces a [warning](diagnostics.md) instead of a failure.
 | ------------ | --------- | ------------------------------------------------------------------------------- |
 | `rawHtml`    | `"allow"` | `"escape"` shows HTML written in Markdown as text instead of passing it through |
 | `headingIds` | `true`    | `false` leaves `id` attributes off headings                                     |
+| `highlight`  | none      | A function that colors code blocks at build time; see [passes](passes.md#highlighting-code) |
 
 ## The documentation
 

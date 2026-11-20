@@ -13,7 +13,7 @@ The public entry point of the compiler.
 | ------------------------------------------------ | ---------------------------------------- |
 | [`parseMarkdown`](../../src/markdown/index.ts)   | Runs all parsing stages and passes       |
 | [`markdownToHtml`](../../src/markdown/index.ts)  | Parses and renders in one step           |
-| [`MarkdownOptions`](../../src/markdown/index.ts) | The `rawHtml` and `headingIds` options   |
+| [`MarkdownOptions`](../../src/markdown/index.ts) | The `rawHtml`, `headingIds` and `highlight` options |
 | [`CompileResult`](../../src/markdown/index.ts)   | The HTML, table of contents and warnings |
 
 ### [`src/markdown/ast.ts`](../../src/markdown/ast.ts)
@@ -208,6 +208,15 @@ The `rawHtml: "escape"` option.
 | Name                                                            | Purpose       |
 | --------------------------------------------------------------- | ------------- |
 | [`escapeRawHtml`](../../src/markdown/passes/escape-raw-html.ts) | Runs the pass |
+
+### [`src/markdown/passes/highlight-code.ts`](../../src/markdown/passes/highlight-code.ts)
+
+The `highlight` option.
+
+| Name                                                          | Purpose                                         |
+| ------------------------------------------------------------- | ----------------------------------------------- |
+| [`highlightCode`](../../src/markdown/passes/highlight-code.ts) | Runs the pass                                  |
+| [`Highlighter`](../../src/markdown/passes/highlight-code.ts)   | Gets the code and language, gives HTML or nothing |
 
 ## Output
 

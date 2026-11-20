@@ -30,7 +30,8 @@ export interface LinkCheckInput {
   readonly themeAssets: readonly string[];
 }
 
-const LINK = /<(?:a|img)\b[^>]*?\s(?:href|src)="([^"]*)"/gi;
+/** Links, images, and the stylesheets, scripts and media a template loads. */
+const LINK = /<(?:a|img|link|script|source)\b[^>]*?\s(?:href|src)="([^"]*)"/gi;
 const ID = /\sid="([^"]*)"/g;
 const SCHEME = /^[a-z][a-z\d+.-]*:/i;
 /** Only used to resolve relative links; it never appears in output. */

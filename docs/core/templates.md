@@ -9,6 +9,9 @@ when there is nothing, so `{% if previous %}` works on every page.
 | `site`        | Every page   | The `site` settings of the config, such as `title`, `url` and `description`         |
 | `page`        | Every page   | The page itself                                                                    |
 | `collections` | Every page   | `posts`, `projects`, `talks`, `experience`, `education`, `pages` and `tags`        |
+| `theme`       | Every page   | The [theme settings](../cli/config.md#theme), with every default filled in           |
+| `navigation`  | Every page   | The blog, projects, talks and about pages the site has, each with `title` and `url` |
+| `feed`        | Every page   | The address of the feed, `/feed.xml`, when the site has one                        |
 | `pagination`  | List pages   | `items`, `current`, `total`, `previousUrl` and `nextUrl`                           |
 | `previous`    | Posts        | The post before this one in time                                                   |
 | `next`        | Posts        | The post after this one in time                                                    |
@@ -124,6 +127,41 @@ date: 2026-01-02
 
 ```html blog/b/index.html
 ← First |
+```
+
+## Menus and the feed
+
+A template can't write `<a href="/blog/">` for a site without posts, because [links are checked](links.md) and `/blog/` wouldn't exist.
+So `navigation` lists the pages a menu leads to, only those the site has, and `feed` is the feed's address only when there is a feed.
+
+<!-- builds -->
+```markdown blog/hello.md
+---
+title: Hello
+date: 2026-11-17
+---
+```
+
+```markdown talks/compilers.md
+---
+title: Compilers
+event: A meetup
+date: 2026-10-01
+---
+```
+
+```json config
+{ "site": { "url": "https://example.com" } }
+```
+
+```jinja home.html
+<nav>{% for item in navigation %}<a href="{{ item.url }}">{{ item.title }}</a>{% endfor %}</nav>
+{% if feed %}<a href="{{ feed }}">Feed</a>{% endif %}
+```
+
+```html index.html
+<nav><a href="/blog/">Blog</a><a href="/talks/">Talks</a></nav>
+<a href="/feed.xml">Feed</a>
 ```
 
 ## Templates that use each other
