@@ -288,6 +288,7 @@ describe("help and version", () => {
     "Commands:",
     "  build  Build the site into dist/",
     "  check  Check the site for problems, without writing anything",
+    "  new    Write a new content file, such as a post",
     "",
     "Run gensane <command> --help to see the arguments of a command.",
   ].join("\n");
