@@ -18,7 +18,7 @@ changed with the [`theme` settings](config.md#theme), and any part of it can be 
 
 It has no web fonts and no frameworks: less than 10 KB of CSS, and two scripts of less than 3 KB each as readers download them. Every
 page works without JavaScript except the switch, the copy buttons and search. Every page of a test site with every type of content is checked by an HTML validator, and for one main
-heading, headings in order, landmarks, text for every link and image, and a skip link.
+heading, headings in order, landmarks, text for every link and image, and a skip link. In a real browser, the tests also type into search, click the switch and the copy button, and change a file to see the page reload.
 
 ## Changing one part
 
