@@ -258,6 +258,88 @@ export function findCoreExamples(page: string): CoreExample[] {
   });
 }
 
+export interface CliStep {
+  /** The words after `gensane`, as a shell splits them. */
+  readonly args: readonly string[];
+  /** What the command prints: problems first, then the line at the end, as in a terminal. */
+  readonly output: string;
+  readonly exitCode: number;
+  /** Folders whose exact list of files is shown after the command. */
+  readonly listings: Readonly<Record<string, readonly string[]>>;
+  /** The exact content of files after the command. */
+  readonly files: Readonly<Record<string, string>>;
+}
+
+export interface CliExample {
+  /** The files of the site folder before the first command, by their path in it. */
+  readonly files: Readonly<Record<string, string>>;
+  readonly steps: readonly CliStep[];
+}
+
+/** A misspelled marker is counted too, so it fails instead of leaving its example unchecked. */
+export function countCliMarkers(page: string): number {
+  return page.match(/^<!--\s*(?:runs?|ran)\b.*-->$/gm)?.length ?? 0;
+}
+
+const FILE_FENCE = /^\S+ (\S+)$/;
+const LISTING_FENCE = /^text files (\S+)$/;
+
+/** `new post "Hello World"` → `new`, `post`, `Hello World`. */
+function shellWords(line: string): string[] {
+  return [...line.matchAll(/"([^"]*)"|(\S+)/g)].map((match) => match[1] ?? match[2] ?? "");
+}
+
+function stepOf(fence: CodeFence): Omit<CliStep, "listings" | "files"> {
+  const [command = "", ...rest] = fence.text.split("\n");
+  if (!command.startsWith("$ gensane")) {
+    throw new Error(`A console fence must start with "$ gensane":\n${fence.text}`);
+  }
+  const echo = rest.indexOf("$ echo $?");
+  const output = echo === -1 ? rest : rest.slice(0, echo);
+  const exitCode = echo === -1 ? 0 : Number(rest[echo + 1]);
+  return { args: shellWords(command.slice("$ gensane".length)), output: output.join("\n"), exitCode };
+}
+
+/**
+ * `runs` goes before the files of a site folder, each in a fence named after its path, such as
+ * `markdown content/blog/hello.md` or `ts gensane.config.ts`. Then come `console` fences: a line
+ * `$ gensane ...`, what it prints, and `$ echo $?` with the exit code when it isn't 0. After a command,
+ * `text files dist` shows the exact files in a folder, and a fence named after a path shows the exact
+ * content of that file.
+ */
+export function findCliExamples(page: string): CliExample[] {
+  const fences = findCodeFences(page);
+  return fences.flatMap((fence, index): CliExample[] => {
+    if (fence.marker !== "runs") return [];
+    const files: Record<string, string> = {};
+    let next = index;
+    for (let input = fences[next]; input !== undefined && input.info !== "console"; input = fences[next]) {
+      const path = FILE_FENCE.exec(input.info)?.[1];
+      if (path === undefined || (next > index && input.marker !== undefined)) break;
+      files[path] = `${input.text}\n`;
+      next++;
+    }
+    const steps: CliStep[] = [];
+    for (let command = fences[next]; command?.info === "console"; command = fences[next]) {
+      if (next > index && command.marker !== undefined) break;
+      next++;
+      const listings: Record<string, string[]> = {};
+      const shown: Record<string, string> = {};
+      for (let output = fences[next]; output !== undefined && output.marker === undefined; output = fences[next]) {
+        const folder = LISTING_FENCE.exec(output.info)?.[1];
+        const path = FILE_FENCE.exec(output.info)?.[1];
+        if (folder !== undefined) listings[folder] = output.text.split("\n").filter((line) => line !== "");
+        else if (path !== undefined) shown[path] = output.text;
+        else break;
+        next++;
+      }
+      steps.push({ ...stepOf(command), listings, files: shown });
+    }
+    if (steps.length === 0) throw new Error(`Example without a command to run:\n${fence.text}`);
+    return [{ files, steps }];
+  });
+}
+
 /** The part of a page from a heading up to the next heading of the same level. */
 export function findSection(page: string, heading: string): string {
   const level = /^#+/.exec(heading)?.[0] ?? "";
@@ -306,8 +388,19 @@ export function linkedSymbol(link: DocLink): string | undefined {
   return link.target.endsWith(".ts") ? /^`([#\w]+)`$/.exec(link.text)?.[1] : undefined;
 }
 
+/** The ids GitHub gives the headings of a page: lowercase, without punctuation, with dashes for spaces. */
+export function headingIds(page: string): string[] {
+  const withoutFences = page.replace(/^(`{3,}|~{3,}).*\n[\s\S]*?^\1[`~]*\s*$/gm, "");
+  return [...withoutFences.matchAll(/^#{1,6} (.+)$/gm)].map(([, heading = ""]) =>
+    heading
+      .toLowerCase()
+      .replaceAll(/[^\p{L}\p{N}\s_-]/gu, "")
+      .replaceAll(" ", "-"),
+  );
+}
+
 /** Whether `source` declares `symbol`: a function, class, type, constant or private method. */
 export function declaresSymbol(source: string, symbol: string): boolean {
-  if (symbol.startsWith("#")) return new RegExp(`^\\s*${symbol}\\(`, "m").test(source);
+  if (symbol.startsWith("#")) return new RegExp(`^\\s*(?:async\\s+)?${symbol}\\(`, "m").test(source);
   return new RegExp(`\\b(?:function|class|interface|type|const)\\s+${symbol}\\b`).test(source);
 }
