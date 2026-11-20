@@ -53,6 +53,26 @@ Built 5 pages into dist in 12 ms, with no warnings.
 The blog page now uses the base layout of the default theme with its own list. Its colors and spacing still come from
 `assets/settings.css` and `assets/style.css`, which a site can also replace in `theme/assets/`.
 
+## Changing all of it
+
+`gensane theme eject` copies every file of the default theme into `theme/`, so all of it can be changed. A file already in `theme/` is
+kept as it is, and the command lists what it copied and what it kept. The copy builds exactly the same site as the default theme; after
+it, updating gensane no longer changes those files, so a site that wants new versions of the theme copies again, or changes only the
+parts it needs.
+
+<!-- runs -->
+```console
+$ gensane theme --help
+Usage: gensane theme eject [arguments]
+
+Copy the default theme into theme/, to change all of it.
+
+Files already in theme/ are kept as they are. After this, updating gensane doesn't change the copied files.
+
+Arguments:
+  -h, --help  Show this help
+```
+
 ## The files
 
 | File                            | What it is                                                                 |

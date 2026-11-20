@@ -155,7 +155,7 @@ describe("the documentation is complete", () => {
   const examples = pages.flatMap(({ text }) => findCliExamples(text));
   const commands = examples.flatMap(({ steps }) => steps.map(({ args }) => args.join(" ")));
 
-  it.each(["--help", "build --help", "check --help", "new --help", "dev --help"])(
+  it.each(["--help", "build --help", "check --help", "new --help", "dev --help", "theme --help"])(
     "shows the output of gensane %s",
     (args) => {
       expect(commands).toContain(args);

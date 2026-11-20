@@ -72,6 +72,12 @@ Reads the arguments, picks the command, and turns every way it can end into an e
 | [`DevCommand`](../../src/cli/commands/dev-command.ts)   | `--port`, a busy port, and running until it is stopped |
 | [`untilStopped`](../../src/cli/commands/dev-command.ts) | Waits for Ctrl+C                                       |
 
+### [`src/cli/commands/theme-command.ts`](../../src/cli/commands/theme-command.ts)
+
+| Name                                                        | Purpose                                                        |
+| ----------------------------------------------------------- | -------------------------------------------------------------- |
+| [`ThemeCommand`](../../src/cli/commands/theme-command.ts)   | `theme eject`: copies the default theme, never replacing a file |
+
 ## Reading, building and printing
 
 ### [`src/cli/site-folder.ts`](../../src/cli/site-folder.ts)

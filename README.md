@@ -69,6 +69,7 @@ Serving the site at http://localhost:4000/ (press Ctrl+C to stop).
 - [`gensane build`](docs/cli/build-and-check.md) writes the site into `dist/`, and `gensane check` does the same without writing, for CI.
 - [`gensane dev`](docs/cli/dev.md) serves the site, builds again on every change and reloads the browser, and shows problems in the page.
 - [`gensane new`](docs/cli/new.md) starts a post, a project, a talk or a page with the fields it needs.
+- [`gensane theme eject`](docs/cli/theme.md#changing-all-of-it) copies the default theme into the site, to change all of it.
 - [A typed config](docs/cli/config.md), checked before every build, and [every problem](docs/cli/problems.md) printed with its line.
 
 Read the [command line documentation](docs/cli/README.md) to see how it works.
