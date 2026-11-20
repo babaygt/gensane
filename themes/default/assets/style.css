@@ -1,0 +1,9 @@
+/* A starter style; the full default theme replaces it. */
+body {
+  max-width: 42rem;
+  margin: 2rem auto;
+  padding: 0 1rem;
+  font:
+    17px/1.6 system-ui,
+    sans-serif;
+}

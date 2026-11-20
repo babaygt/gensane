@@ -8,6 +8,7 @@ somewhere. A link that leads nowhere is an error, because a reader would find it
 - A page the site writes. `/blog/hello` also leads to `/blog/hello/`, as on most web servers.
 - `feed.xml` and `sitemap.xml`.
 - A file in the `public` folder, which is copied as it is.
+- A file of the theme's `assets/` folder, such as `/assets/style.css`.
 
 Links to other sites, such as `https://…`, `mailto:` and `//…`, aren't checked.
 

@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block content %}
+{{ page.html | default("") }}
+{% if collections.posts %}
+<h2>Recent posts</h2>
+<ul>
+{% for post in collections.posts | take(5) %}
+<li><a href="{{ post.url }}">{{ post.title }}</a></li>
+{% endfor %}
+</ul>
+{% endif %}
+{% endblock %}

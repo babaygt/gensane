@@ -39,6 +39,7 @@ Built 4 pages into dist in 14 ms, with no warnings.
 
 ```text files dist
 404.html
+assets/style.css
 blog/hello-world/index.html
 blog/index.html
 index.html

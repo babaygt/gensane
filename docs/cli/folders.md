@@ -5,7 +5,7 @@ Gensane works on the folder it runs in. The folders have fixed names, so every s
 | Path                | What it holds                                                                                  |
 | ------------------- | ---------------------------------------------------------------------------------------------- |
 | `content/`          | The [content](../core/content.md): one Markdown file for each post, project, talk and page      |
-| `theme/`            | The templates, written in the [template language](../template/README.md)                       |
+| `theme/`            | Your own changes to the theme: templates in the [template language](../template/README.md), and `assets/` |
 | `public/`           | Files copied into the site as they are, such as images, a favicon or `CNAME`                   |
 | `gensane.config.ts` | The [config](config.md), which is optional; `gensane.config.js` and `.mjs` work too            |
 | `dist/`             | The website, written by [`gensane build`](build-and-check.md)                                  |
@@ -51,6 +51,7 @@ Built 4 pages into dist in 9 ms, with no warnings.
 ```text files dist
 .nojekyll
 404.html
+assets/style.css
 blog/hello/index.html
 blog/index.html
 feed.xml
@@ -59,6 +60,41 @@ sitemap.xml
 ```
 
 The editor's backup isn't read, so it gives no warning that it isn't Markdown. `.nojekyll` is copied, and `.DS_Store` isn't.
+
+## The theme
+
+Gensane comes with a default theme, so a site needs no `theme/` folder at all. A file in `theme/` replaces the file with the same path
+in the default theme, and everything else still comes from the default theme. So changing only the style or one template means writing
+only that file.
+
+- **Templates** are the `.html` files of the theme, named by their path inside it.
+- **Assets** are the files in the theme's `assets/` folder, such as CSS, scripts and fonts. They are copied to `/assets/` in the site.
+
+<!-- runs -->
+```markdown content/index.md
+---
+title: Welcome
+---
+```
+
+```ts gensane.config.ts
+export default { site: { url: "https://example.com" } };
+```
+
+```css theme/assets/style.css
+body { color: teal; }
+```
+
+```console
+$ gensane build
+Built 2 pages into dist in 8 ms, with no warnings.
+```
+
+```css dist/assets/style.css
+body { color: teal; }
+```
+
+A problem in a file of the default theme names that file inside the gensane package, so it can be opened from there.
 
 ## Where the site is written
 

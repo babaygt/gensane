@@ -25,6 +25,8 @@ export interface LinkCheckInput {
   /** The files the site writes, by path. */
   readonly files: ReadonlyMap<string, string>;
   readonly publicFiles: readonly string[];
+  /** The files of the theme's `assets/` folder, by their path in the site, such as `assets/style.css`. */
+  readonly themeAssets: readonly string[];
 }
 
 const LINK = /<(?:a|img)\b[^>]*?\s(?:href|src)="([^"]*)"/gi;
@@ -81,7 +83,7 @@ class LinkChecker {
 
   constructor(input: LinkCheckInput) {
     this.#input = input;
-    this.#targets = new Set([...input.files.keys(), ...input.publicFiles]);
+    this.#targets = new Set([...input.files.keys(), ...input.publicFiles, ...input.themeAssets]);
     this.#knownUrls = [...this.#targets].map(urlOfFile);
     const drafts = input.entries.filter((entry) => this.#isDraft(entry));
     this.#draftUrls = new Set(
@@ -91,6 +93,7 @@ class LinkChecker {
 
   check(): readonly Diagnostic[] {
     this.#checkPublicFiles();
+    this.#checkThemeAssets();
     for (const entry of this.#input.entries) {
       if (!this.#input.drafts && this.#isDraft(entry)) continue;
       const file = `${this.#input.contentFolder}/${entry.file}`;
@@ -201,12 +204,7 @@ class LinkChecker {
   #checkPublicFiles(): void {
     for (const path of this.#input.publicFiles) {
       if (!this.#input.files.has(path)) continue;
-      const replaced =
-        path === "feed.xml"
-          ? "the feed"
-          : path === "sitemap.xml"
-            ? "the sitemap"
-            : `the page ${urlOfFile(path)}`;
+      const replaced = describeOutput(path);
       this.#problems.push(
         problem(
           CoreCodes.publicFileClash,
@@ -217,6 +215,41 @@ class LinkChecker {
       );
     }
   }
+  /**
+   * A theme's file can't share a path with a public file or a file the site writes, because one would
+   * replace the other.
+   */
+  #checkThemeAssets(): void {
+    const publicFiles = new Set(this.#input.publicFiles);
+    for (const path of this.#input.themeAssets) {
+      if (publicFiles.has(path)) {
+        this.#problems.push(
+          problem(
+            CoreCodes.themeFileClash,
+            `"public/${path}" would replace "${path}" of the theme`,
+            startOf(`public/${path}`),
+            "rename the file, or move it out of the theme's assets folder",
+          ),
+        );
+      } else if (this.#input.files.has(path)) {
+        this.#problems.push(
+          problem(
+            CoreCodes.themeFileClash,
+            `"theme/${path}" would replace ${describeOutput(path)}, which the site writes`,
+            startOf(`theme/${path}`),
+            "rename the file of the theme",
+          ),
+        );
+      }
+    }
+  }
+}
+
+/** The file of the site that a public file or a theme file would replace, for a message. */
+function describeOutput(path: string): string {
+  if (path === "feed.xml") return "the feed";
+  if (path === "sitemap.xml") return "the sitemap";
+  return `the page ${urlOfFile(path)}`;
 }
 
 export function checkLinks(input: LinkCheckInput): readonly Diagnostic[] {

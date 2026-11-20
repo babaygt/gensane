@@ -9,6 +9,8 @@ export interface Environment {
   readonly watcher: Watcher;
   /** Aborted when gensane should stop, such as on Ctrl+C. Only `gensane dev` keeps running until then. */
   readonly stopped: AbortSignal;
+  /** The folder of the default theme, which ships with gensane. */
+  readonly defaultTheme: string;
   /** The folder gensane runs in, which is the site folder. */
   readonly siteFolder: string;
   readonly version: string;

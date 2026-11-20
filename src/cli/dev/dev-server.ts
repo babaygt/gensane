@@ -3,13 +3,13 @@
  * again when a file changes, and tells every open page to reload.
  */
 import { type IncomingMessage, type Server, type ServerResponse, createServer } from "node:http";
-import { join } from "node:path";
 import { buildFolder, countProblems, countWarnings, pagesOf } from "../build-folder.ts";
 import { CONFIG_FILES } from "../config-file.ts";
 import type { Environment } from "../environment.ts";
 import { count, printProblems } from "../report.ts";
 import { type Answer, type ServedSite, answer } from "./answer.ts";
 import { EVENTS_PATH, RELOAD_EVENT, withLiveReload } from "./live-reload.ts";
+import { filesToCopy } from "../site-folder.ts";
 import { problemsPage } from "./problems-page.ts";
 
 /** Editors often save a file in several steps, so changes this close together become one build. */
@@ -25,7 +25,7 @@ export class DevServer {
   readonly #environment: Environment;
   readonly #server: Server;
   readonly #pages = new Set<ServerResponse>();
-  #served: ServedSite = { kind: "site", files: new Map(), publicFiles: new Set() };
+  #served: ServedSite = { kind: "site", files: new Map(), copies: new Map() };
   #building: Promise<void> | undefined;
   #buildAgain = false;
   /** The last file that changed, which the next build names. */
@@ -66,7 +66,12 @@ export class DevServer {
       this.#served = {
         kind: "site",
         files: new Map(build.site.files.map(({ path, content }) => [path, content])),
-        publicFiles: new Set(build.files.publicFiles),
+        copies: new Map(
+          filesToCopy(this.#environment.siteFolder, build.files).map(({ path, source }) => [
+            path,
+            source,
+          ]),
+        ),
       };
       const time = clock.now().getTime() - started;
       const done = change === undefined ? "Built" : `${change} changed. Rebuilt`;
@@ -150,10 +155,9 @@ export class DevServer {
     }
     let body: string | Uint8Array;
     let status = 200;
-    if (reply.kind === "public") {
-      const { fileSystem, siteFolder } = this.#environment;
+    if (reply.kind === "copy") {
       try {
-        body = await fileSystem.readBytes(join(siteFolder, "public", reply.path));
+        body = await this.#environment.fileSystem.readBytes(reply.source);
       } catch {
         // Deleted since the last build; the next build will know.
         response.writeHead(404, headers).end();

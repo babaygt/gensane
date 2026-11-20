@@ -1,0 +1,7 @@
+<ul>
+{% for post in pagination.items %}
+<li><a href="{{ post.url }}">{{ post.title }}</a> <time datetime="{{ post.date }}">{{ post.date | date("MMM d, yyyy") }}</time></li>
+{% endfor %}
+</ul>
+{% if pagination.previousUrl %}<a href="{{ pagination.previousUrl }}">Newer</a>{% endif %}
+{% if pagination.nextUrl %}<a href="{{ pagination.nextUrl }}">Older</a>{% endif %}

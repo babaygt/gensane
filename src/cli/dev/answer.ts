@@ -1,6 +1,6 @@
 /**
- * How `gensane dev` answers a request. It only serves what the last build made and the files of
- * `public/`, looked up by their exact path, so no address can reach any other file.
+ * How `gensane dev` answers a request. It only serves what the last build made and the files it
+ * copies, looked up by their exact path, so no address can reach any other file.
  */
 
 /** What the server has to serve: the last build, or its problems. */
@@ -9,8 +9,8 @@ export type ServedSite =
       readonly kind: "site";
       /** Each file the build made, by its path, such as `blog/hello/index.html`. */
       readonly files: ReadonlyMap<string, string>;
-      /** The paths inside `public/`. */
-      readonly publicFiles: ReadonlySet<string>;
+      /** The files copied as they are, from `public/` or the theme's `assets/`: each one's source, by its path. */
+      readonly copies: ReadonlyMap<string, string>;
     }
   | {
       readonly kind: "problems";
@@ -20,7 +20,7 @@ export type ServedSite =
 
 export type Answer =
   | { readonly kind: "text"; readonly status: number; readonly type: string; readonly body: string }
-  | { readonly kind: "public"; readonly path: string; readonly type: string }
+  | { readonly kind: "copy"; readonly source: string; readonly type: string }
   | { readonly kind: "redirect"; readonly location: string };
 
 const TYPES: Readonly<Record<string, string>> = {
@@ -69,7 +69,8 @@ export function answer(site: ServedSite, pathname: string): Answer {
   const file = path === "" || path.endsWith("/") ? `${path}index.html` : path;
   const built = site.files.get(file);
   if (built !== undefined) return { kind: "text", status: 200, type: typeOf(file), body: built };
-  if (site.publicFiles.has(file)) return { kind: "public", path: file, type: typeOf(file) };
+  const source = site.copies.get(file);
+  if (source !== undefined) return { kind: "copy", source, type: typeOf(file) };
   // `/blog/hello` leads to `/blog/hello/`, as on most web servers.
   if (site.files.has(`${file}/index.html`)) return { kind: "redirect", location: `${pathname}/` };
   return notFound(site);
