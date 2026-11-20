@@ -1,10 +1,12 @@
 import { describe, expect, it } from "vitest";
 import {
-  countExampleMarkers,
+  countCliMarkers,
   countCoreMarkers,
+  countExampleMarkers,
   countFrontmatterMarkers,
   countTemplateMarkers,
   declaresSymbol,
+  findCliExamples,
   findCodeFences,
   findCoreExamples,
   findFieldRows,
@@ -14,6 +16,7 @@ import {
   findTemplateExamples,
   findVerifiedExamples,
   findWarningExamples,
+  headingIds,
   isExternalLink,
   linkedSymbol,
 } from "./doc-rules.ts";
@@ -210,6 +213,7 @@ describe("declaresSymbol", () => {
     ["export type Kind = 1;", "Kind"],
     ["const LIMIT = 1;", "LIMIT"],
     ["class A {\n  #walk(a) {}\n}", "#walk"],
+    ["class A {\n  async #load(a) {}\n}", "#load"],
   ])("%j declares %s", (source, symbol) => {
     expect(declaresSymbol(source, symbol)).toBe(true);
   });
@@ -218,6 +222,7 @@ describe("declaresSymbol", () => {
     ["parse(a);", "parse"],
     ["function parser() {}", "parse"],
     ["this.#walk(a);", "#walk"],
+    ["await this.#load(a);", "#load"],
   ])("%j does not declare %s", (source, symbol) => {
     expect(declaresSymbol(source, symbol)).toBe(false);
   });
@@ -371,6 +376,127 @@ describe("findCoreExamples", () => {
 
   it("counts misspelled markers too", () => {
     expect(countCoreMarkers("<!-- builds -->\n<!-- build -->\n<!-- reported GS1 -->\n<!-- builder -->")).toBe(3);
+  });
+});
+
+
+describe("findCliExamples", () => {
+  const session = [
+    "<!-- runs -->",
+    "```markdown content/blog/hello.md",
+    "---",
+    "title: Hello",
+    "---",
+    "```",
+    "",
+    "Some words between the fences.",
+    "",
+    "```ts gensane.config.ts",
+    "export default {};",
+    "```",
+    "```console",
+    '$ gensane new post "Hello World" --slug hi',
+    "Created content/blog/2026-11-20-hi.md",
+    "```",
+    "```markdown content/blog/2026-11-20-hi.md",
+    "---",
+    "title: Hello World",
+    "```",
+    "```console",
+    "$ gensane check",
+    "error: no",
+    "",
+    "Found 1 error.",
+    "$ echo $?",
+    "1",
+    "```",
+    "```text files dist",
+    "index.html",
+    "404.html",
+    "```",
+  ].join("\n");
+
+  it("reads the files of the site folder, each command, and what it shows afterwards", () => {
+    expect(findCliExamples(session)).toEqual([
+      {
+        files: { "content/blog/hello.md": "---\ntitle: Hello\n---\n", "gensane.config.ts": "export default {};\n" },
+        steps: [
+          {
+            args: ["new", "post", "Hello World", "--slug", "hi"],
+            output: "Created content/blog/2026-11-20-hi.md",
+            exitCode: 0,
+            listings: {},
+            files: { "content/blog/2026-11-20-hi.md": "---\ntitle: Hello World" },
+          },
+          {
+            args: ["check"],
+            output: "error: no\n\nFound 1 error.",
+            exitCode: 1,
+            listings: { dist: ["index.html", "404.html"] },
+            files: {},
+          },
+        ],
+      },
+    ]);
+  });
+
+  it("reads a command that needs no files", () => {
+    const help = ["<!-- runs -->", "```console", "$ gensane --version", "1.0.0", "```"].join("\n");
+    expect(findCliExamples(help)).toEqual([
+      { files: {}, steps: [{ args: ["--version"], output: "1.0.0", exitCode: 0, listings: {}, files: {} }] },
+    ]);
+  });
+
+  it("ends an example where the next marked one starts", () => {
+    const two = ["<!-- runs -->", "```console", "$ gensane a", "```", "<!-- runs -->", "```console", "$ gensane b", "```"];
+    expect(findCliExamples(two.join("\n")).map(({ steps }) => steps.map(({ args }) => args))).toEqual([
+      [["a"]],
+      [["b"]],
+    ]);
+  });
+
+  it("ignores fences without the marker", () => {
+    expect(findCliExamples("```console\n$ gensane build\n```")).toEqual([]);
+  });
+
+  it("refuses an example without a command, so it can't silently check nothing", () => {
+    expect(() => findCliExamples("<!-- runs -->\n```markdown content/a.md\nA\n```")).toThrow(
+      "Example without a command to run",
+    );
+  });
+
+  it("refuses a console fence that doesn't run gensane", () => {
+    expect(() => findCliExamples("<!-- runs -->\n```console\n$ npm run build\n```")).toThrow(
+      'A console fence must start with "$ gensane"',
+    );
+  });
+});
+
+describe("countCliMarkers", () => {
+  it("counts misspelled markers too, so they fail instead of leaving an example unchecked", () => {
+    expect(countCliMarkers("<!-- runs -->\n<!-- run -->\n<!-- ran -->\n<!-- runs:x -->\n<!-- running -->")).toBe(4);
+  });
+});
+
+describe("headingIds", () => {
+  it("gives the ids GitHub gives headings, and leaves out headings inside code fences", () => {
+    const page = [
+      "# Command line",
+      "## Where the site is written",
+      "### GS402",
+      "### `perPage`",
+      "## build and check: drafts, CI",
+      "```markdown",
+      "# Not a heading",
+      "```",
+    ].join("\n");
+    expect(headingIds(page)).toEqual([
+      "command-line",
+      "where-the-site-is-written",
+      "gs402",
+      "perpage",
+      "build-and-check-drafts-ci",
+    ]);
   });
 });
 
