@@ -135,3 +135,7 @@ Each folder in `src/` is a module with a single public entry point (`index.ts`).
 Only the I/O modules (`ports`, `cli`) may use Node built-ins such as `node:fs`; every
 other module is pure and works only on the data passed to it. `test/architecture`
 enforces both rules.
+
+## License
+
+[MIT](LICENSE)

@@ -3,6 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "description": "A zero-dependency static site generator for developer blogs and portfolios.",
+  "license": "MIT",
   "bin": {
     "gensane": "./dist/cli/main.js"
   },
