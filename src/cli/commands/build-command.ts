@@ -5,7 +5,8 @@ import type { Environment } from "../environment.ts";
 import { count } from "../report.ts";
 import { type SiteFiles, outputFolderProblem, writeSite } from "../site-folder.ts";
 import type { OptionValues } from "./command.ts";
-import { DRAFTS_OPTION, SiteCommand, pagesOf } from "./site-command.ts";
+import { pagesOf } from "../build-folder.ts";
+import { DRAFTS_OPTION, SiteCommand } from "./site-command.ts";
 
 const DEFAULT_OUTPUT = "dist";
 

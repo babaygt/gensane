@@ -15,7 +15,7 @@ export function count(amount: number, word: string): string {
  * Problems in templates name the template, as `include` does; in the terminal they name its file in
  * `theme/`, so it can be opened from there.
  */
-function located(diagnostic: Diagnostic, files: SiteFiles | undefined) {
+export function located(diagnostic: Diagnostic, files: SiteFiles | undefined) {
   const { file } = diagnostic.span;
   const template = files?.templates[file];
   if (template !== undefined) {

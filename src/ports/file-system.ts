@@ -12,6 +12,8 @@ export interface FileSystem {
   isFile(path: string): Promise<boolean>;
   /** Fails when the file doesn't exist. */
   readText(path: string): Promise<string>;
+  /** The exact bytes of a file, such as an image. Fails when the file doesn't exist. */
+  readBytes(path: string): Promise<Uint8Array>;
   /** Writes a file, making its folders first. */
   writeText(path: string, content: string): Promise<void>;
   /** Copies the exact bytes of a file, making the folders of the copy first. */

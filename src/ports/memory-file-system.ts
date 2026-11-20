@@ -51,6 +51,10 @@ export class MemoryFileSystem implements FileSystem {
     return new TextDecoder().decode(this.bytesOf(path));
   }
 
+  async readBytes(path: string): Promise<Uint8Array> {
+    return this.bytesOf(path);
+  }
+
   async writeText(path: string, content: string): Promise<void> {
     this.#files.set(normalize(path), encode(content));
   }

@@ -1,6 +1,7 @@
 import type { BuiltSite } from "../../core/index.ts";
 import { count } from "../report.ts";
-import { DRAFTS_OPTION, SiteCommand, pagesOf } from "./site-command.ts";
+import { pagesOf } from "../build-folder.ts";
+import { DRAFTS_OPTION, SiteCommand } from "./site-command.ts";
 
 /** Builds everything a build does, but writes nothing, so it can run in CI on every change. */
 export class CheckCommand extends SiteCommand {
