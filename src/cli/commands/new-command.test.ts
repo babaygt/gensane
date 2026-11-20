@@ -6,13 +6,17 @@ import { runCli } from "../run-cli.ts";
 /** 20 November 2026 on the computer's own calendar, late in the evening. */
 const EVENING = new Date(2026, 10, 20, 23, 30);
 
-async function gensane(args: readonly string[], files: Readonly<Record<string, string>> = {}) {
+async function gensane(
+  args: readonly string[],
+  files: Readonly<Record<string, string>> = {},
+  now: Date = EVENING,
+) {
   const fileSystem = new MemoryFileSystem(files);
   const terminal = new MemoryTerminal();
   const code = await runCli(args, {
     fileSystem,
     moduleLoader: { load: async () => ({}) },
-    clock: { now: () => EVENING },
+    clock: { now: () => now },
     terminal,
     siteFolder: "site",
     version: "1.2.3",
@@ -36,6 +40,11 @@ describe("gensane new", () => {
     expect(await run.fileSystem.readText("site/content/blog/2026-11-20-hello-world.md")).toBe(
       "---\ntitle: Hello World\ndate: 2026-11-20\ndraft: true\n---\n",
     );
+  });
+
+  it("writes the month and day with two digits", async () => {
+    const run = await gensane(["new", "post", "Hello"], {}, new Date(2026, 0, 5, 12));
+    expect(run.output).toBe("Created content/blog/2026-01-05-hello.md");
   });
 
   it("takes a title of several words without quotes", async () => {
@@ -118,6 +127,11 @@ describe("mistakes", () => {
       ["new", "post", "Hello", "--slug", "My Post"],
       '"My Post" can\'t be used in a file name',
       'use lowercase letters, digits and single dashes, such as "my-post"',
+    ],
+    [
+      ["new", "post", "Hello", "--slug", "Über Uns"],
+      '"Über Uns" can\'t be used in a file name',
+      'use lowercase letters, digits and single dashes, such as "uber-uns"',
     ],
   ])("gensane %j", async (args, message, hint) => {
     const run = await gensane(args);
