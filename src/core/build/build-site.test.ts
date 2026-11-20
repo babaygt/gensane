@@ -54,6 +54,8 @@ describe("output files", () => {
       "now/index.html",
       "projects/gensane/index.html",
       "projects/index.html",
+      "search-index.json",
+      "search/index.html",
       "tags/index.html",
       "tags/testing/index.html",
       "talks/index.html",

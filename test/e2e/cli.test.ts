@@ -49,7 +49,7 @@ it("builds a site with a TypeScript config into dist/", async () => {
   });
   const run = await gensane(site, "build");
   expect(run).toMatchObject({ code: 0, stderr: "" });
-  expect(run.stdout).toMatch(/^Built 4 pages into dist in \d+ ms, with no warnings\.\n$/);
+  expect(run.stdout).toMatch(/^Built 5 pages into dist in \d+ ms, with no warnings\.\n$/);
   const written = await readdir(join(site, "dist"), { recursive: true });
   expect(written.toSorted()).toContain("robots.txt");
   expect(await readFile(join(site, "dist", "blog", "hello", "index.html"), "utf8")).toBe(

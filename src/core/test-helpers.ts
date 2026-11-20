@@ -1,5 +1,5 @@
 import type { Diagnostic } from "../diagnostics/index.ts";
-import { type ContentEntry, type LoadOptions, loadContent } from "./index.ts";
+import { type ContentEntry, type LoadOptions, TEMPLATES, loadContent } from "./index.ts";
 
 /** The shortest valid frontmatter for each type of content. */
 export const minimal = {
@@ -38,17 +38,5 @@ export function codes(files: Readonly<Record<string, string>>): string[] {
 
 /** A template for every kind of page, each printing the title, so that a site always builds. */
 export const plainTheme: Readonly<Record<string, string>> = Object.fromEntries(
-  [
-    "home",
-    "post",
-    "blog",
-    "tag",
-    "tags",
-    "project",
-    "projects",
-    "talks",
-    "about",
-    "page",
-    "404",
-  ].map((name) => [`${name}.html`, `<h1>{{ page.title }}</h1>`]),
+  Object.values(TEMPLATES).map((name) => [name, "<h1>{{ page.title }}</h1>"]),
 );

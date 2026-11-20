@@ -321,6 +321,7 @@ describe("routes", () => {
       ["/now/", "page"],
       ["/projects/", "projects"],
       ["/projects/gensane/", "project"],
+      ["/search/", "search"],
       ["/tags/", "tags"],
       ["/tags/testing/", "tag"],
       ["/talks/", "talks"],
