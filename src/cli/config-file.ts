@@ -4,7 +4,7 @@ import { type CheckedConfig, ConfigCodes, checkConfig, configProblem } from "../
 import { type Diagnostic, type Result, err, ok } from "../diagnostics/index.ts";
 import type { FileSystem, ModuleLoader } from "../ports/index.ts";
 
-const CONFIG_FILES = ["gensane.config.ts", "gensane.config.js", "gensane.config.mjs"];
+export const CONFIG_FILES = ["gensane.config.ts", "gensane.config.js", "gensane.config.mjs"];
 
 export interface LoadedConfig extends CheckedConfig {
   /** The config file inside the site folder, if the site has one. */

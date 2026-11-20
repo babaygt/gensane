@@ -3,12 +3,18 @@ import { parseArgs } from "node:util";
 import { InternalError, closestMatch } from "../diagnostics/index.ts";
 import { BuildCommand } from "./commands/build-command.ts";
 import { CheckCommand } from "./commands/check-command.ts";
+import { DevCommand } from "./commands/dev-command.ts";
 import { NewCommand } from "./commands/new-command.ts";
 import type { Command, OptionValues } from "./commands/command.ts";
 import { type Environment, ExitCode } from "./environment.ts";
 import { printUsageError } from "./report.ts";
 
-const COMMANDS: readonly Command[] = [new BuildCommand(), new CheckCommand(), new NewCommand()];
+const COMMANDS: readonly Command[] = [
+  new BuildCommand(),
+  new CheckCommand(),
+  new DevCommand(),
+  new NewCommand(),
+];
 const ISSUES = "https://github.com/babaygt/gensane/issues";
 
 function generalHelp(version: string): string {

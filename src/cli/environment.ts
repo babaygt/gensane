@@ -1,4 +1,4 @@
-import type { Clock, FileSystem, ModuleLoader, Terminal } from "../ports/index.ts";
+import type { Clock, FileSystem, ModuleLoader, Terminal, Watcher } from "../ports/index.ts";
 
 /** Everything a command needs from outside. `main.ts` gives the real ones; tests give versions in memory. */
 export interface Environment {
@@ -6,6 +6,9 @@ export interface Environment {
   readonly moduleLoader: ModuleLoader;
   readonly clock: Clock;
   readonly terminal: Terminal;
+  readonly watcher: Watcher;
+  /** Aborted when gensane should stop, such as on Ctrl+C. Only `gensane dev` keeps running until then. */
+  readonly stopped: AbortSignal;
   /** The folder gensane runs in, which is the site folder. */
   readonly siteFolder: string;
   readonly version: string;
