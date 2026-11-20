@@ -64,7 +64,7 @@ describe("site properties", () => {
     );
   });
 
-  it("writes exactly one file for every page", () => {
+  it("writes exactly one file for every page, and the theme settings", () => {
     fc.assert(
       fc.property(content, (files) => {
         const loaded = loadContent(files);
@@ -72,7 +72,8 @@ describe("site properties", () => {
         const built = buildSite({ content: files, templates: theme });
         const routes = graph?.ok ? graph.value.graph.routes.length : -1;
         const paths = built.ok ? built.value.files.map((file) => file.path) : [];
-        expect(paths).toHaveLength(routes);
+        expect(paths.filter((path) => path !== "assets/settings.css")).toHaveLength(routes);
+        expect(paths).toContain("assets/settings.css");
         expect(new Set(paths).size).toBe(paths.length);
       }),
     );
