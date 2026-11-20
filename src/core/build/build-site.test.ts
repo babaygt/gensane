@@ -498,6 +498,17 @@ describe("navigation and the feed", () => {
     expect(fileOf(site, "index.html")).toBe("Blog /blog/;Talks /talks/;About /about/; no feed");
   });
 
+  it("lists projects between the blog and the talks", () => {
+    const content = {
+      "talks/a.md": minimal.talk,
+      "projects/a.md": minimal.project,
+      "blog/a.md": minimal.post,
+    };
+    expect(fileOf(built({ content, templates }), "index.html")).toBe(
+      "Blog /blog/;Projects /projects/;Talks /talks/; no feed",
+    );
+  });
+
   it("lists nothing for a site with nothing to list", () => {
     expect(fileOf(built({ content: {}, templates }), "index.html")).toBe(" no feed");
   });
