@@ -8,6 +8,8 @@ describe("contrast", () => {
     ["#ffffff", "#ffffff", 1],
     ["#777777", "#ffffff", 4.48],
     ["#5b4bdb", "#ffffff", 6.04],
+    // Channels this dark are counted by a straight line in the formula, not by its curve.
+    ["#050505", "#000000", 1.03],
   ])("%s on %s is %s to 1", (first, second, ratio) => {
     expect(contrast(first, second)).toBeCloseTo(ratio, 2);
   });
