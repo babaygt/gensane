@@ -68,13 +68,15 @@ export async function readSiteFolder(
  */
 export function outputFolderProblem(siteFolder: string, outputFolder: string): string | undefined {
   const inside = relative(siteFolder, outputFolder);
-  if (inside === "") return `the output folder "${outputFolder}" is the site folder itself`;
+  // Shown from the site folder, as it is written after --out.
+  const shown = inside === "" ? "." : inside.split(sep).join("/");
+  if (inside === "") return `the output folder "${shown}" is the site folder itself`;
   if (inside === ".." || inside.startsWith(`..${sep}`) || isAbsolute(inside)) {
-    return `the output folder "${outputFolder}" isn't inside the site folder`;
+    return `the output folder "${shown}" isn't inside the site folder`;
   }
   const first = inside.split(sep)[0];
   if (first === CONTENT || first === PUBLIC || first === THEME) {
-    return `the output folder "${outputFolder}" would replace ${first}/`;
+    return `the output folder "${shown}" would replace ${first}/`;
   }
   return undefined;
 }
