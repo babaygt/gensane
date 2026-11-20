@@ -1,7 +1,18 @@
 {% extends "base.html" %}
 {% block content %}
-<article>
-<h1>{{ page.title }}</h1>
+<article class="project">
+<header>
+<h1>{{ page.title }}{% if page.draft %} <span class="draft">Draft</span>{% endif %}</h1>
+{% if page.description %}<p class="lead">{{ page.description }}</p>
+{% endif %}{% if page.stack %}<p class="meta">{{ page.stack | join(" · ") }}{% if page.status %} · {{ page.status | capitalize }}{% endif %}</p>
+{% endif %}{% if page.website or page.repo or page.links %}<ul class="project-links">
+{% if page.website %}<li><a href="{{ page.website }}">Website</a></li>
+{% endif %}{% if page.repo %}<li><a href="{{ page.repo }}">Code</a></li>
+{% endif %}{% for link in page.links %}<li><a href="{{ link.url }}">{{ link.name }}</a></li>
+{% endfor %}</ul>
+{% endif %}</header>
+<div class="content">
 {{ page.html }}
+</div>
 </article>
 {% endblock %}

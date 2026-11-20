@@ -1,15 +1,35 @@
-<!doctype html>
-<html lang="en">
+<!DOCTYPE html>
+<html lang="{{ site.language | default("en") }}">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>{{ page.title }}</title>
+<title>{% block title %}{{ page.title }}{% if site.title %} · {{ site.title }}{% endif %}{% endblock %}</title>
+{% if page.description %}<meta name="description" content="{{ page.description }}">
+{% elif site.description %}<meta name="description" content="{{ site.description }}">
+{% endif %}<link rel="stylesheet" href="/assets/settings.css">
 <link rel="stylesheet" href="/assets/style.css">
+{% if feed %}<link rel="alternate" type="application/atom+xml" title="{{ site.title | default("Feed") }}" href="{{ feed }}">
+{% endif %}{% if theme.colorScheme == "auto" %}<script>try{const s=localStorage.getItem("gensane-color-scheme");if(s)document.documentElement.dataset.colorScheme=s}catch{}</script>
+{% endif %}<script type="module" src="/assets/theme.js"></script>
 </head>
-<body>
-<header><a href="/">{{ site.title | default("Home") }}</a></header>
-<main>
+<body class="font-{{ theme.font }}">
+<a class="skip" href="#content">Skip to content</a>
+<header class="site-header">
+<a class="site-title" href="/">{{ site.title | default("Home") }}</a>
+{% if navigation %}<nav aria-label="Main">
+<ul>
+{% for item in navigation %}<li><a href="{{ item.url }}"{% if page.url == item.url %} aria-current="page"{% endif %}>{{ item.title }}</a></li>
+{% endfor %}</ul>
+</nav>
+{% endif %}{% if theme.colorScheme == "auto" %}<button class="scheme-switch" type="button" hidden>Dark</button>
+{% endif %}</header>
+<main id="content">
 {% block content %}{% endblock %}
 </main>
+<footer class="site-footer">
+{% if site.title %}<p>{{ site.title }}</p>
+{% endif %}{% if feed %}<p><a href="{{ feed }}">Feed</a></p>
+{% endif %}<p>Made with <a href="https://github.com/babaygt/gensane">gensane</a></p>
+</footer>
 </body>
 </html>

@@ -1,9 +1,7 @@
 {% extends "base.html" %}
 {% block content %}
 <h1>{{ page.title }}</h1>
-<ul>
-{% for project in collections.projects %}
-<li><a href="{{ project.url }}">{{ project.title }}</a></li>
-{% endfor %}
-</ul>
+<ul class="cards">
+{% for project in collections.projects %}{% include "partials/project-card.html" %}
+{% endfor %}</ul>
 {% endblock %}

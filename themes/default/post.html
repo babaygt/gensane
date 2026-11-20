@@ -1,8 +1,18 @@
 {% extends "base.html" %}
 {% block content %}
-<article>
-<h1>{{ page.title }}</h1>
-<p><time datetime="{{ page.date }}">{{ page.date | date("MMM d, yyyy") }}</time></p>
+<article class="post">
+<header>
+<h1>{{ page.title }}{% if page.draft %} <span class="draft">Draft</span>{% endif %}</h1>
+<p class="meta"><time datetime="{{ page.date }}">{{ page.date | date("MMM d, yyyy") }}</time> · {{ page.readingTime }} min read</p>
+{% include "partials/tags.html" %}
+</header>
+{% include "partials/toc.html" %}
+<div class="content">
 {{ page.html }}
-</article>
+</div>
+{% if previous or next %}<nav class="neighbours" aria-label="More posts">
+{% if previous %}<a href="{{ previous.url }}" rel="prev">← {{ previous.title }}</a>{% endif %}
+{% if next %}<a href="{{ next.url }}" rel="next">{{ next.title }} →</a>{% endif %}
+</nav>
+{% endif %}</article>
 {% endblock %}

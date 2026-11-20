@@ -1,0 +1,4 @@
+{% if page.tags %}<ul class="tags" aria-label="Tags">
+{% for name in page.tags %}<li>{% for tag in collections.tags | where("name", name) %}<a href="{{ tag.url }}">{{ tag.name }}</a>{% else %}{{ name }}{% endfor %}</li>
+{% endfor %}</ul>
+{% endif %}

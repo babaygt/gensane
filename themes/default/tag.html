@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% block content %}
-<h1>Posts tagged {{ tag.name }}</h1>
+<h1>Posts about {{ tag.name }}</h1>
 {% include "partials/post-list.html" %}
+<p><a href="{{ "/tags/" }}">All tags</a></p>
 {% endblock %}

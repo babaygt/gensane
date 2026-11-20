@@ -1,0 +1,11 @@
+{% if theme.toc and page.toc | length >= 3 %}<nav class="toc" aria-label="Contents">
+<h2>Contents</h2>
+<ol>
+{% for entry in page.toc %}<li><a href="#{{ entry.id }}">{{ entry.text }}</a>{% if entry.children %}
+<ol>
+{% for child in entry.children %}<li><a href="#{{ child.id }}">{{ child.text }}</a></li>
+{% endfor %}</ol>
+{% endif %}</li>
+{% endfor %}</ol>
+</nav>
+{% endif %}

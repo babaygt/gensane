@@ -1,7 +1,9 @@
-<ul>
-{% for post in pagination.items %}
-<li><a href="{{ post.url }}">{{ post.title }}</a> <time datetime="{{ post.date }}">{{ post.date | date("MMM d, yyyy") }}</time></li>
-{% endfor %}
-</ul>
-{% if pagination.previousUrl %}<a href="{{ pagination.previousUrl }}">Newer</a>{% endif %}
-{% if pagination.nextUrl %}<a href="{{ pagination.nextUrl }}">Older</a>{% endif %}
+<ul class="posts posts-{{ theme.blog.layout }}">
+{% for post in pagination.items %}{% include "partials/post-item.html" %}
+{% endfor %}</ul>
+{% if pagination.total > 1 %}<nav class="pagination" aria-label="Pages">
+{% if pagination.previousUrl %}<a href="{{ pagination.previousUrl }}" rel="prev">Newer posts</a>{% endif %}
+<span>Page {{ pagination.current }} of {{ pagination.total }}</span>
+{% if pagination.nextUrl %}<a href="{{ pagination.nextUrl }}" rel="next">Older posts</a>{% endif %}
+</nav>
+{% endif %}

@@ -53,6 +53,7 @@ Built 4 pages into dist in 9 ms, with no warnings.
 404.html
 assets/settings.css
 assets/style.css
+assets/theme.js
 blog/hello/index.html
 blog/index.html
 feed.xml
