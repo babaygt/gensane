@@ -3,6 +3,7 @@ import type { ContentDate } from "../../frontmatter/index.ts";
 import type { EntryOf } from "../content/entries.ts";
 import { compareDates } from "../site/order.ts";
 import { dateTime } from "./feed-dates.ts";
+import { withBasePath } from "../build/base-path.ts";
 import { type SiteAddress, absoluteUrl } from "./site-address.ts";
 import { escapeXml } from "./xml.ts";
 
@@ -31,7 +32,7 @@ function entry(post: Post, address: SiteAddress): string[] {
     `    <published>${dateTime(date)}</published>`,
     `    <updated>${dateTime(lastChange(post))}</updated>`,
     ...(description === undefined ? [] : [`    <summary>${escapeXml(description)}</summary>`]),
-    `    <content type="html">${escapeXml(post.html)}</content>`,
+    `    <content type="html">${escapeXml(withBasePath(post.html, address.path))}</content>`,
     ...tags.map((tag) => `    <category term="${escapeXml(tag)}"/>`),
     "  </entry>",
   ];

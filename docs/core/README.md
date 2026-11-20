@@ -54,7 +54,7 @@ if (built.ok) {
 
 | Input         | What it is                                                                 |
 | ------------- | -------------------------------------------------------------------------- |
-| `config`      | Settings: `site`, `perPage`, `drafts`, `markdown`, `filters`, and the folder names used in problems |
+| `config`      | Settings: `site`, `perPage`, `drafts`, `servedAtRoot`, `markdown`, `filters`, and the folder names used in problems |
 | `content`     | Each content file by its path inside the content folder                    |
 | `templates`   | Each template by its name                                                  |
 | `publicFiles` | The paths of the files in the `public` folder, which are copied as they are |

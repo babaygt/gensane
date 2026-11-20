@@ -14,6 +14,8 @@ import { inFileOrder, problem, startOf } from "../problems.ts";
 import { compareStrings } from "../site/order.ts";
 import { type Route, TEMPLATES } from "../site/routes.ts";
 import { buildSiteGraph } from "../site/site-graph.ts";
+import { siteAddressOf } from "../feeds/site-address.ts";
+import { withBasePath } from "./base-path.ts";
 import { outputPath } from "./output-paths.ts";
 import { type TemplateData, TemplateVariables } from "./page-data.ts";
 
@@ -24,6 +26,11 @@ export interface SiteConfig {
   readonly perPage?: number;
   /** Show drafts, to preview them. Defaults to `false`. */
   readonly drafts?: boolean;
+  /**
+   * Leave links as they are written, even when `site.url` has a path, because the site is served at
+   * `/`, as in `gensane dev`. Defaults to `false`.
+   */
+  readonly servedAtRoot?: boolean;
   readonly markdown?: MarkdownOptions;
   /** Extra filters for templates. */
   readonly filters?: Readonly<Record<string, TemplateFilter>>;
@@ -145,5 +152,11 @@ export function buildSite(input: SiteInput): Result<BuiltSite, readonly Diagnost
     publicFiles: input.publicFiles ?? [],
     themeAssets: input.themeAssets ?? [],
   });
-  return finish(allFiles, [...found, ...links]);
+  // Links are checked as they are written; the path of the site is added to the finished pages only.
+  const path =
+    config.servedAtRoot === true ? "" : (siteAddressOf(config.site?.["url"])?.path ?? "");
+  const served = allFiles.map((file) =>
+    file.path.endsWith(".html") ? { ...file, content: withBasePath(file.content, path) } : file,
+  );
+  return finish(served, [...found, ...links]);
 }

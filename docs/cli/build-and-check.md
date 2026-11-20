@@ -152,6 +152,37 @@ index.html
 sitemap.xml
 ```
 
+## A site under a path
+
+When the site is served under a path, such as a project site on GitHub Pages, `site.url` says so, and the build adds the path to every
+link that starts at the root. Content and templates keep writing `/about/`.
+
+<!-- runs -->
+```markdown content/pages/about.md
+---
+title: About
+---
+```
+
+```jinja theme/home.html
+<a href="/about/">About</a>
+```
+
+```ts gensane.config.ts
+export default { site: { url: "https://ada.github.io/notes/" } };
+```
+
+```console
+$ gensane build
+Built 3 pages into dist in 9 ms, with no warnings.
+```
+
+```html dist/index.html
+<a href="/notes/about/">About</a>
+```
+
+[`gensane dev`](dev.md) serves the site at `/` and leaves links as they are written, so a preview needs no setting.
+
 ## Arguments
 
 <!-- runs -->

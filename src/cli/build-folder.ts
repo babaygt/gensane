@@ -25,10 +25,20 @@ export type FolderBuild =
       readonly problems: readonly Diagnostic[];
     };
 
-function siteConfigOf({ config, file }: LoadedConfig, drafts: boolean): SiteConfig {
+interface BuildOptions {
+  readonly drafts: boolean;
+  /** `gensane dev` serves the site at `/`, so it leaves links as they are written. */
+  readonly servedAtRoot?: boolean;
+}
+
+function siteConfigOf(
+  { config, file }: LoadedConfig,
+  { drafts, servedAtRoot }: BuildOptions,
+): SiteConfig {
   const { site, perPage, markdown, filters } = config;
   return {
     drafts,
+    servedAtRoot: servedAtRoot ?? false,
     configFile: file ?? "gensane.config.ts",
     ...(site === undefined ? {} : { site }),
     ...(perPage === undefined ? {} : { perPage }),
@@ -39,13 +49,13 @@ function siteConfigOf({ config, file }: LoadedConfig, drafts: boolean): SiteConf
 
 export async function buildFolder(
   { fileSystem, moduleLoader, siteFolder, defaultTheme }: Environment,
-  { drafts }: { readonly drafts: boolean },
+  options: BuildOptions,
 ): Promise<FolderBuild> {
   const loaded = await loadConfig(fileSystem, moduleLoader, siteFolder);
   if (!loaded.ok) return { kind: "config-failed", problems: loaded.error };
   const files = await readSiteFolder(fileSystem, siteFolder, defaultTheme);
   const built = buildSite({
-    config: siteConfigOf(loaded.value, drafts),
+    config: siteConfigOf(loaded.value, options),
     content: files.content,
     templates: files.templates,
     publicFiles: files.publicFiles,

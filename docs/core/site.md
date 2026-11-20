@@ -130,3 +130,44 @@ and a warning names the other spelling. A tag with nothing to use in a URL, such
 
 Each post knows the post before it in time, `previous`, and the one after it, `next`. The oldest post has no `previous` and the newest
 has no `next`.
+
+## Sites under a path
+
+A site can be served under a path, such as a project site on GitHub Pages at `https://ada.github.io/notes/`. Then every link that
+starts at the root needs `/notes` in front of it. Authors and themes still write `/about/`: once every page is built and its links are
+checked, [`withBasePath`](../../src/core/build/base-path.ts) adds the path of `site.url` to every `href`, `src` and `srcset` address
+that starts with one `/`. Nothing else in the page changes, and the links in the content of the feed get the path too.
+
+<!-- builds -->
+```markdown blog/hello.md
+---
+title: Hello
+date: 2026-11-17
+---
+Read [about me](/about/).
+```
+
+```markdown pages/about.md
+---
+title: About
+---
+```
+
+```jinja post.html
+<a href="/">Home</a>
+{{ page.html }}
+```
+
+```json config
+{ "site": { "url": "https://ada.github.io/notes" } }
+```
+
+```html blog/hello/index.html
+<a href="/notes/">Home</a>
+<p>Read <a href="/notes/about/">about me</a>.</p>
+```
+
+Addresses to other sites, relative addresses and links to a part of the same page are left as they are. `servedAtRoot: true` leaves
+every link as it is written, which `gensane dev` uses because it serves the site at `/`. Files copied as they are, such as CSS, are not
+changed, so a theme's CSS should use addresses relative to itself.
+
