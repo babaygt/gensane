@@ -109,6 +109,8 @@ describe("the documentation is complete", () => {
       .filter(
         (file) => file.endsWith(".ts") && !file.endsWith(".test.ts") && file !== "test-helpers.ts",
       );
-    for (const file of sources) expect(reference).toContain(`src/core/${file}`);
+    for (const file of sources) {
+      expect(reference).toContain(`### [\`src/core/${file}\`](../../src/core/${file})`);
+    }
   });
 });

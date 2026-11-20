@@ -3,9 +3,9 @@
 A static site generator for developers who want a blog and portfolio online in minutes,
 with nothing to learn but Markdown.
 
-> **Status:** early development. The Markdown compiler, the frontmatter parser, the template language and the core
-> that joins them into a site are finished. The command line program comes next, so gensane can't build a site from a
-> folder yet, and it isn't published on npm.
+> **Status:** early development. The Markdown compiler, the frontmatter parser, the template language, the core and the
+> command line are finished, so gensane builds and serves a site from a folder. The default theme comes next; until then a
+> site brings its own templates. It isn't published on npm yet.
 
 ## What works today
 
@@ -56,12 +56,29 @@ A **core** that joins them into a site:
 
 Read the [core documentation](docs/core/README.md) to see how it works.
 
+A **command line** around them:
+
+```console
+$ gensane new post "Hello World"
+Created content/blog/2026-11-20-hello-world.md
+$ gensane dev
+Built 4 pages in 15 ms, with no warnings.
+Serving the site at http://localhost:4000/ (press Ctrl+C to stop).
+```
+
+- [`gensane build`](docs/cli/build-and-check.md) writes the site into `dist/`, and `gensane check` does the same without writing, for CI.
+- [`gensane dev`](docs/cli/dev.md) serves the site, builds again on every change and reloads the browser, and shows problems in the page.
+- [`gensane new`](docs/cli/new.md) starts a post, a project, a talk or a page with the fields it needs.
+- [A typed config](docs/cli/config.md), checked before every build, and [every problem](docs/cli/problems.md) printed with its line.
+
+Read the [command line documentation](docs/cli/README.md) to see how it works.
+
 ## Planned
 
-- `npx gensane init`: scaffold a site with blog, projects, talks, experience and education
-- `gensane build` and `gensane dev`, with live reload
+- A default theme, with layout options
 - Client-side search, with no server needed
-- A default theme and ready-made deploy configs for GitHub Pages, Cloudflare, Netlify and Vercel
+- `npx gensane init`: scaffold a site with blog, projects, talks, experience and education, and ready-made deploy configs for
+  GitHub Pages, Cloudflare, Netlify and Vercel
 
 ## Development
 
@@ -100,11 +117,17 @@ src/
     build/       rendering each page
     feeds/       the feed and the sitemap
     links/       checking links and images
+  config/        the settings of a site, and checking them
+  cli/           the command line: reading the site folder, commands, the dev server
+    commands/    build, check, new and dev
+    dev/         answering requests, live reload, the problems page
+  ports/         the disk, the config loader, the clock, the terminal and the watcher
   index.ts       public API
 test/
   architecture/  tests that enforce module boundaries
   conformance/   the official CommonMark spec examples
   docs/          tests that keep the documentation true
+  e2e/           the real gensane program in a temporary folder
 docs/            documentation
 ```
 
