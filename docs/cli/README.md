@@ -56,12 +56,13 @@ the site, but no feed yet: drafts never appear in the feed, so it waits for the 
 
 ## Commands
 
-| Command                                | What it does                                                             |
-| -------------------------------------- | ------------------------------------------------------------------------ |
-| [`gensane build`](build-and-check.md)  | Builds the site into `dist/`                                             |
-| [`gensane check`](build-and-check.md)  | Does the same work without writing anything, for CI                      |
-| [`gensane dev`](dev.md)                | Serves the site while you write, and reloads the browser on every change |
-| [`gensane new`](new.md)                | Writes a new content file with the fields its type needs                 |
+| Command                                              | What it does                                                             |
+| ---------------------------------------------------- | ------------------------------------------------------------------------ |
+| [`gensane build`](build-and-check.md)                | Builds the site into `dist/`                                             |
+| [`gensane check`](build-and-check.md)                | Does the same work without writing anything, for CI                      |
+| [`gensane dev`](dev.md)                              | Serves the site while you write, and reloads the browser on every change |
+| [`gensane new`](new.md)                              | Writes a new content file with the fields its type needs                 |
+| [`gensane theme eject`](theme.md#changing-all-of-it) | Copies the default theme into `theme/`, to change all of it              |
 
 <!-- runs -->
 ```console
@@ -75,6 +76,7 @@ Commands:
   check  Check the site for problems, without writing anything
   dev    Serve the site while you write, and reload the browser on every change
   new    Write a new content file, such as a post
+  theme  Copy the default theme into theme/, to change all of it
 
 Run gensane <command> --help to see the arguments of a command.
 ```
