@@ -3,7 +3,7 @@ import type { BuiltSite } from "../../core/index.ts";
 import { InternalError } from "../../diagnostics/index.ts";
 import type { Environment } from "../environment.ts";
 import { count } from "../report.ts";
-import { type SiteFiles, outputFolderProblem, writeSite } from "../site-folder.ts";
+import { type SiteFiles, filesToCopy, outputFolderProblem, writeSite } from "../site-folder.ts";
 import type { OptionValues } from "./command.ts";
 import { pagesOf } from "../build-folder.ts";
 import { DRAFTS_OPTION, SiteCommand } from "./site-command.ts";
@@ -46,7 +46,7 @@ export class BuildCommand extends SiteCommand {
       siteFolder: environment.siteFolder,
       outputFolder,
       files: site.files,
-      publicFiles: files.publicFiles,
+      copies: filesToCopy(environment.siteFolder, files),
     });
     if (!written.ok)
       throw new InternalError(`the output folder was checked before: ${written.error}`);

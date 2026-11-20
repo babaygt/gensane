@@ -4,7 +4,6 @@ import type { Terminal } from "../ports/index.ts";
 import type { SiteFiles } from "./site-folder.ts";
 
 const CONTENT = "content/";
-const THEME = "theme/";
 
 /** `1 error`, `2 errors`. */
 export function count(amount: number, word: string): string {
@@ -12,15 +11,16 @@ export function count(amount: number, word: string): string {
 }
 
 /**
- * Problems in templates name the template, as `include` does; in the terminal they name its file in
- * `theme/`, so it can be opened from there.
+ * Problems in templates name the template, as `include` does; in the terminal they name its file,
+ * in `theme/` or in the default theme, so it can be opened from there.
  */
 export function located(diagnostic: Diagnostic, files: SiteFiles | undefined) {
   const { file } = diagnostic.span;
   const template = files?.templates[file];
-  if (template !== undefined) {
+  const shown = files?.templateFiles[file];
+  if (template !== undefined && shown !== undefined) {
     return {
-      diagnostic: { ...diagnostic, span: { ...diagnostic.span, file: `${THEME}${file}` } },
+      diagnostic: { ...diagnostic, span: { ...diagnostic.span, file: shown } },
       source: template,
     };
   }

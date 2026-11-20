@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 // The `gensane` program: the real disk, clock, terminal and watcher, given to the command line.
 import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 import {
   NodeFileSystem,
   NodeModuleLoader,
@@ -28,6 +29,7 @@ process.exitCode = await runCli(args, {
   clock: new SystemClock(),
   terminal: new NodeTerminal(process.stdout, process.stderr, process.env),
   watcher: new NodeWatcher(),
+  defaultTheme: fileURLToPath(new URL("../../themes/default", import.meta.url)),
   stopped: stop.signal,
   siteFolder: process.cwd(),
   version,

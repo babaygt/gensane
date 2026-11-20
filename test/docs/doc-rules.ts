@@ -191,6 +191,8 @@ export interface CoreExample {
   readonly templates: Readonly<Record<string, string>>;
   readonly config: Readonly<Record<string, unknown>>;
   readonly publicFiles: readonly string[];
+  /** The paths in the site of the theme's assets, such as `assets/style.css`. */
+  readonly themeAssets: readonly string[];
   /** Plain templates that the example leaves out, to show what happens without them. */
   readonly withoutTemplates: readonly string[];
   /** For `builds`: the exact list of files, if the example shows it. */
@@ -206,13 +208,13 @@ export function countCoreMarkers(page: string): number {
   return page.match(/^<!--\s*(?:builds?|built|reports?|reported)\b.*-->$/gm)?.length ?? 0;
 }
 
-const CORE_INPUTS = /^(markdown|jinja) (\S+)$|^json config$|^text (?:public|without)$/;
+const CORE_INPUTS = /^(markdown|jinja) (\S+)$|^json config$|^text (?:public|assets|without)$/;
 const CORE_OUTPUTS = /^text files$|^(html|xml) (\S+)$/;
 
 /**
  * `builds` and `reports GS405` go before the files of a small site: `markdown blog/hello.md` for a
  * content file, `jinja post.html` for a template, `json config`, `text public` for the files in
- * the `public` folder, and `text without` for plain templates that the example leaves out. `builds` ends with `text files`, the exact list of files the site writes,
+ * the `public` folder, `text assets` for the theme's assets, and `text without` for plain templates that the example leaves out. `builds` ends with `text files`, the exact list of files the site writes,
  * and with `html <path>` or `xml <path>` for the exact content of a file. `reports` ends with a
  * `text` fence that shows the exact problem.
  */
@@ -225,6 +227,7 @@ export function findCoreExamples(page: string): CoreExample[] {
     const templates: Record<string, string> = {};
     let config: Record<string, unknown> = {};
     let publicFiles: string[] = [];
+    let themeAssets: string[] = [];
     let withoutTemplates: string[] = [];
     let next = index;
     for (let input = fences[next]; input !== undefined && CORE_INPUTS.test(input.info); input = fences[next]) {
@@ -233,11 +236,12 @@ export function findCoreExamples(page: string): CoreExample[] {
       else if (language === "jinja") templates[name] = input.text;
       else if (language === "json") config = JSON.parse(input.text);
       else if (name === "public") publicFiles = input.text.split("\n").filter((line) => line !== "");
+      else if (name === "assets") themeAssets = input.text.split("\n").filter((line) => line !== "");
       else withoutTemplates = input.text.split("\n").filter((line) => line !== "");
       next++;
     }
     if (next === index) throw new Error(`Example without the files of a site:\n${fence.text}`);
-    const base = { content, templates, config, publicFiles, withoutTemplates };
+    const base = { content, templates, config, publicFiles, themeAssets, withoutTemplates };
     if (marker[1] !== "builds") {
       const output = fences[next];
       if (output?.info !== "text") throw new Error(`Example without a text fence after it:\n${fence.text}`);

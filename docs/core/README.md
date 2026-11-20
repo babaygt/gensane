@@ -58,6 +58,7 @@ if (built.ok) {
 | `content`     | Each content file by its path inside the content folder                    |
 | `templates`   | Each template by its name                                                  |
 | `publicFiles` | The paths of the files in the `public` folder, which are copied as they are |
+| `themeAssets` | The paths of the theme's assets in the site, such as `assets/style.css`, which are copied as they are |
 
 `buildSite` never throws on a mistake in the content or the templates. It returns every problem it found, from every file, each with an
 exact position and a hint. Warnings never stop a build.

@@ -38,17 +38,18 @@ function siteConfigOf({ config, file }: LoadedConfig, drafts: boolean): SiteConf
 }
 
 export async function buildFolder(
-  { fileSystem, moduleLoader, siteFolder }: Environment,
+  { fileSystem, moduleLoader, siteFolder, defaultTheme }: Environment,
   { drafts }: { readonly drafts: boolean },
 ): Promise<FolderBuild> {
   const loaded = await loadConfig(fileSystem, moduleLoader, siteFolder);
   if (!loaded.ok) return { kind: "config-failed", problems: loaded.error };
-  const files = await readSiteFolder(fileSystem, siteFolder);
+  const files = await readSiteFolder(fileSystem, siteFolder, defaultTheme);
   const built = buildSite({
     config: siteConfigOf(loaded.value, drafts),
     content: files.content,
     templates: files.templates,
     publicFiles: files.publicFiles,
+    themeAssets: files.themeAssets.map(({ path }) => path),
   });
   const problems = [...loaded.value.warnings, ...(built.ok ? built.value.warnings : built.error)];
   return built.ok

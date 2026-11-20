@@ -141,6 +141,7 @@ Built 6 pages into dist in 9 ms, with 1 warning.
 
 ```text files dist
 404.html
+assets/style.css
 blog/first/index.html
 blog/index.html
 blog/page/2/index.html

@@ -22,6 +22,7 @@ the others are errors. Problems from the other modules, such as frontmatter and 
 | GS413 | Links            | A link or image leads nowhere                                 |
 | GS414 | Links            | A link leads to a part of a page that doesn't exist (warning) |
 | GS415 | Links            | A public file would replace a file the site writes            |
+| GS416 | Links            | A file of the theme would clash with another file of the site |
 
 ## Content
 
@@ -362,3 +363,30 @@ feed.xml
 public/feed.xml, line 1, column 1: "public/feed.xml" would replace the feed, which the site writes
 hint: rename the file, or move it into a folder
 ```
+
+### GS416
+
+A file of the theme's `assets/` folder has the same path as a public file, or as a file the site writes, so one would replace the
+other.
+
+<!-- reports GS416 -->
+
+```markdown index.md
+---
+title: Welcome
+---
+```
+
+```text assets
+assets/style.css
+```
+
+```text public
+assets/style.css
+```
+
+```text
+public/assets/style.css, line 1, column 1: "public/assets/style.css" would replace "assets/style.css" of the theme
+hint: rename the file, or move it out of the theme's assets folder
+```
+

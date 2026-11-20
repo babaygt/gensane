@@ -41,6 +41,8 @@ export interface SiteInput {
   readonly templates: Readonly<Record<string, string>>;
   /** The paths of the files in the `public` folder, which are copied as they are. */
   readonly publicFiles?: readonly string[];
+  /** The paths in the site of the files in the theme's `assets/` folder, which are copied as they are. */
+  readonly themeAssets?: readonly string[];
 }
 
 export interface OutputFile {
@@ -141,6 +143,7 @@ export function buildSite(input: SiteInput): Result<BuiltSite, readonly Diagnost
     templates: input.templates,
     files: new Map(allFiles.map((file) => [file.path, file.content])),
     publicFiles: input.publicFiles ?? [],
+    themeAssets: input.themeAssets ?? [],
   });
   return finish(allFiles, [...found, ...links]);
 }
