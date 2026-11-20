@@ -3,11 +3,12 @@ import { parseArgs } from "node:util";
 import { InternalError, closestMatch } from "../diagnostics/index.ts";
 import { BuildCommand } from "./commands/build-command.ts";
 import { CheckCommand } from "./commands/check-command.ts";
+import { NewCommand } from "./commands/new-command.ts";
 import type { Command, OptionValues } from "./commands/command.ts";
 import { type Environment, ExitCode } from "./environment.ts";
 import { printUsageError } from "./report.ts";
 
-const COMMANDS: readonly Command[] = [new BuildCommand(), new CheckCommand()];
+const COMMANDS: readonly Command[] = [new BuildCommand(), new CheckCommand(), new NewCommand()];
 const ISSUES = "https://github.com/babaygt/gensane/issues";
 
 function generalHelp(version: string): string {
@@ -30,7 +31,7 @@ function quotedIn(message: string): string {
 }
 
 type Parsed =
-  | { readonly values: OptionValues }
+  | { readonly values: OptionValues; readonly positionals: readonly string[] }
   | { readonly mistake: string; readonly hint: string };
 
 function parseArguments(command: Command, args: readonly string[]): Parsed {
@@ -39,13 +40,13 @@ function parseArguments(command: Command, args: readonly string[]): Parsed {
   );
   const helpHint = `see gensane ${command.name} --help`;
   try {
-    const { values } = parseArgs({
+    const { values, positionals } = parseArgs({
       args: [...args],
       options: { ...options, help: { type: "boolean", short: "h" } },
       strict: true,
-      allowPositionals: false,
+      allowPositionals: command.takes !== "",
     });
-    return { values };
+    return { values, positionals };
   } catch (error) {
     const code = error instanceof Error && "code" in error ? error.code : undefined;
     const message = error instanceof Error ? error.message : String(error);
@@ -109,7 +110,7 @@ async function runCommand(args: readonly string[], environment: Environment): Pr
     terminal.write(command.help());
     return ExitCode.success;
   }
-  return command.run(parsed.values, environment);
+  return command.run(parsed.values, environment, parsed.positionals);
 }
 
 /** Runs gensane with the arguments after `gensane`, and gives back the exit code. */

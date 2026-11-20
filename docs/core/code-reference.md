@@ -65,6 +65,23 @@ Content files to entries.
 | [`isValidSlug`](../../src/core/content/slugs.ts)      | Checks a written slug                       |
 | [`slugFromFileName`](../../src/core/content/slugs.ts) | Leaves out a date at the start              |
 
+### [`src/core/content/folders.ts`](../../src/core/content/folders.ts)
+
+| Name                                            | Purpose                               |
+| ----------------------------------------------- | ------------------------------------- |
+| [`FOLDERS`](../../src/core/content/folders.ts)  | The type of content each folder holds |
+| [`folderOf`](../../src/core/content/folders.ts) | The folder of a type of content       |
+
+### [`src/core/content/new-entry.ts`](../../src/core/content/new-entry.ts)
+
+What `gensane new` writes.
+
+| Name                                                     | Purpose                                                                 |
+| -------------------------------------------------------- | ----------------------------------------------------------------------- |
+| [`newEntry`](../../src/core/content/new-entry.ts)        | The path and text of a new content file, and the fields left to fill in |
+| [`yamlText`](../../src/core/content/new-entry.ts)        | Puts a title in quotes only when frontmatter would read it differently  |
+| [`NEW_ENTRY_TYPES`](../../src/core/content/new-entry.ts) | The types `gensane new` can write                                       |
+
 ### [`src/core/content/summary.ts`](../../src/core/content/summary.ts)
 
 | Name                                                 | Purpose                                        |
