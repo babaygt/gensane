@@ -212,6 +212,33 @@ describe("images and files", () => {
   });
 });
 
+describe("stylesheets, scripts and media in templates", () => {
+  it.each([
+    '<link rel="stylesheet" href="/assets/missing.css">',
+    '<script src="/assets/missing.js"></script>',
+    '<video><source src="/assets/missing.mp4"></video>',
+  ])("reports %s, which leads nowhere", (tag) => {
+    const templates = { ...theme, "post.html": `${tag}{{ page.html }}` };
+    expect(codesOf({ content: { "blog/a.md": minimal.post }, templates })).toEqual([
+      CoreCodes.brokenLink,
+    ]);
+  });
+
+  it("accepts them when they lead to a file of the site, or to another site", () => {
+    const templates = {
+      ...theme,
+      "post.html":
+        '<link rel="stylesheet" href="/assets/style.css"><link rel="alternate" href="/feed.xml"><script src="https://cdn.example.com/a.js"></script>{{ page.html }}',
+    };
+    const input = {
+      content: { "blog/a.md": minimal.post },
+      templates,
+      themeAssets: ["assets/style.css"],
+    };
+    expect(codesOf(input)).toEqual([]);
+  });
+});
+
 describe("the theme's assets", () => {
   it("accepts links to them, in templates and in content", () => {
     const content = { "blog/a.md": post("![logo](/assets/logo.svg)\n") };

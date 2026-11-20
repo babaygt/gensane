@@ -482,3 +482,39 @@ describe("the theme", () => {
     ]);
   });
 });
+
+describe("navigation and the feed", () => {
+  const menu =
+    '{% for item in navigation %}{{ item.title }} {{ item.url }};{% endfor %} {{ feed | default("no feed") }}';
+  const templates = { ...plainTheme, "home.html": menu };
+
+  it("lists the blog, projects, talks and about pages, in that order, only when the site has them", () => {
+    const content = {
+      "talks/a.md": minimal.talk,
+      "blog/a.md": minimal.post,
+      "experience/a.md": minimal.experience,
+    };
+    const site = built({ content, templates });
+    expect(fileOf(site, "index.html")).toBe("Blog /blog/;Talks /talks/;About /about/; no feed");
+  });
+
+  it("lists nothing for a site with nothing to list", () => {
+    expect(fileOf(built({ content: {}, templates }), "index.html")).toBe(" no feed");
+  });
+
+  it("gives the address of the feed when the site has one", () => {
+    const site = built({
+      content: { "blog/a.md": minimal.post },
+      templates,
+      config: { site: { url: "https://example.com" } },
+    });
+    expect(fileOf(site, "index.html")).toBe("Blog /blog/; /feed.xml");
+  });
+
+  it("has no feed when every post is a draft, even with drafts shown", () => {
+    const draft = minimal.post.replace("---\n", "---\ndraft: true\n");
+    const config = { site: { url: "https://example.com" }, drafts: true };
+    const site = built({ content: { "blog/a.md": draft }, templates, config });
+    expect(fileOf(site, "index.html")).toBe("Blog /blog/; no feed");
+  });
+});
