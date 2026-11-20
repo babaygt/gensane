@@ -20,6 +20,7 @@ async function gensane(
     terminal,
     watcher: new ManualWatcher(),
     stopped: new AbortController().signal,
+    defaultTheme: "gensane/themes/default",
     siteFolder: "site",
     version: "1.2.3",
   });

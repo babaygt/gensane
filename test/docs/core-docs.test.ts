@@ -23,13 +23,14 @@ const plainTheme = Object.fromEntries(
   Object.values(TEMPLATES).map((name) => [name, "<h1>{{ page.title }}</h1>"]),
 );
 
-function run({ content, templates, config, publicFiles, withoutTemplates }: CoreExample) {
+function run({ content, templates, config, publicFiles, themeAssets, withoutTemplates }: CoreExample) {
   const theme = Object.entries(plainTheme).filter(([name]) => !withoutTemplates.includes(name));
   return buildSite({
     content,
     templates: { ...Object.fromEntries(theme), ...templates },
     config: config as SiteConfig,
     publicFiles,
+    themeAssets,
   });
 }
 

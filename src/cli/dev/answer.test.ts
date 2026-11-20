@@ -13,12 +13,16 @@ const site = {
     ["feed.xml", "<feed/>"],
     ["404.html", "<h1>Not here</h1>"],
   ]),
-  publicFiles: new Set(["images/me.png", "CNAME"]),
+  copies: new Map([
+    ["images/me.png", "site/public/images/me.png"],
+    ["CNAME", "site/public/CNAME"],
+    ["assets/style.css", "gensane/themes/default/assets/style.css"],
+  ]),
 } satisfies ServedSite;
 
-/** Whether an answer only gives a file of the build or of the public folder, or adds a / to the address. */
+/** Whether an answer only gives a file of the build or a file it copies, or adds a / to the address. */
 function isAllowed(reply: Answer, path: string): boolean {
-  if (reply.kind === "public") return site.publicFiles.has(reply.path);
+  if (reply.kind === "copy") return [...site.copies.values()].includes(reply.source);
   if (reply.kind === "text") return [...site.files.values()].includes(reply.body);
   return reply.location === `${path}/`;
 }
@@ -41,11 +45,16 @@ describe("answer", () => {
     });
   });
 
-  it("serves files of the public folder from there", () => {
+  it("serves the files it copies from where they are", () => {
     expect(answer(site, "/images/me.png")).toEqual({
-      kind: "public",
-      path: "images/me.png",
+      kind: "copy",
+      source: "site/public/images/me.png",
       type: "image/png",
+    });
+    expect(answer(site, "/assets/style.css")).toEqual({
+      kind: "copy",
+      source: "gensane/themes/default/assets/style.css",
+      type: "text/css; charset=utf-8",
     });
   });
 
@@ -70,7 +79,7 @@ describe("answer", () => {
   );
 
   it("says Not found when the site has no 404 page", () => {
-    const without: ServedSite = { kind: "site", files: new Map(), publicFiles: new Set() };
+    const without: ServedSite = { kind: "site", files: new Map(), copies: new Map() };
     expect(answer(without, "/")).toMatchObject({ status: 404, body: "Not found" });
   });
 
@@ -86,7 +95,7 @@ describe("answer", () => {
     }
   });
 
-  it("never serves anything but a file of the build or of the public folder, for any address", () => {
+  it("never serves anything but a file of the build or a file it copies, for any address", () => {
     const part = fc.constantFrom(
       "",
       ".",
