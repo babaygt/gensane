@@ -35,7 +35,7 @@ function siteConfigOf(
   { config, file }: LoadedConfig,
   { drafts, servedAtRoot }: BuildOptions,
 ): SiteConfig {
-  const { site, perPage, markdown, filters } = config;
+  const { site, perPage, markdown, filters, theme } = config;
   return {
     drafts,
     servedAtRoot: servedAtRoot ?? false,
@@ -44,6 +44,7 @@ function siteConfigOf(
     ...(perPage === undefined ? {} : { perPage }),
     ...(markdown === undefined ? {} : { markdown }),
     ...(filters === undefined ? {} : { filters }),
+    ...(theme === undefined ? {} : { theme }),
   };
 }
 

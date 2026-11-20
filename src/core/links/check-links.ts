@@ -3,6 +3,7 @@
  * every link written into a template. A link can lead to a page, the feed, the sitemap, or a file
  * from the `public` folder, and a link to a part of a page needs an element with that id.
  */
+import { THEME_CSS_PATH } from "../theme/theme-css.ts";
 import {
   type Diagnostic,
   type SourceSpan,
@@ -249,6 +250,7 @@ class LinkChecker {
 function describeOutput(path: string): string {
   if (path === "feed.xml") return "the feed";
   if (path === "sitemap.xml") return "the sitemap";
+  if (path === THEME_CSS_PATH) return "the theme settings";
   return `the page ${urlOfFile(path)}`;
 }
 

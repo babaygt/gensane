@@ -51,6 +51,7 @@ Built 4 pages into dist in 9 ms, with no warnings.
 ```text files dist
 .nojekyll
 404.html
+assets/settings.css
 assets/style.css
 blog/hello/index.html
 blog/index.html

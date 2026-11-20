@@ -53,6 +53,7 @@ title: Now
 ```text files
 404.html
 about/index.html
+assets/settings.css
 index.html
 now/index.html
 ```

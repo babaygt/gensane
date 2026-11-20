@@ -2,6 +2,7 @@
 import { SafeHtml } from "../../template/index.ts";
 import type { ContentEntry } from "../content/entries.ts";
 import type { Collections } from "../site/collections.ts";
+import type { Theme } from "../theme/theme-settings.ts";
 import type { Pagination, Route, RouteKind, Tag } from "../site/routes.ts";
 
 export type TemplateData = Readonly<Record<string, unknown>>;
@@ -23,11 +24,13 @@ export const DEFAULT_TITLES: Readonly<Partial<Record<RouteKind, string>>> = {
  */
 export class TemplateVariables {
   readonly #site: TemplateData;
+  readonly #theme: TemplateData;
   readonly #pages = new Map<ContentEntry, TemplateData>();
   readonly #collections: TemplateData;
 
-  constructor(site: TemplateData, collections: Collections) {
+  constructor(site: TemplateData, theme: Theme, collections: Collections) {
     this.#site = site;
+    this.#theme = { ...theme };
     this.#collections = {
       posts: collections.posts.map((entry) => this.#page(entry)),
       projects: collections.projects.map((entry) => this.#page(entry)),
@@ -43,6 +46,7 @@ export class TemplateVariables {
   of(route: Route): TemplateData {
     return {
       site: this.#site,
+      theme: this.#theme,
       collections: this.#collections,
       page: this.#pageOf(route),
       pagination: "pagination" in route ? this.#pagination(route.pagination) : undefined,

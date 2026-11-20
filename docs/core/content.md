@@ -34,6 +34,7 @@ date: 2026-11-17
 
 ```text files
 404.html
+assets/settings.css
 blog/hello-world/index.html
 blog/index.html
 index.html
@@ -56,6 +57,7 @@ slug: my-first-post
 
 ```text files
 404.html
+assets/settings.css
 blog/index.html
 blog/my-first-post/index.html
 index.html
@@ -114,6 +116,7 @@ draft: true
 
 ```text files
 404.html
+assets/settings.css
 index.html
 ```
 

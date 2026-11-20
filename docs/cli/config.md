@@ -141,6 +141,7 @@ Built 6 pages into dist in 9 ms, with 1 warning.
 
 ```text files dist
 404.html
+assets/settings.css
 assets/style.css
 blog/first/index.html
 blog/index.html
@@ -206,6 +207,65 @@ Built 2 pages into dist in 8 ms, with no warnings.
 ```html dist/index.html
 <h1>HELLO!</h1>
 ```
+
+### `theme`
+
+The settings of the default theme. Every one has a default, and changes something you can see.
+
+| Setting         | Choices                                                        | Default   |
+| --------------- | -------------------------------------------------------------- | --------- |
+| `palette`       | `default`, `paper`, `nord`, `solarized`, `gruvbox`, `midnight` | `default` |
+| `accent`        | A color such as `"#6d5dfc"`, for links, instead of the palette's | the palette's |
+| `colorScheme`   | `auto` (follow the reader's system, with a switch), `light`, `dark` | `auto` |
+| `font`          | `sans`, `serif`, `mono`, all from the reader's system           | `sans`    |
+| `width`         | `narrow`, `normal`, `wide`                                     | `normal`  |
+| `blog.layout`   | `list`, `grid`                                                 | `list`    |
+| `home.sections` | `intro`, `recent-posts`, `featured-projects`, `talks`, in the order you list them | all four |
+| `toc`           | `true` for a table of contents on posts with at least 3 headings, or `false` | `true` |
+
+Every palette has a light and a dark side, and all its text colors are readable on its backgrounds. An `accent` of your own that isn't
+gets a [warning](problems.md#gs507). Colors, the font and the width are written into `assets/settings.css` as CSS custom properties,
+which the theme's stylesheet uses; templates see every setting, with its default, as `theme`.
+
+<!-- runs -->
+```ts gensane.config.ts
+import { defineConfig } from "gensane";
+
+export default defineConfig({
+  site: { url: "https://example.com" },
+  theme: { palette: "nord", colorScheme: "light", font: "serif", width: "wide" },
+});
+```
+
+```jinja theme/home.html
+<p>{{ theme.palette }}, {{ theme.blog.layout }}, {{ theme.home.sections | join(", ") }}</p>
+```
+
+```console
+$ gensane build
+Built 2 pages into dist in 8 ms, with no warnings.
+```
+
+```html dist/index.html
+<p>nord, list, intro, recent-posts, featured-projects, talks</p>
+```
+
+```css dist/assets/settings.css
+/* Made by gensane from the theme settings in the config. */
+:root {
+  color-scheme: light;
+  --font: "Iowan Old Style", Charter, Georgia, serif;
+  --width: 52rem;
+  --background: #eceff4;
+  --surface: #e5e9f0;
+  --text: #2e3440;
+  --muted: #4c566a;
+  --border: #d8dee9;
+  --accent: #3b5f8f;
+}
+```
+
+With `colorScheme: "auto"`, the file also has the dark colors, for readers whose system is dark and for the switch on the page.
 
 ## While serving
 
