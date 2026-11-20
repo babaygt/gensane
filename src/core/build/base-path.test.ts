@@ -48,6 +48,18 @@ describe("withBasePath", () => {
     expect(withBasePath(html, PATH)).toBe(html);
   });
 
+  it("knows a script and its end in any case", () => {
+    expect(withBasePath('<SCRIPT>x = "<a href=/in/>";</SCRIPT><a href="/out/">x</a>', PATH)).toBe(
+      '<SCRIPT>x = "<a href=/in/>";</SCRIPT><a href="/notes/out/">x</a>',
+    );
+  });
+
+  it("adds the path to a srcset address after spaces", () => {
+    expect(withBasePath('<img srcset="a.png 1x,  /b.png 2x">', PATH)).toBe(
+      '<img srcset="a.png 1x,  /notes/b.png 2x">',
+    );
+  });
+
   it("finds tags again after a script ends", () => {
     expect(withBasePath('<script>if (a < b) {}</script><a href="/x/">x</a>', PATH)).toBe(
       '<script>if (a < b) {}</script><a href="/notes/x/">x</a>',
