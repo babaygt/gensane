@@ -212,6 +212,40 @@ describe("images and files", () => {
   });
 });
 
+describe("the theme's assets", () => {
+  it("accepts links to them, in templates and in content", () => {
+    const content = { "blog/a.md": post("![logo](/assets/logo.svg)\n") };
+    const templates = { ...theme, "post.html": '<link href="/assets/style.css">{{ page.html }}' };
+    const themeAssets = ["assets/style.css", "assets/logo.svg"];
+    expect(codesOf({ content, templates, themeAssets })).toEqual([]);
+  });
+
+  it("rejects a public file at the same path as one of them", () => {
+    const content = { "blog/a.md": minimal.post };
+    const input = { content, publicFiles: ["assets/style.css"], themeAssets: ["assets/style.css"] };
+    expect(problemsOf(input)).toMatchObject([
+      {
+        code: CoreCodes.themeFileClash,
+        message: '"public/assets/style.css" would replace "assets/style.css" of the theme',
+        hint: "rename the file, or move it out of the theme's assets folder",
+        span: { file: "public/assets/style.css", start: { line: 1, column: 1 } },
+      },
+    ]);
+  });
+
+  it("rejects one that would replace a page", () => {
+    const content = { "pages/assets.md": minimal.page };
+    expect(problemsOf({ content, themeAssets: ["assets/index.html"] })).toMatchObject([
+      {
+        code: CoreCodes.themeFileClash,
+        message: '"theme/assets/index.html" would replace the page /assets/, which the site writes',
+        hint: "rename the file of the theme",
+        span: { file: "theme/assets/index.html" },
+      },
+    ]);
+  });
+});
+
 describe("links to a part of a page", () => {
   it("accepts a link to a heading on the same page", () => {
     const content = { "blog/a.md": post("[down](#why)\n\n## Why\n") };

@@ -56,6 +56,7 @@ async function startDev(
     terminal,
     watcher,
     stopped: stop.signal,
+    defaultTheme: "gensane/themes/default",
     siteFolder: "site",
     version: "1.2.3",
   });
@@ -232,6 +233,14 @@ describe("gensane dev", () => {
     expect(new Uint8Array(await response.arrayBuffer())).toEqual(PICTURE);
   });
 
+  it("serves the assets of the default theme", async () => {
+    const dev = await startDev({ "gensane/themes/default/assets/style.css": "body {}" });
+    const response = await fetchText(`${dev.address}/assets/style.css`);
+    expect(response.status).toBe(200);
+    expect(response.headers.get("content-type")).toBe("text/css; charset=utf-8");
+    expect(response.body).toBe("body {}");
+  });
+
   it("answers a public file deleted since the last build with 404", async () => {
     const dev = await startDev({ "site/public/images/me.png": PICTURE });
     await dev.fileSystem.removeFolder("site/public");
@@ -277,6 +286,7 @@ it("stops at once when it is asked to stop before it has started, such as by Ctr
     terminal: new MemoryTerminal(),
     watcher,
     stopped: stop.signal,
+    defaultTheme: "gensane/themes/default",
     siteFolder: "site",
     version: "1.2.3",
   });
@@ -298,6 +308,7 @@ describe("mistakes", () => {
       terminal,
       watcher: new ManualWatcher(),
       stopped: new AbortController().signal,
+      defaultTheme: "gensane/themes/default",
       siteFolder: "site",
       version: "1.2.3",
     });
@@ -317,6 +328,7 @@ describe("mistakes", () => {
       terminal,
       watcher: new ManualWatcher(),
       stopped: new AbortController().signal,
+      defaultTheme: "gensane/themes/default",
       siteFolder: "site",
       version: "1.2.3",
     });

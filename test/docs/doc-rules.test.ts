@@ -345,6 +345,7 @@ describe("findCoreExamples", () => {
         templates: { "post.html": "{{ page.title }}" },
         config: { perPage: 2 },
         publicFiles: ["images/a.png"],
+        themeAssets: [],
         withoutTemplates: [],
         files: ["blog/hello/index.html", "index.html"],
         outputs: { "blog/hello/index.html": "Hello" },

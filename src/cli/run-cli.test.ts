@@ -54,6 +54,7 @@ async function gensane(args: readonly string[], setup: Setup = {}): Promise<Run>
     terminal,
     watcher: new ManualWatcher(),
     stopped: new AbortController().signal,
+    defaultTheme: "gensane/themes/default",
     siteFolder: "site",
     version: "1.2.3",
   });

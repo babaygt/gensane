@@ -16,7 +16,9 @@ describe("problemsPage", () => {
   const files = {
     content: {},
     templates: { "post.html": "<p>{{ page.titel }} & <b></p>" },
+    templateFiles: { "post.html": "theme/post.html" },
     publicFiles: [],
+    themeAssets: [],
   };
 
   it("counts the problems in its title", () => {

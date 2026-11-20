@@ -135,3 +135,32 @@ it("serves a site with gensane dev until it is stopped with Ctrl+C", async () =>
   }
   expect(await exited).toBe(0);
 });
+
+it("builds a site with nothing but content using the default theme, without a single problem", async () => {
+  const site = await mkdtemp(join(tmpdir(), "gensane-site-"));
+  folders.push(site);
+  const files: Record<string, string> = {
+    "gensane.config.mjs":
+      'export default { site: { title: "Ada", url: "https://example.com" } };\n',
+    "content/index.md": "---\ntitle: Welcome\n---\nHello.\n",
+    "content/blog/2026-11-17-hello.md":
+      "---\ntitle: Hello\ndate: 2026-11-17\ntags: [testing]\n---\nHi\n",
+    "content/blog/2026-11-18-again.md": "---\ntitle: Again\ndate: 2026-11-18\n---\nHi again\n",
+    "content/projects/gensane.md": "---\ntitle: Gensane\n---\nA site generator.\n",
+    "content/talks/compilers.md": "---\ntitle: Compilers\nevent: A meetup\ndate: 2026-10-01\n---\n",
+    "content/experience/acme.md": "---\ncompany: Acme\nrole: Engineer\nstart: 2024-01\n---\n",
+    "content/education/school.md": "---\nschool: A school\ndegree: BSc\nstart: 2020-10\n---\n",
+    "content/pages/now.md": "---\ntitle: Now\n---\nWriting.\n",
+  };
+  for (const [path, content] of Object.entries(files)) {
+    await mkdir(dirname(join(site, path)), { recursive: true });
+    await writeFile(join(site, path), content);
+  }
+  const run = await gensane(site, "build");
+  expect(run).toMatchObject({ code: 0, stderr: "" });
+  const written = (await readdir(join(site, "dist"), { recursive: true })).map(String);
+  expect(written).toContain("assets/style.css");
+  expect(await readFile(join(site, "dist", "blog", "hello", "index.html"), "utf8")).toContain(
+    '<link rel="stylesheet" href="/assets/style.css">',
+  );
+});
