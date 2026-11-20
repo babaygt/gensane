@@ -96,3 +96,15 @@ it("shows the version from package.json", async () => {
     stderr: "",
   });
 });
+
+it("names a new post after today on the computer's own calendar, not in UTC", async () => {
+  // Kiritimati is 14 hours ahead of UTC, so for most of the day its date is not the date in UTC.
+  const timeZone = "Pacific/Kiritimati";
+  const site = await siteWith({});
+  const { stdout } = await promisify(execFile)(process.execPath, [program, "new", "post", "Hi"], {
+    cwd: site,
+    env: { ...process.env, TZ: timeZone },
+  });
+  const today = new Intl.DateTimeFormat("en-CA", { timeZone }).format(new Date());
+  expect(stdout).toBe(`Created content/blog/${today}-hi.md\n`);
+});
