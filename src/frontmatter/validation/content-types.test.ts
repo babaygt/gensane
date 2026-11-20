@@ -65,12 +65,13 @@ describe("page", () => {
 describe("project", () => {
   it("reads links, stack and status", () => {
     const yaml =
-      "title: Gensane\nstack: [TypeScript]\nrepo: https://github.com/a/b\nurl: https://a.dev\nstatus: active\nfeatured: true\norder: 2\nlinks:\n  - name: Docs\n    url: /docs";
+      "title: Gensane\nstack: [TypeScript]\nrepo: https://github.com/a/b\nwebsite: https://a.dev\nstatus: active\nfeatured: true\norder: 2\nlinks:\n  - name: Docs\n    url: /docs";
     expect(validated("project", yaml)).toMatchObject({
       ok: true,
       value: {
         value: {
           stack: ["TypeScript"],
+          website: "https://a.dev",
           status: "active",
           featured: true,
           order: 2,
@@ -194,5 +195,19 @@ describe("custom fields", () => {
       ok: true,
       value: { extra: { mood: "happy" } },
     });
+  });
+});
+
+describe("a project's website", () => {
+  it("is the field website, and url is a field of one's own", () => {
+    const result = validated("project", "title: Gensane\nurl: https://a.dev");
+    expect(result).toMatchObject({
+      ok: true,
+      value: { value: { title: "Gensane", website: undefined }, extra: { url: "https://a.dev" } },
+    });
+  });
+
+  it("must be a web address", () => {
+    expect(validated("project", "title: Gensane\nwebsite: not an address").ok).toBe(false);
   });
 });
