@@ -6,3 +6,5 @@ export type { FileSystem } from "./file-system.ts";
 export { MemoryFileSystem } from "./memory-file-system.ts";
 export { NodeFileSystem } from "./node-file-system.ts";
 export { type ModuleLoader, NodeModuleLoader } from "./module-loader.ts";
+export { type Clock, SystemClock } from "./clock.ts";
+export { MemoryTerminal, NodeTerminal, type Terminal, wantsColor } from "./terminal.ts";
