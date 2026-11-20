@@ -344,3 +344,37 @@ function loadContentProblems(files: Readonly<Record<string, string>>, contentFol
   const result = loadContent(files, { contentFolder });
   return result.ok ? result.value.warnings : result.error;
 }
+
+/** A talk, which has no slug of its own, with one more field. */
+const talk = (field: string) =>
+  `---\ntitle: A talk\nevent: A meetup\ndate: 2026-10-01\n${field}: something\n---\n`;
+
+describe("fields named like what the build gives templates", () => {
+  it.each([
+    ["url", "the address of the page"],
+    ["slug", "the slug of the page"],
+    ["type", "the type of content"],
+    ["html", "the HTML of the body"],
+    ["excerpt", "the excerpt"],
+    ["toc", "the table of contents"],
+    ["readingTime", "the reading time"],
+  ])("warns about %s, which templates see as %s, at the field's name", (field, meaning) => {
+    expect(problems({ "talks/a.md": talk(field) })).toMatchObject([
+      {
+        code: CoreCodes.hiddenField,
+        severity: "warning",
+        message: `templates see "${field}" as ${meaning}, not as this field`,
+        hint: "give the field another name",
+        span: { file: "content/talks/a.md", start: { line: 5, column: 1 } },
+      },
+    ]);
+  });
+
+  it("doesn't warn about a field the type of content has, such as the slug of a post", () => {
+    expect(codes({ "blog/a.md": post("", "slug: hello\n") })).toEqual([]);
+  });
+
+  it("doesn't warn about other fields of one's own", () => {
+    expect(codes({ "talks/a.md": talk("mood") })).toEqual([]);
+  });
+});

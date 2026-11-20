@@ -66,7 +66,7 @@ const files: Record<string, string> = {
   ),
   "content/blog/2026-11-19-third.md": post("Third", "2026-11-19", "Third.\n"),
   "content/projects/gensane.md":
-    "---\ntitle: Gensane\ndescription: A site generator\nstack: [TypeScript]\nrepo: https://github.com/babaygt/gensane\nstatus: active\nfeatured: true\nlinks:\n  - name: Docs\n    url: https://example.com/docs\n---\nBuilt by hand.\n",
+    "---\ntitle: Gensane\ndescription: A site generator\nstack: [TypeScript]\nrepo: https://github.com/babaygt/gensane\nwebsite: https://gensane.dev\nstatus: active\nfeatured: true\nlinks:\n  - name: Docs\n    url: https://example.com/docs\n---\nBuilt by hand.\n",
   "content/projects/other.md": "---\ntitle: Other\n---\n",
   "content/talks/compilers.md":
     "---\ntitle: Compilers\nevent: A meetup\ndate: 2026-10-01\nlocation: Berlin\nslides: https://example.com/slides\nvideo: https://example.com/video\n---\n",
@@ -255,6 +255,13 @@ describe("the theme settings", () => {
     } finally {
       await rm(join(site, "content/blog/2026-11-20-soon.md"));
     }
+  });
+
+  it("links a project to its website, its code and its other links", async () => {
+    const project = pageOf(await build(), "projects/gensane/index.html");
+    expect(project).toContain('<li><a href="https://gensane.dev">Website</a></li>');
+    expect(project).toContain('<li><a href="https://github.com/babaygt/gensane">Code</a></li>');
+    expect(project).toContain('<li><a href="https://example.com/docs">Docs</a></li>');
   });
 
   it("marks the page the menu is on", async () => {
