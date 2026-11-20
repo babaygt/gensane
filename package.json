@@ -36,6 +36,7 @@
     "html-validate": "11.21.1",
     "oxfmt": "0.78.0",
     "oxlint": "1.93.0",
+    "playwright": "1.65.0",
     "typescript": "7.0.2",
     "vitest": "5.1.0"
   },
