@@ -15,6 +15,7 @@ Rendering then only has to follow these _routes_.
 | `project`   | `/projects/<slug>/`                   | `project.html`  | For each project                                 |
 | `projects`  | `/projects/`                          | `projects.html` | There are projects                               |
 | `talks`     | `/talks/`                             | `talks.html`    | There are talks                                  |
+| `search`    | `/search/`                            | `search.html`   | There are posts, projects, talks or pages        |
 | `about`     | `/about/`                             | `about.html`    | There is experience, education or `pages/about.md` |
 | `page`      | `/<slug>/`                            | `page.html`     | For each page                                    |
 | `not-found` | `/404.html`                           | `404.html`      | Always                                           |
@@ -56,6 +57,8 @@ about/index.html
 assets/settings.css
 index.html
 now/index.html
+search-index.json
+search/index.html
 ```
 
 A page can't take a URL that the site needs, such as `pages/blog.md` on a site with posts. Without posts, `/blog/` is free for it.
@@ -171,4 +174,14 @@ title: About
 Addresses to other sites, relative addresses and links to a part of the same page are left as they are. `servedAtRoot: true` leaves
 every link as it is written, which `gensane dev` uses because it serves the site at `/`. Files copied as they are, such as CSS, are not
 changed, so a theme's CSS should use addresses relative to itself.
+
+## Search
+
+A site with posts, projects, talks or pages also gets `search-index.json`, which the search page of a theme looks words up in, so search
+needs no server. Each post, project, talk and page that isn't a draft has its title, address, description, tags (a project's stack),
+date, and the words of its text. A talk leads to the list of talks. Drafts are never in it, not even when drafts are shown.
+
+The words are cut by [`wordsOf`](../../src/core/search/words.ts): lowercase, without accents, at least 2 letters or digits, each once,
+so `Über` is found as `uber`. The default theme's script cuts the words typed in the same way, and a test checks that both always
+agree.
 

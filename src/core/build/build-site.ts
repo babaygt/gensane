@@ -16,6 +16,7 @@ import { type Route, TEMPLATES } from "../site/routes.ts";
 import { buildSiteGraph } from "../site/site-graph.ts";
 import { siteAddressOf } from "../feeds/site-address.ts";
 import { withBasePath } from "./base-path.ts";
+import { SEARCH_INDEX_PATH, searchIndex } from "../search/search-index.ts";
 import { THEME_CSS_PATH, themeCss } from "../theme/theme-css.ts";
 import { type ThemeSettings, themeOf } from "../theme/theme-settings.ts";
 import { outputPath } from "./output-paths.ts";
@@ -151,7 +152,13 @@ export function buildSite(input: SiteInput): Result<BuiltSite, readonly Diagnost
       ),
     );
   }
-  const allFiles = [...files, ...feeds.files, { path: THEME_CSS_PATH, content: themeCss(theme) }];
+  const hasSearch = graph.value.graph.routes.some((route) => route.kind === "search");
+  const allFiles = [
+    ...files,
+    ...feeds.files,
+    { path: THEME_CSS_PATH, content: themeCss(theme) },
+    ...(hasSearch ? [{ path: SEARCH_INDEX_PATH, content: searchIndex(loaded.value.entries) }] : []),
+  ];
   const found = [...problems, ...feeds.problems];
   if (hasErrors(found)) return finish(allFiles, found);
   const links = checkLinks({

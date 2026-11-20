@@ -26,6 +26,8 @@ assets/settings.css
 blog/hello/index.html
 blog/index.html
 index.html
+search-index.json
+search/index.html
 tags/index.html
 tags/testing/index.html
 ```

@@ -12,7 +12,8 @@ function lastChangeOf(route: Route): string | undefined {
 /** The routes must already be without drafts and sorted. */
 export function sitemap(routes: readonly Route[], address: SiteAddress): string {
   const urls = routes
-    .filter((route) => route.kind !== "not-found")
+    // Neither is a page to send people to from a search engine.
+    .filter((route) => route.kind !== "not-found" && route.kind !== "search")
     .flatMap((route) => {
       const lastChange = lastChangeOf(route);
       return [

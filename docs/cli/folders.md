@@ -45,12 +45,13 @@ an editor's backup
 
 ```console
 $ gensane build
-Built 4 pages into dist in 9 ms, with no warnings.
+Built 5 pages into dist in 9 ms, with no warnings.
 ```
 
 ```text files dist
 .nojekyll
 404.html
+assets/search.js
 assets/settings.css
 assets/style.css
 assets/theme.js
@@ -58,6 +59,8 @@ blog/hello/index.html
 blog/index.html
 feed.xml
 index.html
+search-index.json
+search/index.html
 sitemap.xml
 ```
 

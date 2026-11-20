@@ -12,6 +12,7 @@ when there is nothing, so `{% if previous %}` works on every page.
 | `theme`       | Every page   | The [theme settings](../cli/config.md#theme), with every default filled in           |
 | `navigation`  | Every page   | The blog, projects, talks and about pages the site has, each with `title` and `url` |
 | `feed`        | Every page   | The address of the feed, `/feed.xml`, when the site has one                        |
+| `search`      | Every page   | The address of the search page, `/search/`, when the site has one                  |
 | `pagination`  | List pages   | `items`, `current`, `total`, `previousUrl` and `nextUrl`                           |
 | `previous`    | Posts        | The post before this one in time                                                   |
 | `next`        | Posts        | The post after this one in time                                                    |
@@ -68,6 +69,7 @@ page uses the name of its tag.
 | `tags`      | Tags           |
 | `projects`  | Projects       |
 | `talks`     | Talks          |
+| `search`    | Search         |
 | `about`     | About          |
 | `not-found` | Page not found |
 

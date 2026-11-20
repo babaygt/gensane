@@ -5,8 +5,8 @@
  * finds where attribute values start, and changes nothing else.
  */
 
-/** The attributes that hold an address, or a list of them in `srcset`. */
-const ADDRESS_ATTRIBUTES = new Set(["href", "src", "srcset"]);
+/** The attributes that hold an address, or a list of them in `srcset`; `action` is where a form goes. */
+const ADDRESS_ATTRIBUTES = new Set(["href", "src", "srcset", "action"]);
 /** Elements whose content is not HTML, so a `<` inside them doesn't start a tag. */
 const RAW_TEXT = new Set(["script", "style", "textarea", "title"]);
 
@@ -125,7 +125,7 @@ class AttributeScanner {
   }
 }
 
-/** Adds `path`, such as `/notes`, to every `href`, `src` and `srcset` address that starts with one `/`. */
+/** Adds `path`, such as `/notes`, to every `href`, `src`, `srcset` and `action` address that starts with one `/`. */
 export function withBasePath(html: string, path: string): string {
   const scanner = new AttributeScanner(html);
   scanner.scan();

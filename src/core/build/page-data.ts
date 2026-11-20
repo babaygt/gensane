@@ -14,6 +14,7 @@ export const DEFAULT_TITLES: Readonly<Partial<Record<RouteKind, string>>> = {
   tags: "Tags",
   projects: "Projects",
   talks: "Talks",
+  search: "Search",
   about: "About",
   "not-found": "Page not found",
 };
@@ -39,10 +40,12 @@ export class TemplateVariables {
   readonly #theme: TemplateData;
   readonly #navigation: readonly TemplateData[];
   readonly #feed: string | undefined;
+  readonly #search: string | undefined;
   readonly #pages = new Map<ContentEntry, TemplateData>();
   readonly #collections: TemplateData;
 
   constructor({ site, theme, collections, routes, feed }: VariableSources) {
+    this.#search = routes.find((route) => route.kind === "search")?.url;
     this.#site = site;
     this.#theme = { ...theme };
     this.#feed = feed;
@@ -68,6 +71,7 @@ export class TemplateVariables {
       theme: this.#theme,
       navigation: this.#navigation,
       feed: this.#feed,
+      search: this.#search,
       collections: this.#collections,
       page: this.#pageOf(route),
       pagination: "pagination" in route ? this.#pagination(route.pagination) : undefined,

@@ -46,6 +46,7 @@ const GENERATED_PAGES: ReadonlyMap<string, string> = new Map([
   ["/talks/", "the list of talks"],
   ["/tags/", "the list of tags"],
   ["/about/", "the about page"],
+  ["/search/", "the search page"],
 ]);
 
 function listRoutes(collections: Collections, perPage: number): Route[] {
@@ -69,6 +70,10 @@ function listRoutes(collections: Collections, perPage: number): Route[] {
   for (const page of projects) routes.push({ kind: "project", url: page.url ?? "", page });
   if (projects.length > 0) routes.push({ kind: "projects", url: "/projects/" });
   if (talks.length > 0) routes.push({ kind: "talks", url: "/talks/" });
+  // Search finds posts, projects, talks and pages, so it only has a page when there is one of them.
+  if (posts.length + projects.length + talks.length + collections.pages.length > 0) {
+    routes.push({ kind: "search", url: "/search/" });
+  }
   return routes;
 }
 

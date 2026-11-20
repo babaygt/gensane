@@ -38,6 +38,8 @@ assets/settings.css
 blog/hello-world/index.html
 blog/index.html
 index.html
+search-index.json
+search/index.html
 ```
 
 A slug only has lowercase letters, digits and single dashes, so it works in any address. Accents are removed, so `Über uns` becomes
@@ -61,6 +63,8 @@ assets/settings.css
 blog/index.html
 blog/my-first-post/index.html
 index.html
+search-index.json
+search/index.html
 ```
 
 Two files that end up at the same URL are an error, reported at the second one in the order of their paths.
@@ -103,7 +107,7 @@ The rest.
 ## Drafts
 
 `draft: true` on a post, a page or a project leaves it out of the site: out of every list, every page, the feed and the sitemap. With
-`drafts: true` in the config, for a preview, drafts are built like other content, but they still never appear in the feed or the sitemap.
+`drafts: true` in the config, for a preview, drafts are built like other content, but they still never appear in the feed, the sitemap or the search index.
 
 <!-- builds -->
 ```markdown blog/a.md

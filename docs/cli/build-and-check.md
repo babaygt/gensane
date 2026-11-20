@@ -22,16 +22,17 @@ not really a picture
 
 ```console
 $ gensane check
-Checked 4 pages in 11 ms, with no warnings.
+Checked 5 pages in 11 ms, with no warnings.
 ```
 
 ```console
 $ gensane build
-Built 4 pages into dist in 12 ms, with no warnings.
+Built 5 pages into dist in 12 ms, with no warnings.
 ```
 
 ```text files dist
 404.html
+assets/search.js
 assets/settings.css
 assets/style.css
 assets/theme.js
@@ -40,6 +41,8 @@ blog/index.html
 feed.xml
 images/me.png
 index.html
+search-index.json
+search/index.html
 sitemap.xml
 ```
 
@@ -112,21 +115,25 @@ Built 2 pages into dist in 8 ms, with no warnings.
 
 ```console
 $ gensane build --drafts
-Built 4 pages into dist in 9 ms, with no warnings.
+Built 5 pages into dist in 9 ms, with no warnings.
 ```
 
 ```text files dist
 404.html
+assets/search.js
 assets/settings.css
 assets/style.css
 assets/theme.js
 blog/index.html
 blog/soon/index.html
 index.html
+search-index.json
+search/index.html
 sitemap.xml
 ```
 
-Even with `--drafts`, drafts never appear in the feed or the sitemap, so the sitemap only has the home page here and there is no feed.
+Even with `--drafts`, drafts never appear in the feed, the sitemap or the search index, so the sitemap only has the home page here,
+there is no feed, and search finds nothing.
 
 ## Another output folder
 
@@ -151,6 +158,7 @@ Built 2 pages into public_html in 8 ms, with no warnings.
 
 ```text files public_html
 404.html
+assets/search.js
 assets/settings.css
 assets/style.css
 assets/theme.js
@@ -180,7 +188,7 @@ export default { site: { url: "https://ada.github.io/notes/" } };
 
 ```console
 $ gensane build
-Built 3 pages into dist in 9 ms, with no warnings.
+Built 4 pages into dist in 9 ms, with no warnings.
 ```
 
 ```html dist/index.html

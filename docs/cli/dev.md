@@ -25,7 +25,7 @@ export default { site: { url: "https://example.com" } };
 
 ```console
 $ gensane dev
-Built 5 pages in 15 ms, with no warnings.
+Built 6 pages in 15 ms, with no warnings.
 Serving the site at http://localhost:4000/ (press Ctrl+C to stop).
 ```
 

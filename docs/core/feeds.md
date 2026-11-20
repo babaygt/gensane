@@ -55,7 +55,7 @@ field, or else its date.
 
 ## The sitemap
 
-The sitemap lists every page except the page for missing pages, with the last change of each post.
+The sitemap lists every page except the page for missing pages and the search page, with the last change of each post.
 
 <!-- builds -->
 ```markdown blog/a.md
