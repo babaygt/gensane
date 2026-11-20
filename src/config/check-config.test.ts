@@ -116,7 +116,7 @@ describe("settings it doesn't know", () => {
 
   it("lists the settings of markdown when none is close", () => {
     expect(problemsOf({ markdown: { tables: true } })[0]?.hint).toBe(
-      "the settings of markdown are rawHtml and headingIds",
+      "the settings of markdown are rawHtml, headingIds and highlight",
     );
   });
 
@@ -286,6 +286,18 @@ describe("any config", () => {
         ).not.toThrow();
       }),
     );
+  });
+});
+
+describe("markdown.highlight", () => {
+  it("accepts a function", () => {
+    expect(problemsOf({ markdown: { highlight: () => undefined } })).toEqual([]);
+  });
+
+  it("refuses anything else", () => {
+    expect(messagesOf({ markdown: { highlight: "shiki" } })).toEqual([
+      '"markdown.highlight" must be a function, but "shiki" is text',
+    ]);
   });
 });
 
