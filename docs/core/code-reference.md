@@ -21,6 +21,13 @@ The whole build, from text to files.
 | [`BuiltSite`](../../src/core/build/build-site.ts)      | The files to write, sorted by path, and the warnings        |
 | [`withoutRepeats`](../../src/core/build/build-site.ts) | Reports a mistake that repeats on many pages once           |
 
+### [`src/core/build/base-path.ts`](../../src/core/build/base-path.ts)
+
+| Name                                                   | Purpose                                                             |
+| ------------------------------------------------------ | ------------------------------------------------------------------- |
+| [`withBasePath`](../../src/core/build/base-path.ts)    | Adds the site's path to `href`, `src` and `srcset` that start at `/` |
+| [`AttributeScanner`](../../src/core/build/base-path.ts) | Finds where attribute values start, without parsing all of HTML     |
+
 ### [`src/core/diagnostic-codes.ts`](../../src/core/diagnostic-codes.ts)
 
 | Name                                              | Purpose                           |

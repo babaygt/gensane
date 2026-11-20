@@ -58,7 +58,7 @@ export class DevServer {
   async build(change?: string): Promise<void> {
     const { clock, terminal } = this.#environment;
     const started = clock.now().getTime();
-    const build = await buildFolder(this.#environment, { drafts: true });
+    const build = await buildFolder(this.#environment, { drafts: true, servedAtRoot: true });
     const files = build.kind === "config-failed" ? undefined : build.files;
     printProblems(build.problems, files, terminal);
 

@@ -58,6 +58,11 @@ Only the files of the last build and the files of `public/`, each found by its e
 your computer. `/blog/hello` leads to `/blog/hello/`, as on most web servers, and an address that isn't there gets the site's own
 `404.html`.
 
+## A site under a path
+
+When `site.url` has a path, such as `https://ada.github.io/notes/`, `gensane build` adds it to the links. `gensane dev` doesn't: it
+serves the site at `http://localhost:4000/` with the links as they are written, so the preview works without any setting.
+
 ## Another port
 
 `--port` serves on another port. When the port is already used by another program, `gensane dev` says so and stops, instead of
