@@ -80,6 +80,26 @@ describe("NodeModuleLoader", () => {
     });
   });
 
+  it("runs a file again after it changed, as gensane dev needs", async () => {
+    const path = join(folder, "changing.mjs");
+    await writeFile(path, "export default 1;\n");
+    const twice = `
+const { NodeModuleLoader } = await import(${JSON.stringify(loaderUrl)});
+const { writeFile } = await import("node:fs/promises");
+const loader = new NodeModuleLoader();
+const first = (await loader.load(process.argv[1])).default;
+await writeFile(process.argv[1], "export default 2;\\n");
+const second = (await loader.load(process.argv[1])).default;
+console.log(JSON.stringify([first, second]));`;
+    const { stdout } = await promisify(execFile)(process.execPath, [
+      "--input-type=module",
+      "--eval",
+      twice,
+      path,
+    ]);
+    expect(JSON.parse(stdout)).toEqual([1, 2]);
+  });
+
   it("fails for a file that doesn't exist", async () => {
     const { stdout } = await promisify(execFile)(process.execPath, [
       "--input-type=module",

@@ -4,6 +4,7 @@ import { InternalError } from "../diagnostics/index.ts";
 import {
   type Clock,
   type FileSystem,
+  ManualWatcher,
   MemoryFileSystem,
   MemoryTerminal,
   type ModuleLoader,
@@ -51,6 +52,8 @@ async function gensane(args: readonly string[], setup: Setup = {}): Promise<Run>
     moduleLoader,
     clock: setup.clock ?? { now: () => new Date(0) },
     terminal,
+    watcher: new ManualWatcher(),
+    stopped: new AbortController().signal,
     siteFolder: "site",
     version: "1.2.3",
   });
@@ -288,6 +291,7 @@ describe("help and version", () => {
     "Commands:",
     "  build  Build the site into dist/",
     "  check  Check the site for problems, without writing anything",
+    "  dev    Serve the site while you write, and reload the browser on every change",
     "  new    Write a new content file, such as a post",
     "",
     "Run gensane <command> --help to see the arguments of a command.",

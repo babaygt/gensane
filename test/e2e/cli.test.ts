@@ -1,6 +1,6 @@
 // Runs the real `gensane` program in a temporary folder, to show that the real disk, the config loader
 // and the terminal are joined correctly. Everything else is tested in memory.
-import { execFile } from "node:child_process";
+import { execFile, spawn } from "node:child_process";
 import { mkdir, mkdtemp, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
@@ -109,4 +109,29 @@ it("names a new post after today on the computer's own calendar, not in UTC", as
   const today = new Intl.DateTimeFormat("en-CA", { timeZone }).format(new Date());
   expect(today).not.toBe(new Date().toISOString().slice(0, 10));
   expect(stdout).toBe(`Created content/blog/${today}-hi.md\n`);
+});
+
+it("serves a site with gensane dev until it is stopped with Ctrl+C", async () => {
+  const site = await siteWith({
+    "content/blog/hello.md": "---\ntitle: Hello\ndate: 2026-11-17\n---\nHi\n",
+  });
+  const dev = spawn(process.execPath, [program, "dev", "--port", "0"], {
+    cwd: site,
+    env: { ...process.env, NO_COLOR: "1" },
+  });
+  let output = "";
+  dev.stdout.setEncoding("utf8").on("data", (chunk: string) => {
+    output += chunk;
+  });
+  const exited = new Promise<number | null>((resolve) => dev.on("exit", resolve));
+  try {
+    for (let tries = 0; tries < 500 && !output.includes("Serving"); tries++) {
+      await new Promise((resolve) => setTimeout(resolve, 10));
+    }
+    const address = /http:\/\/localhost:\d+\//.exec(output)?.[0] ?? "";
+    expect(await (await fetch(`${address}blog/hello/`)).text()).toMatch(/^<h1>Hello<\/h1><script>/);
+  } finally {
+    dev.kill("SIGINT");
+  }
+  expect(await exited).toBe(0);
 });

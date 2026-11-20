@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { MemoryFileSystem, MemoryTerminal } from "../../ports/index.ts";
+import { ManualWatcher, MemoryFileSystem, MemoryTerminal } from "../../ports/index.ts";
 import { ExitCode } from "../environment.ts";
 import { runCli } from "../run-cli.ts";
 
@@ -18,6 +18,8 @@ async function gensane(
     moduleLoader: { load: async () => ({}) },
     clock: { now: () => now },
     terminal,
+    watcher: new ManualWatcher(),
+    stopped: new AbortController().signal,
     siteFolder: "site",
     version: "1.2.3",
   });

@@ -123,6 +123,23 @@ describe.each([
     });
   });
 
+  describe("readBytes", () => {
+    it("reads the exact bytes of a file", async () => {
+      const { fileSystem, root } = await setUp({ "public/me.png": PICTURE });
+      expect(await fileSystem.readBytes(`${root}/public/me.png`)).toEqual(PICTURE);
+    });
+
+    it("reads text as UTF-8 bytes", async () => {
+      const { fileSystem, root } = await setUp({ "a.txt": "ü" });
+      expect(await fileSystem.readBytes(`${root}/a.txt`)).toEqual(new Uint8Array([0xc3, 0xbc]));
+    });
+
+    it("fails for a file that doesn't exist", async () => {
+      const { fileSystem, root } = await setUp({});
+      await expect(fileSystem.readBytes(`${root}/missing.png`)).rejects.toThrow("ENOENT");
+    });
+  });
+
   describe("writeText", () => {
     it("writes a file, making its folders first", async () => {
       const { fileSystem, root } = await setUp({});
