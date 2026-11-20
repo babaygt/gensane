@@ -42,6 +42,7 @@ export type Route =
   | { readonly kind: "project"; readonly url: string; readonly page: EntryOf<"project"> }
   | { readonly kind: "projects"; readonly url: string }
   | { readonly kind: "talks"; readonly url: string }
+  | { readonly kind: "search"; readonly url: string }
   | { readonly kind: "about"; readonly url: string; readonly page: EntryOf<"page"> | undefined }
   | { readonly kind: "page"; readonly url: string; readonly page: EntryOf<"page"> }
   | { readonly kind: "not-found"; readonly url: string };
@@ -58,6 +59,7 @@ export const TEMPLATES: Readonly<Record<RouteKind, string>> = {
   project: "project.html",
   projects: "projects.html",
   talks: "talks.html",
+  search: "search.html",
   about: "about.html",
   page: "page.html",
   "not-found": "404.html",

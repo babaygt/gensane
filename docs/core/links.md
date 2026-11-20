@@ -43,6 +43,8 @@ blog/hello/index.html
 blog/index.html
 feed.xml
 index.html
+search-index.json
+search/index.html
 sitemap.xml
 ```
 

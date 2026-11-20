@@ -12,9 +12,12 @@ changed with the [`theme` settings](config.md#theme), and any part of it can be 
   next post. Code blocks get their language as a label and a copy button.
 - **Lists:** posts as a list or as cards with their cover image, projects as cards, talks and experience as timelines.
 - **Drafts:** a "Draft" label, which only [`gensane dev`](dev.md) shows.
+- **Search:** a box in the header and a search page that finds as you type, in the
+  [search index](../core/site.md#search) the build writes. Titles count most, then tags, then descriptions, then the text, and the
+  newest comes first among equally good results.
 
-It has no web fonts and no frameworks: less than 10 KB of CSS and 3 KB of JavaScript, and every page works without JavaScript except
-the switch and the copy buttons. Every page of a test site with every type of content is checked by an HTML validator, and for one main
+It has no web fonts and no frameworks: less than 10 KB of CSS, and two scripts of less than 3 KB each as readers download them. Every
+page works without JavaScript except the switch, the copy buttons and search. Every page of a test site with every type of content is checked by an HTML validator, and for one main
 heading, headings in order, landmarks, text for every link and image, and a skip link.
 
 ## Changing one part
@@ -44,7 +47,7 @@ export default { site: { title: "Ada's notes", url: "https://example.com" } };
 
 ```console
 $ gensane build
-Built 4 pages into dist in 12 ms, with no warnings.
+Built 5 pages into dist in 12 ms, with no warnings.
 ```
 
 The blog page now uses the base layout of the default theme with its own list. Its colors and spacing still come from
@@ -66,6 +69,7 @@ The blog page now uses the base layout of the default theme with its own list. I
 | `about.html`                    | The about page, with experience and education                              |
 | `page.html`                     | Any other page                                                             |
 | `404.html`                      | The page for an address that doesn't exist                                 |
+| `search.html`                   | The search page, which finds as you type                                   |
 | `partials/post-item.html`       | One post in a list                                                         |
 | `partials/post-list.html`       | A list of posts with its pages                                             |
 | `partials/project-card.html`    | One project as a card                                                      |
@@ -74,6 +78,7 @@ The blog page now uses the base layout of the default theme with its own list. I
 | `partials/period.html`          | When a job or a study started and ended                                    |
 | `assets/style.css`              | The styles, which use the custom properties of `assets/settings.css`      |
 | `assets/theme.js`               | The switch between light and dark, and the label and copy button of code   |
+| `assets/search.js`              | Search: finds the words typed in `search-index.json`                        |
 
 ## Custom properties
 

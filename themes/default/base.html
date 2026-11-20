@@ -21,6 +21,10 @@
 {% for item in navigation %}<li><a href="{{ item.url }}"{% if page.url == item.url %} aria-current="page"{% endif %}>{{ item.title }}</a></li>
 {% endfor %}</ul>
 </nav>
+{% endif %}{% if search and page.url != search %}<form class="site-search" action="{{ search }}" role="search">
+<input type="search" name="q" placeholder="Search" aria-label="Search">
+<button type="submit">Search</button>
+</form>
 {% endif %}{% if theme.colorScheme == "auto" %}<button class="scheme-switch" type="button" hidden>Dark</button>
 {% endif %}</header>
 <main id="content">

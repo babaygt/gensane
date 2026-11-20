@@ -136,11 +136,12 @@ warning[GS411]: the feed and the sitemap are left out, because they need the add
   │
   = hint: add `site: { url: "https://example.com" }` to the config
 
-Built 6 pages into dist in 9 ms, with 1 warning.
+Built 7 pages into dist in 9 ms, with 1 warning.
 ```
 
 ```text files dist
 404.html
+assets/search.js
 assets/settings.css
 assets/style.css
 assets/theme.js
@@ -149,6 +150,8 @@ blog/index.html
 blog/page/2/index.html
 blog/second/index.html
 index.html
+search-index.json
+search/index.html
 ```
 
 ### `markdown`
@@ -175,7 +178,7 @@ I like <b>bold</b> ideas.
 
 ```console
 $ gensane build
-Built 3 pages into dist in 8 ms, with no warnings.
+Built 4 pages into dist in 8 ms, with no warnings.
 ```
 
 ```html dist/about/index.html
@@ -214,7 +217,7 @@ npm install gensane
 
 ```console
 $ gensane build
-Built 3 pages into dist in 8 ms, with no warnings.
+Built 4 pages into dist in 8 ms, with no warnings.
 ```
 
 ```html dist/about/index.html

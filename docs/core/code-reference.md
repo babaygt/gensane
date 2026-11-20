@@ -247,3 +247,20 @@ The settings of the default theme.
 | [`contrast`](../../src/core/theme/contrast.ts)          | How readable one color is on another, as WCAG measures it |
 | [`luminance`](../../src/core/theme/contrast.ts)         | How bright a color looks                                  |
 | [`READABLE_CONTRAST`](../../src/core/theme/contrast.ts) | 4.5 to 1, the level AA for text                           |
+
+## Search
+
+### [`src/core/search/search-index.ts`](../../src/core/search/search-index.ts)
+
+| Name                                                       | Purpose                                               |
+| ---------------------------------------------------------- | ----------------------------------------------------- |
+| [`searchIndex`](../../src/core/search/search-index.ts)     | The index the search page looks words up in           |
+| [`searchDocuments`](../../src/core/search/search-index.ts) | Every post, project, talk and page that isn't a draft |
+| [`SearchDocument`](../../src/core/search/search-index.ts)  | What the index holds of one page                      |
+
+### [`src/core/search/words.ts`](../../src/core/search/words.ts)
+
+| Name                                        | Purpose                                                     |
+| ------------------------------------------- | ----------------------------------------------------------- |
+| [`wordsOf`](../../src/core/search/words.ts) | Lowercase words without accents, at least 2 long, each once |
+| [`textOf`](../../src/core/search/words.ts)  | The text of some HTML, without its tags                     |
