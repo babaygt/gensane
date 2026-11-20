@@ -314,6 +314,7 @@ describe("help and version", () => {
     "  check  Check the site for problems, without writing anything",
     "  dev    Serve the site while you write, and reload the browser on every change",
     "  new    Write a new content file, such as a post",
+    "  theme  Copy the default theme into theme/, to change all of it",
     "",
     "Run gensane <command> --help to see the arguments of a command.",
   ].join("\n");

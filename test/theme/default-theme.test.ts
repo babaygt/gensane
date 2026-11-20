@@ -6,9 +6,9 @@ import { dirname, join } from "node:path";
 import { gzipSync } from "node:zlib";
 import { HtmlValidate } from "html-validate";
 import { afterAll, describe, expect, it } from "vitest";
-import { readSiteFolder } from "../../src/cli/index.ts";
+import { readSiteFolder, runCli } from "../../src/cli/index.ts";
 import { type BuiltSite, type ThemeSettings, buildSite } from "../../src/core/index.ts";
-import { NodeFileSystem } from "../../src/ports/index.ts";
+import { ManualWatcher, MemoryTerminal, NodeFileSystem } from "../../src/ports/index.ts";
 import { languageOf, nextScheme, shownScheme } from "../../themes/default/assets/theme.js";
 
 const defaultTheme = join(import.meta.dirname, "..", "..", "themes", "default");
@@ -286,6 +286,46 @@ describe("the theme settings", () => {
     expect(pageOf(await build(), "talks/index.html")).toContain(
       '<a href="/talks/" aria-current="page">Talks</a>',
     );
+  });
+});
+
+describe("an ejected theme", () => {
+  it("builds exactly the same site as the default theme it was copied from", async () => {
+    const before = await build();
+    const code = await runCli(["theme", "eject"], {
+      fileSystem: new NodeFileSystem(),
+      moduleLoader: { load: async () => ({}) },
+      clock: { now: () => new Date(0) },
+      terminal: new MemoryTerminal(),
+      watcher: new ManualWatcher(),
+      stopped: new AbortController().signal,
+      defaultTheme,
+      siteFolder: site,
+      version: "1.2.3",
+    });
+    try {
+      expect(code).toBe(0);
+      // Read with an empty default theme, so everything comes from the site's own theme/.
+      const read = await readSiteFolder(new NodeFileSystem(), site, join(site, "no-default-theme"));
+      const after = buildSite({
+        config: {
+          site: { title: "Ada's notes", url: "https://example.com", description: "Notes" },
+          perPage: 2,
+        },
+        content: read.content,
+        templates: read.templates,
+        publicFiles: read.publicFiles,
+        themeAssets: read.themeAssets.map(({ path }) => path),
+      });
+      expect(after.ok && after.value).toEqual(before);
+      expect(read.themeAssets.map(({ path }) => path)).toEqual([
+        "assets/search.js",
+        "assets/style.css",
+        "assets/theme.js",
+      ]);
+    } finally {
+      await rm(join(site, "theme"), { recursive: true, force: true });
+    }
   });
 });
 
