@@ -338,3 +338,12 @@ describe("mistakes", () => {
     );
   });
 });
+
+it("serves a site with a path in its address at /, with its links as they are written", async () => {
+  const dev = await startDev(
+    { "site/content/blog/hello.md": HELLO, "site/theme/post.html": '<a href="/">Home</a>' },
+    { default: { site: { url: "https://ada.github.io/notes/" } } },
+  );
+  expect((await fetchText(`${dev.address}/blog/hello/`)).body).toMatch(/^<a href="\/">Home<\/a>/);
+  await dev.stop();
+});
