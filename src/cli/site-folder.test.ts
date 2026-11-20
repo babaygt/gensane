@@ -130,6 +130,8 @@ describe("the theme", () => {
       [`${DEFAULT_THEME}/assets/search.js`]: "default",
       "site/theme/assets/style.css": "mine",
       "site/theme/assets/icons/.DS_Store": "",
+      [`${DEFAULT_THEME}/.DS_Store`]: "",
+      [`${DEFAULT_THEME}/assets/.cache/a.css`]: "",
     });
     const { themeAssets, templates } = await readSiteFolder(fileSystem, "site", DEFAULT_THEME);
     expect(themeAssets).toEqual([
