@@ -98,7 +98,7 @@ describe("settings it doesn't know", () => {
         code: ConfigCodes.unknownSetting,
         severity: "error",
         message: '"colours" is not a setting',
-        hint: "the settings are site, perPage, markdown and filters",
+        hint: "the settings are site, perPage, markdown, filters and theme",
       },
     ]);
   });
@@ -286,5 +286,150 @@ describe("any config", () => {
         ).not.toThrow();
       }),
     );
+  });
+});
+
+describe("the theme", () => {
+  it("accepts every setting", () => {
+    const theme = {
+      palette: "nord",
+      accent: "#3b5f8f",
+      colorScheme: "light",
+      font: "serif",
+      width: "wide",
+      blog: { layout: "grid" },
+      home: { sections: ["recent-posts", "intro"] },
+      toc: false,
+    };
+    expect(problemsOf({ theme })).toEqual([]);
+  });
+
+  it.each([
+    [
+      { palette: "nordic" },
+      '"theme.palette" must be "default", "paper", "nord", "solarized", "gruvbox" or "midnight", but "nordic" is text',
+      'did you mean "nord"?',
+    ],
+    [
+      { colorScheme: "system" },
+      '"theme.colorScheme" must be "auto", "light" or "dark", but "system" is text',
+      'write "auto", "light" or "dark"',
+    ],
+    [
+      { font: "serrif" },
+      '"theme.font" must be "sans", "serif" or "mono", but "serrif" is text',
+      'did you mean "serif"?',
+    ],
+    [
+      { width: 900 },
+      '"theme.width" must be "narrow", "normal" or "wide", but 900 is a number',
+      'write "narrow", "normal" or "wide"',
+    ],
+    [
+      { blog: { layout: "cards" } },
+      '"theme.blog.layout" must be "list" or "grid", but "cards" is text',
+      'write "list" or "grid"',
+    ],
+    [{ toc: "yes" }, '"theme.toc" must be true or false, but "yes" is text', "write true or false"],
+    [
+      { accent: "purple" },
+      '"theme.accent" must be a color such as "#6d5dfc", but "purple" is text',
+      "write the color as # and 3 or 6 hexadecimal digits",
+    ],
+    [
+      { home: { sections: "intro" } },
+      '"theme.home.sections" must be a list, but "intro" is text',
+      'write a list, such as ["intro", "recent-posts"]',
+    ],
+    [
+      { home: { sections: ["intro", "blog"] } },
+      '"theme.home.sections[1]" must be "intro", "recent-posts", "featured-projects" or "talks", but "blog" is text',
+      'write "intro", "recent-posts", "featured-projects" or "talks"',
+    ],
+    [
+      { home: { sections: ["talks", "intro", "talks"] } },
+      '"theme.home.sections" has "talks" more than once',
+      "list each part of the home page once",
+    ],
+    [
+      { blog: "grid" },
+      '"theme.blog" must be a group of settings, but "grid" is text',
+      "write the settings between { and }",
+    ],
+  ])("reports theme %j", (theme, message, hint) => {
+    expect(
+      problemsOf({ theme }).map((found) => ({
+        code: found.code,
+        message: found.message,
+        hint: found.hint,
+      })),
+    ).toEqual([{ code: ConfigCodes.wrongValue, message, hint }]);
+  });
+
+  it.each([
+    [
+      { colours: "blue" },
+      '"theme.colours" is not a setting',
+      "the settings of theme are palette, accent, colorScheme, font, width, blog, home and toc",
+    ],
+    [
+      { blog: { columns: 2 } },
+      '"theme.blog.columns" is not a setting',
+      "the settings of theme.blog are layout",
+    ],
+    [{ fonts: "serif" }, '"theme.fonts" is not a setting', 'did you mean "font"?'],
+  ])("reports a setting of the theme it doesn't know: %j", (theme, message, hint) => {
+    expect(problemsOf({ theme })).toEqual([
+      { code: ConfigCodes.unknownSetting, severity: "error", message, hint },
+    ]);
+  });
+
+  describe("an accent of the site's own", () => {
+    it("warns when it is hard to read on the light side, and on the dark side", () => {
+      expect(problemsOf({ theme: { accent: "#7a7a7a" } })).toEqual([
+        {
+          code: ConfigCodes.hardToRead,
+          severity: "warning",
+          message:
+            '"theme.accent" is hard to read in the light colors of the "default" palette: 3.9 to 1, and text needs 4.5 to 1',
+          hint: "choose a darker color, or leave accent out to use the palette's own",
+        },
+        {
+          code: ConfigCodes.hardToRead,
+          severity: "warning",
+          message:
+            '"theme.accent" is hard to read in the dark colors of the "default" palette: 3.8 to 1, and text needs 4.5 to 1',
+          hint: "choose a lighter color, or leave accent out to use the palette's own",
+        },
+      ]);
+    });
+
+    it("is only checked on the side the site uses", () => {
+      expect(problemsOf({ theme: { accent: "#ffd400", colorScheme: "dark" } })).toEqual([]);
+      expect(problemsOf({ theme: { accent: "#ffd400", colorScheme: "light" } })).toHaveLength(1);
+    });
+
+    it("is checked against the palette the site uses", () => {
+      expect(
+        problemsOf({ theme: { accent: "#9a3b1a", colorScheme: "light", palette: "paper" } }),
+      ).toEqual([]);
+      expect(
+        problemsOf({ theme: { accent: "#9a3b1a", colorScheme: "dark", palette: "midnight" } }),
+      ).toHaveLength(1);
+    });
+
+    it("isn't checked when the accent or the palette is wrong, which is reported already", () => {
+      expect(problemsOf({ theme: { accent: "nope" } }).map(({ code }) => code)).toEqual([
+        ConfigCodes.wrongValue,
+      ]);
+      expect(
+        problemsOf({ theme: { accent: "#ffd400", palette: "nope" } }).map(({ code }) => code),
+      ).toEqual([ConfigCodes.wrongValue]);
+    });
+
+    it("gives back the config with its warnings", () => {
+      const result = checkConfig({ theme: { accent: "#7a7a7a" } }, FILE);
+      expect(result.ok && result.value.warnings.length).toBe(2);
+    });
   });
 });

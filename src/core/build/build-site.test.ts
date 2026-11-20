@@ -35,7 +35,7 @@ const post = (date: string, extra = "", body = "") =>
   `---\ntitle: Post ${date}\ndate: ${date}\n${extra}---\n${body}`;
 
 describe("output files", () => {
-  it("writes a file for every page, sorted by path", () => {
+  it("writes a file for every page and the theme settings, sorted by path", () => {
     const content = {
       "index.md": minimal.page,
       "blog/hello.md": post("2026-01-01", "tags: [testing]\n"),
@@ -47,6 +47,7 @@ describe("output files", () => {
     expect(built({ content }).files.map((file) => file.path)).toEqual([
       "404.html",
       "about/index.html",
+      "assets/settings.css",
       "blog/hello/index.html",
       "blog/index.html",
       "index.html",
@@ -447,5 +448,37 @@ describe("a site under a path", () => {
       themeAssets: ["assets/style.css"],
     });
     expect(fileOf(site, "sitemap.xml")).toContain("<loc>https://ada.github.io/notes/about/</loc>");
+  });
+});
+
+describe("the theme", () => {
+  it("gives every template the theme settings, with their defaults", () => {
+    const content = { "pages/about.md": minimal.page };
+    const templates = {
+      ...plainTheme,
+      "about.html": "{{ theme.palette }} {{ theme.font }} {{ theme.home.sections | join }}",
+    };
+    const site = built({ content, templates, config: { theme: { font: "serif" } } });
+    expect(fileOf(site, "about/index.html")).toBe(
+      "default serif intro, recent-posts, featured-projects, talks",
+    );
+  });
+
+  it("writes the settings as CSS, which links can lead to", () => {
+    const content = { "blog/a.md": `${minimal.post}[styles](/assets/settings.css)\n` };
+    const site = built({ content, config: { theme: { palette: "nord", colorScheme: "light" } } });
+    expect(fileOf(site, "assets/settings.css")).toContain("--background: #eceff4;");
+    expect(problemsOf({ content })).toEqual([]);
+  });
+
+  it("refuses a theme asset that would replace the settings", () => {
+    const content = { "blog/a.md": minimal.post };
+    expect(problemsOf({ content, themeAssets: ["assets/settings.css"] })).toMatchObject([
+      {
+        code: CoreCodes.themeFileClash,
+        message:
+          '"theme/assets/settings.css" would replace the theme settings, which the site writes',
+      },
+    ]);
   });
 });

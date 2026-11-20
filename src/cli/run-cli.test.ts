@@ -77,6 +77,7 @@ describe("gensane build", () => {
     expect(run.errors).toBe("");
     expect(await run.fileSystem.listFiles("site/dist")).toEqual([
       "404.html",
+      "assets/settings.css",
       "blog/hello/index.html",
       "blog/index.html",
       "feed.xml",
@@ -180,7 +181,11 @@ describe("gensane build", () => {
       files: { "site/content/index.md": "---\ntitle: Home\n---\n" },
     });
     expect(run.output).toBe("Built 2 pages into public_html in 0 ms, with 1 warning.");
-    expect(await run.fileSystem.listFiles("site/public_html")).toEqual(["404.html", "index.html"]);
+    expect(await run.fileSystem.listFiles("site/public_html")).toEqual([
+      "404.html",
+      "assets/settings.css",
+      "index.html",
+    ]);
   });
 
   it.each([

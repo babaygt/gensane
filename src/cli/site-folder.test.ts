@@ -270,6 +270,7 @@ it("a site folder goes through buildSite into the output folder", async () => {
 
   expect(await fileSystem.listFiles("site/dist")).toEqual([
     "404.html",
+    "assets/settings.css",
     "assets/style.css",
     "blog/hello/index.html",
     "blog/index.html",
