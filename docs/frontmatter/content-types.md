@@ -65,7 +65,7 @@ title: Gensane
 description: A static site generator
 stack: [TypeScript, Node]
 repo: https://github.com/example/gensane
-url: https://example.com
+website: https://example.com
 links:
   - name: Documentation
     url: /docs
@@ -83,7 +83,7 @@ order: 1
 | `description` | No       | Text                                     | Empty         |
 | `stack`       | No       | List of text                             | Empty list    |
 | `repo`        | No       | Web address                              | Empty         |
-| `url`         | No       | Web address                              | Empty         |
+| `website`     | No       | Web address                              | Empty         |
 | `links`       | No       | List of `name` (text) and `url` (web address) | Empty list |
 | `status`      | No       | `active`, `paused` or `archived`         | Empty         |
 | `featured`    | No       | True or false                            | `false`       |

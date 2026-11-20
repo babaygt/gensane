@@ -18,4 +18,5 @@ export const CoreCodes = {
   missingAnchor: "GS414",
   publicFileClash: "GS415",
   themeFileClash: "GS416",
+  hiddenField: "GS417",
 } as const satisfies Record<string, DiagnosticCode>;

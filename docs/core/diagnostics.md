@@ -1,7 +1,7 @@
 # Problems
 
 Every problem has a stable code, a message, a hint and a position in a file
-([`Diagnostic`](../../src/diagnostics/diagnostic.ts)). GS402, GS406, GS409, GS411 and GS414 are warnings, and the site is still built. All
+([`Diagnostic`](../../src/diagnostics/diagnostic.ts)). GS402, GS406, GS409, GS411, GS414 and GS417 are warnings, and the site is still built. All
 the others are errors. Problems from the other modules, such as frontmatter and templates, have their own pages:
 [Markdown](../markdown-compiler/diagnostics.md), [frontmatter](../frontmatter/diagnostics.md) and [templates](../template/diagnostics.md).
 
@@ -23,6 +23,7 @@ the others are errors. Problems from the other modules, such as frontmatter and 
 | GS414 | Links            | A link leads to a part of a page that doesn't exist (warning) |
 | GS415 | Links            | A public file would replace a file the site writes            |
 | GS416 | Links            | A file of the theme would clash with another file of the site |
+| GS417 | Content          | A field has a name the build uses for something else (warning) |
 
 ## Content
 
@@ -388,5 +389,26 @@ assets/style.css
 ```text
 public/assets/style.css, line 1, column 1: "public/assets/style.css" would replace "assets/style.css" of the theme
 hint: rename the file, or move it out of the theme's assets folder
+```
+
+### GS417
+
+A warning: a field of your own has a name that templates already use for something the build works out, such as `url` for the
+address of the page, so templates would never see the field. Rename it. A project's website is the field `website` for this reason.
+
+<!-- reports GS417 -->
+
+```markdown talks/compilers.md
+---
+title: Compilers
+event: A meetup
+date: 2026-10-01
+url: https://example.com/compilers
+---
+```
+
+```text
+content/talks/compilers.md, line 5, column 1: templates see "url" as the address of the page, not as this field
+hint: give the field another name
 ```
 
