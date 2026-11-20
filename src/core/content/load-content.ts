@@ -28,6 +28,7 @@ import {
 import { CoreCodes } from "../diagnostic-codes.ts";
 import { inFileOrder, problem, startOf } from "../problems.ts";
 import type { ContentEntry, EntryDetails } from "./entries.ts";
+import { FOLDERS } from "./folders.ts";
 import { isValidSlug, slugFromFileName, slugify } from "./slugs.ts";
 import { excerptOf, readingTimeOf } from "./summary.ts";
 
@@ -42,15 +43,6 @@ export interface LoadedContent {
   readonly entries: readonly ContentEntry[];
   readonly warnings: readonly Diagnostic[];
 }
-
-const FOLDERS: ReadonlyMap<string, ContentType> = new Map([
-  ["blog", "post"],
-  ["projects", "project"],
-  ["talks", "talk"],
-  ["experience", "experience"],
-  ["education", "education"],
-  ["pages", "page"],
-]);
 
 const LISTED_FOLDERS = `${[...FOLDERS.keys()].slice(0, -1).join(", ")} or ${[...FOLDERS.keys()].at(-1)}`;
 
