@@ -133,7 +133,7 @@ $ gensane check
 error[GS504]: "colours" is not a setting
   ┌─ gensane.config.ts
   │
-  = hint: the settings are site, perPage, markdown and filters
+  = hint: the settings are site, perPage, markdown, filters and theme
 
 Found 1 error and 0 warnings in the config.
 $ echo $?
@@ -179,3 +179,24 @@ warning[GS506]: "site.descripton" is not a known setting
 
 Checked 2 pages in 7 ms, with 1 warning.
 ```
+
+### GS507
+
+A warning: an `accent` of your own replaces the palette's accent, and it is hard to read on the palette's background. Text needs a
+contrast of at least 4.5 to 1 ([WCAG AA](https://www.w3.org/TR/WCAG21/#contrast-minimum)).
+
+<!-- runs -->
+```ts gensane.config.ts
+export default { site: { url: "https://example.com" }, theme: { accent: "#ffd400" } };
+```
+
+```console
+$ gensane check
+warning[GS507]: "theme.accent" is hard to read in the light colors of the "default" palette: 1.3 to 1, and text needs 4.5 to 1
+  ┌─ gensane.config.ts
+  │
+  = hint: choose a darker color, or leave accent out to use the palette's own
+
+Checked 2 pages in 7 ms, with 1 warning.
+```
+

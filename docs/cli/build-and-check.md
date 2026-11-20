@@ -32,6 +32,7 @@ Built 4 pages into dist in 12 ms, with no warnings.
 
 ```text files dist
 404.html
+assets/settings.css
 assets/style.css
 blog/hello/index.html
 blog/index.html
@@ -115,6 +116,7 @@ Built 4 pages into dist in 9 ms, with no warnings.
 
 ```text files dist
 404.html
+assets/settings.css
 assets/style.css
 blog/index.html
 blog/soon/index.html
@@ -147,6 +149,7 @@ Built 2 pages into public_html in 8 ms, with no warnings.
 
 ```text files public_html
 404.html
+assets/settings.css
 assets/style.css
 index.html
 sitemap.xml

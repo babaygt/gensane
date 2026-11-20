@@ -212,3 +212,38 @@ Checks that links and images lead somewhere.
 | [`#checkTemplate`](../../src/core/links/check-links.ts)    | Links written out in full in a template               |
 | [`#spanOf`](../../src/core/links/check-links.ts)           | Finds a link in the file it was written in            |
 | [`#checkPublicFiles`](../../src/core/links/check-links.ts) | A public file that would replace a written one        |
+
+## Theme
+
+### [`src/core/theme/theme-settings.ts`](../../src/core/theme/theme-settings.ts)
+
+The settings of the default theme.
+
+| Name                                                      | Purpose                                                        |
+| --------------------------------------------------------- | -------------------------------------------------------------- |
+| [`ThemeSettings`](../../src/core/theme/theme-settings.ts) | The settings as a site writes them                             |
+| [`Theme`](../../src/core/theme/theme-settings.ts)         | Every setting with its default, as templates see it as `theme` |
+| [`themeOf`](../../src/core/theme/theme-settings.ts)       | Fills in the defaults                                          |
+| [`THEME_CHOICES`](../../src/core/theme/theme-settings.ts) | Every choice of every setting                                  |
+
+### [`src/core/theme/palettes.ts`](../../src/core/theme/palettes.ts)
+
+| Name                                           | Purpose                                             |
+| ---------------------------------------------- | --------------------------------------------------- |
+| [`PALETTES`](../../src/core/theme/palettes.ts) | Six palettes, each with a light and a dark side     |
+| [`Colors`](../../src/core/theme/palettes.ts)   | Background, surface, text, muted, border and accent |
+
+### [`src/core/theme/theme-css.ts`](../../src/core/theme/theme-css.ts)
+
+| Name                                                  | Purpose                                                         |
+| ----------------------------------------------------- | --------------------------------------------------------------- |
+| [`themeCss`](../../src/core/theme/theme-css.ts)       | The settings as CSS custom properties, in `assets/settings.css` |
+| [`THEME_CSS_PATH`](../../src/core/theme/theme-css.ts) | Where that file is written                                      |
+
+### [`src/core/theme/contrast.ts`](../../src/core/theme/contrast.ts)
+
+| Name                                                    | Purpose                                                   |
+| ------------------------------------------------------- | --------------------------------------------------------- |
+| [`contrast`](../../src/core/theme/contrast.ts)          | How readable one color is on another, as WCAG measures it |
+| [`luminance`](../../src/core/theme/contrast.ts)         | How bright a color looks                                  |
+| [`READABLE_CONTRAST`](../../src/core/theme/contrast.ts) | 4.5 to 1, the level AA for text                           |

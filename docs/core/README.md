@@ -22,6 +22,7 @@ My first post.
 
 ```text files
 404.html
+assets/settings.css
 blog/hello/index.html
 blog/index.html
 index.html

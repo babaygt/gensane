@@ -16,6 +16,8 @@ import { type Route, TEMPLATES } from "../site/routes.ts";
 import { buildSiteGraph } from "../site/site-graph.ts";
 import { siteAddressOf } from "../feeds/site-address.ts";
 import { withBasePath } from "./base-path.ts";
+import { THEME_CSS_PATH, themeCss } from "../theme/theme-css.ts";
+import { type ThemeSettings, themeOf } from "../theme/theme-settings.ts";
 import { outputPath } from "./output-paths.ts";
 import { type TemplateData, TemplateVariables } from "./page-data.ts";
 
@@ -32,6 +34,8 @@ export interface SiteConfig {
    */
   readonly servedAtRoot?: boolean;
   readonly markdown?: MarkdownOptions;
+  /** The settings of the default theme. */
+  readonly theme?: ThemeSettings;
   /** Extra filters for templates. */
   readonly filters?: Readonly<Record<string, TemplateFilter>>;
   /** Where the content files are, for the paths in problems. Defaults to `content`. */
@@ -105,7 +109,8 @@ export function buildSite(input: SiteInput): Result<BuiltSite, readonly Diagnost
   );
   if (!templates.ok) return finish([], [...warnings, ...templates.error]);
 
-  const variables = new TemplateVariables(config.site ?? {}, graph.value.graph.collections);
+  const theme = themeOf(config.theme);
+  const variables = new TemplateVariables(config.site ?? {}, theme, graph.value.graph.collections);
   const files: OutputFile[] = [];
   const problems: Diagnostic[] = [...warnings];
   const missing = new Map<string, Route>();
@@ -139,7 +144,7 @@ export function buildSite(input: SiteInput): Result<BuiltSite, readonly Diagnost
     graph.value.graph,
     config.configFile ?? "gensane.config.ts",
   );
-  const allFiles = [...files, ...feeds.files];
+  const allFiles = [...files, ...feeds.files, { path: THEME_CSS_PATH, content: themeCss(theme) }];
   const found = [...problems, ...feeds.problems];
   if (hasErrors(found)) return finish(allFiles, found);
   const links = checkLinks({

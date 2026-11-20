@@ -1,3 +1,4 @@
+import type { ThemeSettings } from "../core/index.ts";
 import type { MarkdownOptions } from "../markdown/index.ts";
 import type { TemplateFilter } from "../template/index.ts";
 
@@ -10,6 +11,8 @@ export interface GensaneConfig {
   readonly markdown?: MarkdownOptions;
   /** Extra filters for templates, by the name templates use. */
   readonly filters?: Readonly<Record<string, TemplateFilter>>;
+  /** The settings of the default theme: colors, font, width and layout. */
+  readonly theme?: ThemeSettings;
 }
 
 export interface SiteSettings {

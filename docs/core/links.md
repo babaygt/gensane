@@ -38,6 +38,7 @@ images/me.png
 ```text files
 404.html
 about/index.html
+assets/settings.css
 blog/hello/index.html
 blog/index.html
 feed.xml

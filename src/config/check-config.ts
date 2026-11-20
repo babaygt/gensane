@@ -10,6 +10,7 @@ import {
   hasErrors,
   ok,
 } from "../diagnostics/index.ts";
+import { PALETTES, READABLE_CONTRAST, THEME_CHOICES, contrast, isHexColor } from "../core/index.ts";
 import type { GensaneConfig } from "./config.ts";
 import { ConfigCodes } from "./diagnostic-codes.ts";
 
@@ -18,7 +19,7 @@ export interface CheckedConfig {
   readonly warnings: readonly Diagnostic[];
 }
 
-const SETTINGS = ["site", "perPage", "markdown", "filters"];
+const SETTINGS = ["site", "perPage", "markdown", "filters", "theme"];
 const SITE_SETTINGS = ["title", "url", "description", "author"];
 const MARKDOWN_SETTINGS = ["rawHtml", "headingIds"];
 const FILTER_NAME = /^[A-Za-z_]\w*$/;
@@ -49,8 +50,9 @@ function filterNameLike(name: string): string {
   return /^\d/.test(replaced) ? `_${replaced}` : replaced;
 }
 
-function listed(names: readonly string[]): string {
-  return `${names.slice(0, -1).join(", ")} and ${names.at(-1) ?? ""}`;
+function listed(names: readonly string[], last = "and"): string {
+  if (names.length === 1) return names[0] ?? "";
+  return `${names.slice(0, -1).join(", ")} ${last} ${names.at(-1) ?? ""}`;
 }
 
 /** A loaded config has no line numbers, so a problem with it points at the start of its file. */
@@ -161,6 +163,111 @@ class ConfigCheck {
     }
   }
 
+  /** One of a few words, with "did you mean" for a misspelled one. */
+  choice(path: string, value: unknown, choices: readonly string[]): boolean {
+    if (typeof value === "string" && choices.includes(value)) return true;
+    const suggestion = typeof value === "string" ? closestMatch(value, choices) : undefined;
+    const quoted = choices.map((choice) => JSON.stringify(choice));
+    const hint =
+      suggestion === undefined ? `write ${listed(quoted, "or")}` : `did you mean "${suggestion}"?`;
+    this.wrongValue(path, listed(quoted, "or"), value, hint);
+    return false;
+  }
+
+  /** Settings of a group of the theme, such as `theme.blog`, each checked by its own rule. */
+  themeGroup(
+    path: string,
+    value: unknown,
+    rules: Readonly<Record<string, (setting: unknown) => void>>,
+  ): void {
+    if (!this.group(path, value)) return;
+    const names = Object.keys(rules);
+    for (const [name, setting] of Object.entries(value)) {
+      const rule = rules[name];
+      if (rule !== undefined) rule(setting);
+      else
+        this.unknownSetting(
+          `${path}.${name}`,
+          name,
+          names,
+          `the settings of ${path} are ${listed(names)}`,
+        );
+    }
+  }
+
+  sections(value: unknown): void {
+    const path = "theme.home.sections";
+    if (!Array.isArray(value)) {
+      this.wrongValue(path, "a list", value, `write a list, such as ["intro", "recent-posts"]`);
+      return;
+    }
+    const seen = new Set<unknown>();
+    value.forEach((section: unknown, index) => {
+      if (!this.choice(`${path}[${index}]`, section, THEME_CHOICES.homeSections)) return;
+      if (seen.has(section)) {
+        const message = `${JSON.stringify(path)} has "${String(section)}" more than once`;
+        this.report(ConfigCodes.wrongValue, message, "list each part of the home page once");
+      }
+      seen.add(section);
+    });
+  }
+
+  theme(value: unknown): void {
+    if (!this.group("theme", value)) return;
+    const theme = value;
+    this.themeGroup("theme", theme, {
+      palette: (setting) => this.choice("theme.palette", setting, THEME_CHOICES.palette),
+      accent: (setting) => {
+        if (typeof setting === "string" && isHexColor(setting)) return;
+        this.wrongValue(
+          "theme.accent",
+          'a color such as "#6d5dfc"',
+          setting,
+          "write the color as # and 3 or 6 hexadecimal digits",
+        );
+      },
+      colorScheme: (setting) =>
+        this.choice("theme.colorScheme", setting, THEME_CHOICES.colorScheme),
+      font: (setting) => this.choice("theme.font", setting, THEME_CHOICES.font),
+      width: (setting) => this.choice("theme.width", setting, THEME_CHOICES.width),
+      blog: (setting) =>
+        this.themeGroup("theme.blog", setting, {
+          layout: (layout) => this.choice("theme.blog.layout", layout, THEME_CHOICES.blogLayout),
+        }),
+      home: (setting) =>
+        this.themeGroup("theme.home", setting, { sections: (sections) => this.sections(sections) }),
+      toc: (setting) => {
+        if (typeof setting !== "boolean")
+          this.wrongValue("theme.toc", "true or false", setting, "write true or false");
+      },
+    });
+    this.readableAccent(theme);
+  }
+
+  /** An accent of your own replaces the palette's, so it must still be readable on the palette's backgrounds. */
+  readableAccent(theme: Group): void {
+    const { accent, palette = "default", colorScheme = "auto" } = theme;
+    if (typeof accent !== "string" || !isHexColor(accent)) return;
+    const name = THEME_CHOICES.palette.find((known) => known === palette);
+    if (name === undefined) return;
+    const colors = PALETTES[name];
+    const modes: readonly ("light" | "dark")[] =
+      colorScheme === "light" || colorScheme === "dark" ? [colorScheme] : ["light", "dark"];
+    for (const mode of modes) {
+      const { background, surface } = colors[mode];
+      const ratio = Math.min(contrast(accent, background), contrast(accent, surface));
+      if (ratio >= READABLE_CONTRAST) continue;
+      this.report(
+        ConfigCodes.hardToRead,
+        `"theme.accent" is hard to read in the ${mode} colors of the "${name}" palette: ${ratio.toFixed(1)} to 1, and text needs ${READABLE_CONTRAST} to 1`,
+        mode === "dark"
+          ? "choose a lighter color, or leave accent out to use the palette's own"
+          : "choose a darker color, or leave accent out to use the palette's own",
+        "warning",
+      );
+    }
+  }
+
   filters(value: unknown): void {
     if (!this.group("filters", value)) return;
     for (const [name, filter] of Object.entries(value)) {
@@ -200,6 +307,7 @@ export function checkConfig(
     else if (name === "perPage") check.perPage(setting);
     else if (name === "markdown") check.markdown(setting);
     else if (name === "filters") check.filters(setting);
+    else if (name === "theme") check.theme(setting);
     else check.unknownSetting(name, name, SETTINGS, `the settings are ${listed(SETTINGS)}`);
   }
   if (hasErrors(check.problems)) return err(check.problems);

@@ -8,4 +8,5 @@ export const ConfigCodes = {
   unknownSetting: "GS504",
   wrongValue: "GS505",
   misspelledSiteSetting: "GS506",
+  hardToRead: "GS507",
 } as const satisfies Record<string, DiagnosticCode>;
