@@ -72,7 +72,8 @@ const project = object({
   description: optional(text()),
   stack: tags(),
   repo: optional(url()),
-  url: optional(url()),
+  /** Not `url`, which templates use for the address of the page itself. */
+  website: optional(url()),
   links: withDefault(listOf(object({ name: text(), url: url() })), []),
   status: optional(choice("active", "paused", "archived")),
   featured: withDefault(boolean(), false),

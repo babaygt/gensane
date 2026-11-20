@@ -44,6 +44,38 @@ export interface LoadedContent {
   readonly warnings: readonly Diagnostic[];
 }
 
+/** What the build gives templates under these names, which a field of the same name can't replace. */
+const BUILT_FIELDS: Readonly<Record<string, string>> = {
+  url: "the address of the page",
+  slug: "the slug of the page",
+  type: "the type of content",
+  html: "the HTML of the body",
+  excerpt: "the excerpt",
+  toc: "the table of contents",
+  readingTime: "the reading time",
+};
+
+/** A field of one's own named like one of the build's is lost in templates, so it is worth a warning. */
+function hiddenFields(
+  extra: Readonly<Record<string, unknown>>,
+  data: MapValue,
+  start: SourceSpan,
+): Diagnostic[] {
+  return Object.keys(extra).flatMap((name) => {
+    const meaning = BUILT_FIELDS[name];
+    if (meaning === undefined) return [];
+    return [
+      problem(
+        CoreCodes.hiddenField,
+        `templates see "${name}" as ${meaning}, not as this field`,
+        data.entries.find((entry) => entry.key === name)?.keySpan ?? start,
+        "give the field another name",
+        "warning",
+      ),
+    ];
+  });
+}
+
 const LISTED_FOLDERS = `${[...FOLDERS.keys()].slice(0, -1).join(", ")} or ${[...FOLDERS.keys()].at(-1)}`;
 
 /** Only these types have pages of their own. */
@@ -151,6 +183,7 @@ class ContentLoader {
     const markdown = parseMarkdown(body, file, this.#markdown);
     const problems = [
       ...warnings,
+      ...hiddenFields(extra, data, start),
       ...markdown.diagnostics.map((diagnostic) => moveBy(diagnostic, bodyStart)),
     ];
 
