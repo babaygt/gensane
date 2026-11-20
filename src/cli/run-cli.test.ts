@@ -73,7 +73,7 @@ describe("gensane build", () => {
       config: WITH_ADDRESS,
     });
     expect(run.code).toBe(ExitCode.success);
-    expect(run.output).toBe("Built 4 pages into dist in 0 ms, with no warnings.");
+    expect(run.output).toBe("Built 5 pages into dist in 0 ms, with no warnings.");
     expect(run.errors).toBe("");
     expect(await run.fileSystem.listFiles("site/dist")).toEqual([
       "404.html",
@@ -82,6 +82,8 @@ describe("gensane build", () => {
       "blog/index.html",
       "feed.xml",
       "index.html",
+      "search-index.json",
+      "search/index.html",
       "sitemap.xml",
     ]);
   });
@@ -131,7 +133,7 @@ describe("gensane build", () => {
       "  │",
       "1 │ {{ page.titel }}",
     ]);
-    expect(run.output).toBe("Built 4 pages into dist in 0 ms, with 1 warning.");
+    expect(run.output).toBe("Built 5 pages into dist in 0 ms, with 1 warning.");
   });
 
   it("accepts links to the assets of the default theme", async () => {
@@ -180,6 +182,7 @@ describe("gensane build", () => {
     const run = await gensane(["build", "--out", "public_html"], {
       files: { "site/content/index.md": "---\ntitle: Home\n---\n" },
     });
+    // Only a home page: nothing for search to find, so no search page.
     expect(run.output).toBe("Built 2 pages into public_html in 0 ms, with 1 warning.");
     expect(await run.fileSystem.listFiles("site/public_html")).toEqual([
       "404.html",
@@ -256,7 +259,7 @@ describe("gensane check", () => {
       config: WITH_ADDRESS,
     });
     expect(run.code).toBe(ExitCode.success);
-    expect(run.output).toBe("Checked 4 pages in 0 ms, with no warnings.");
+    expect(run.output).toBe("Checked 5 pages in 0 ms, with no warnings.");
     expect(await run.fileSystem.listFiles("site/dist")).toEqual([]);
   });
 

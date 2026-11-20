@@ -276,6 +276,8 @@ it("a site folder goes through buildSite into the output folder", async () => {
     "blog/index.html",
     "images/me.png",
     "index.html",
+    "search-index.json",
+    "search/index.html",
   ]);
   expect(await fileSystem.readText("site/dist/blog/hello/index.html")).toBe("<h1>Hello</h1>");
 });

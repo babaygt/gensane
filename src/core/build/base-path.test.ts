@@ -22,6 +22,7 @@ describe("withBasePath", () => {
       '<script src="/notes/assets/search.js"></script>',
     ],
     ['<img src="/a.png"/>', '<img src="/notes/a.png"/>'],
+    ['<form action="/search/" role="search">', '<form action="/notes/search/" role="search">'],
   ])("adds the path to %s", (html, expected) => {
     expect(withBasePath(html, PATH)).toBe(expected);
   });

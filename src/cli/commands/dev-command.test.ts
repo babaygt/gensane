@@ -100,7 +100,7 @@ describe("gensane dev", () => {
       "site/content/blog/soon.md": draft,
     });
     expect(dev.output().split("\n")).toEqual([
-      "Built 5 pages in 0 ms, with no warnings.",
+      "Built 6 pages in 0 ms, with no warnings.",
       expect.stringMatching(
         /^Serving the site at http:\/\/localhost:\d+\/ \(press Ctrl\+C to stop\)\.$/,
       ),
@@ -125,7 +125,7 @@ describe("gensane dev", () => {
     await waitFor(() => page.count() === 1);
     expect((await fetchText(`${dev.address}/blog/hello/`)).body).toContain("<h1>Hello again</h1>");
     expect(dev.output().split("\n").at(-1)).toBe(
-      "content/blog/hello.md changed. Rebuilt 4 pages in 0 ms, with no warnings.",
+      "content/blog/hello.md changed. Rebuilt 5 pages in 0 ms, with no warnings.",
     );
     page.close();
   });
@@ -221,8 +221,8 @@ describe("gensane dev", () => {
 
     await waitFor(() => dev.output().match(/Rebuilt/g)?.length === 2);
     expect(dev.output().split("\n").slice(-2)).toEqual([
-      "content/blog/hello.md changed. Rebuilt 4 pages in 0 ms, with no warnings.",
-      "theme/post.html changed. Rebuilt 4 pages in 0 ms, with no warnings.",
+      "content/blog/hello.md changed. Rebuilt 5 pages in 0 ms, with no warnings.",
+      "theme/post.html changed. Rebuilt 5 pages in 0 ms, with no warnings.",
     ]);
   });
 

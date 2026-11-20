@@ -1,23 +1,11 @@
 // Property-based tests: fast-check generates random sites, and these rules must hold for all of them.
 import * as fc from "fast-check";
 import { describe, expect, it } from "vitest";
-import { buildSite, buildSiteGraph, loadContent } from "../index.ts";
+import { TEMPLATES, buildSite, buildSiteGraph, loadContent } from "../index.ts";
 
 const theme = Object.fromEntries(
-  [
-    "home",
-    "post",
-    "blog",
-    "tag",
-    "tags",
-    "project",
-    "projects",
-    "talks",
-    "about",
-    "page",
-    "404",
-  ].map((name) => [
-    `${name}.html`,
+  Object.values(TEMPLATES).map((name) => [
+    name,
     "{{ page.title }} {{ page.url }} {{ collections.posts | length }}",
   ]),
 );
@@ -64,16 +52,18 @@ describe("site properties", () => {
     );
   });
 
-  it("writes exactly one file for every page, and the theme settings", () => {
+  it("writes exactly one page for every route, the theme settings, and the search index when there is a search page", () => {
     fc.assert(
       fc.property(content, (files) => {
         const loaded = loadContent(files);
         const graph = loaded.ok ? buildSiteGraph(loaded.value.entries) : undefined;
         const built = buildSite({ content: files, templates: theme });
-        const routes = graph?.ok ? graph.value.graph.routes.length : -1;
+        const routes = graph?.ok ? graph.value.graph.routes : [];
         const paths = built.ok ? built.value.files.map((file) => file.path) : [];
-        expect(paths.filter((path) => path !== "assets/settings.css")).toHaveLength(routes);
+        expect(paths.filter((path) => path.endsWith(".html"))).toHaveLength(routes.length);
         expect(paths).toContain("assets/settings.css");
+        const searchPage = routes.some((route) => route.kind === "search");
+        expect(paths.includes("search-index.json")).toBe(searchPage);
         expect(new Set(paths).size).toBe(paths.length);
       }),
     );

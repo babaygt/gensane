@@ -3,6 +3,7 @@
 import { mkdir, mkdtemp, readFile, rm, stat, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
+import { gzipSync } from "node:zlib";
 import { HtmlValidate } from "html-validate";
 import { afterAll, describe, expect, it } from "vitest";
 import { readSiteFolder } from "../../src/cli/index.ts";
@@ -128,6 +129,7 @@ describe("the default theme", () => {
       "projects/gensane/index.html",
       "projects/index.html",
       "projects/other/index.html",
+      "search/index.html",
       "tags/compilers/index.html",
       "tags/compilers/page/2/index.html",
       "tags/index.html",
@@ -182,10 +184,15 @@ describe("the default theme", () => {
     );
   });
 
-  it("stays small: less than 10 KB of CSS and 3 KB of JavaScript", async () => {
+  it("stays small: less than 10 KB of CSS, and less than 3 KB for each script as readers download it", async () => {
     const assets = join(defaultTheme, "assets");
     expect((await stat(join(assets, "style.css"))).size).toBeLessThan(10 * 1024);
-    expect((await stat(join(assets, "theme.js"))).size).toBeLessThan(3 * 1024);
+    for (const script of ["theme.js", "search.js"]) {
+      const source = await readFile(join(assets, script));
+      // Hosts send scripts compressed; the uncompressed file also has a limit, so it can't grow unseen.
+      expect(gzipSync(source).length).toBeLessThan(3 * 1024);
+      expect(source.length).toBeLessThan(4 * 1024);
+    }
   });
 
   it("uses only the custom properties that the settings file writes", async () => {
@@ -262,6 +269,17 @@ describe("the theme settings", () => {
     expect(project).toContain('<li><a href="https://gensane.dev">Website</a></li>');
     expect(project).toContain('<li><a href="https://github.com/babaygt/gensane">Code</a></li>');
     expect(project).toContain('<li><a href="https://example.com/docs">Docs</a></li>');
+  });
+
+  it("has a search box in the header that leads to the search page, but not on the search page itself", async () => {
+    const built = await build();
+    expect(pageOf(built, "blog/index.html")).toContain(
+      '<form class="site-search" action="/search/" role="search">',
+    );
+    const searchPage = pageOf(built, "search/index.html");
+    expect(searchPage).not.toContain('class="site-search"');
+    expect(searchPage).toContain('<form class="search-form" action="/search/" role="search">');
+    expect(searchPage).toContain('<script type="module" src="/assets/search.js"></script>');
   });
 
   it("marks the page the menu is on", async () => {
