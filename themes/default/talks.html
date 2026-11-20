@@ -1,9 +1,12 @@
 {% extends "base.html" %}
 {% block content %}
 <h1>{{ page.title }}</h1>
-<ul>
-{% for talk in collections.talks %}
-<li>{{ talk.title }}, {{ talk.event }}, <time datetime="{{ talk.date }}">{{ talk.date | date("MMM d, yyyy") }}</time></li>
-{% endfor %}
-</ul>
+<ul class="timeline">
+{% for talk in collections.talks %}<li>
+<h2>{{ talk.title }}</h2>
+<p class="meta">{{ talk.event }}{% if talk.location %}, {{ talk.location }}{% endif %} · <time datetime="{{ talk.date }}">{{ talk.date | date("MMM d, yyyy") }}</time></p>
+{% if talk.description %}<p>{{ talk.description }}</p>
+{% endif %}{% if talk.slides or talk.video %}<p>{% if talk.slides %}<a href="{{ talk.slides }}">Slides</a>{% endif %}{% if talk.slides and talk.video %} · {% endif %}{% if talk.video %}<a href="{{ talk.video }}">Video</a>{% endif %}</p>
+{% endif %}</li>
+{% endfor %}</ul>
 {% endblock %}

@@ -34,6 +34,7 @@ Built 4 pages into dist in 12 ms, with no warnings.
 404.html
 assets/settings.css
 assets/style.css
+assets/theme.js
 blog/hello/index.html
 blog/index.html
 feed.xml
@@ -118,6 +119,7 @@ Built 4 pages into dist in 9 ms, with no warnings.
 404.html
 assets/settings.css
 assets/style.css
+assets/theme.js
 blog/index.html
 blog/soon/index.html
 index.html
@@ -151,6 +153,7 @@ Built 2 pages into public_html in 8 ms, with no warnings.
 404.html
 assets/settings.css
 assets/style.css
+assets/theme.js
 index.html
 sitemap.xml
 ```

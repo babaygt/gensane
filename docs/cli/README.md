@@ -41,6 +41,7 @@ Built 4 pages into dist in 14 ms, with no warnings.
 404.html
 assets/settings.css
 assets/style.css
+assets/theme.js
 blog/hello-world/index.html
 blog/index.html
 index.html
@@ -93,6 +94,7 @@ Scripts and CI can tell from the exit code what happened.
 | ---------------------------------------- | ---------------------------------------------------------------------- |
 | [The site folder](folders.md)            | What gensane reads, what it leaves out, and where it writes            |
 | [The config](config.md)                  | `gensane.config.ts` and every setting                                  |
+| [The default theme](theme.md)            | What the theme shows, changing one part of it, and its files            |
 | [build and check](build-and-check.md)    | Building, checking in CI, drafts and the output folder                 |
 | [new](new.md)                            | Starting a post, a project, a talk or a page                           |
 | [dev](dev.md)                            | Serving the site while you write                                       |

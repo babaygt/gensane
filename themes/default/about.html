@@ -2,20 +2,19 @@
 {% block content %}
 <h1>{{ page.title }}</h1>
 {{ page.html | default("") }}
-{% if collections.experience %}
-<h2>Experience</h2>
-<ul>
-{% for job in collections.experience %}
-<li>{{ job.role }}, {{ job.company }}</li>
-{% endfor %}
-</ul>
-{% endif %}
-{% if collections.education %}
-<h2>Education</h2>
-<ul>
-{% for study in collections.education %}
-<li>{{ study.degree }}, {{ study.school }}</li>
-{% endfor %}
-</ul>
-{% endif %}
-{% endblock %}
+{% if collections.experience %}<h2>Experience</h2>
+<ul class="timeline">
+{% for item in collections.experience %}<li>
+<h3>{{ item.role }}, {{ item.company }}</h3>
+<p class="meta">{% include "partials/period.html" %}{% if item.location %} · {{ item.location }}{% endif %}</p>
+{% if item.stack %}<p class="meta">{{ item.stack | join(" · ") }}</p>
+{% endif %}</li>
+{% endfor %}</ul>
+{% endif %}{% if collections.education %}<h2>Education</h2>
+<ul class="timeline">
+{% for item in collections.education %}<li>
+<h3>{{ item.degree }}{% if item.field %} in {{ item.field }}{% endif %}, {{ item.school }}</h3>
+<p class="meta">{% include "partials/period.html" %}{% if item.location %} · {{ item.location }}{% endif %}</p>
+</li>
+{% endfor %}</ul>
+{% endif %}{% endblock %}

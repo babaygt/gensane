@@ -1,0 +1,6 @@
+<li class="card">
+{% if project.cover %}<img class="cover" src="{{ project.cover }}" alt="" loading="lazy">
+{% endif %}<h2><a href="{{ project.url }}">{{ project.title }}</a>{% if project.draft %} <span class="draft">Draft</span>{% endif %}</h2>
+{% if project.description %}<p>{{ project.description }}</p>
+{% endif %}{% if project.stack %}<p class="meta">{{ project.stack | join(" · ") }}</p>
+{% endif %}</li>

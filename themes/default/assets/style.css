@@ -1,9 +1,407 @@
-/* A starter style; the full default theme replaces it. */
+/* The default theme of gensane. Colors, the font and the width come from settings.css. */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
 body {
-  max-width: 42rem;
-  margin: 2rem auto;
-  padding: 0 1rem;
-  font:
-    17px/1.6 system-ui,
-    sans-serif;
+  margin: 0;
+  background: var(--background);
+  color: var(--text);
+  font: 1.0625rem/1.65 var(--font);
+  -webkit-text-size-adjust: 100%;
+}
+
+body > * {
+  max-width: var(--width);
+  margin-inline: auto;
+  padding-inline: 1.25rem;
+}
+
+a {
+  color: var(--accent);
+  text-underline-offset: 0.2em;
+}
+
+a:hover {
+  text-decoration-thickness: 2px;
+}
+
+:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}
+
+h1,
+h2,
+h3 {
+  line-height: 1.25;
+  margin: 2rem 0 0.75rem;
+}
+
+h1 {
+  font-size: 2rem;
+}
+
+h2 {
+  font-size: 1.375rem;
+}
+
+h3 {
+  font-size: 1.125rem;
+}
+
+img,
+video {
+  max-width: 100%;
+  height: auto;
+}
+
+hr {
+  border: 0;
+  border-top: 1px solid var(--border);
+  margin: 2rem 0;
+}
+
+.skip {
+  position: absolute;
+  left: -100vw;
+}
+
+.skip:focus {
+  left: 1rem;
+  top: 1rem;
+  padding: 0.5rem 1rem;
+  background: var(--surface);
+}
+
+/* Header and footer */
+
+.site-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1.5rem;
+  padding-block: 1.25rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.site-title {
+  color: var(--text);
+  font-weight: 700;
+  text-decoration: none;
+  margin-right: auto;
+}
+
+.site-header ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.site-header a[aria-current="page"] {
+  color: var(--text);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.scheme-switch {
+  font: inherit;
+  font-size: 0.875rem;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 0.25rem 0.75rem;
+  cursor: pointer;
+}
+
+main {
+  padding-block: 1rem 3rem;
+}
+
+.site-footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 1.5rem;
+  padding-block: 1.5rem 2rem;
+  border-top: 1px solid var(--border);
+  color: var(--muted);
+  font-size: 0.875rem;
+}
+
+.site-footer p {
+  margin: 0;
+}
+
+/* Text */
+
+.meta,
+.count {
+  color: var(--muted);
+  font-size: 0.9375rem;
+}
+
+.lead {
+  font-size: 1.1875rem;
+  color: var(--muted);
+}
+
+.draft {
+  display: inline-block;
+  vertical-align: middle;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--background);
+  background: var(--muted);
+  border-radius: 4px;
+  padding: 0.1rem 0.4rem;
+}
+
+blockquote {
+  margin: 1.5rem 0;
+  padding: 0.25rem 1rem;
+  border-left: 3px solid var(--border);
+  color: var(--muted);
+}
+
+table {
+  border-collapse: collapse;
+  display: block;
+  overflow-x: auto;
+}
+
+th,
+td {
+  border: 1px solid var(--border);
+  padding: 0.4rem 0.75rem;
+  text-align: left;
+}
+
+/* Code */
+
+code,
+pre {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.875em;
+}
+
+:not(pre) > code {
+  background: var(--surface);
+  border-radius: 4px;
+  padding: 0.1em 0.35em;
+}
+
+.code {
+  position: relative;
+  margin: 1.5rem 0;
+}
+
+pre {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1rem;
+  overflow-x: auto;
+  line-height: 1.5;
+}
+
+.code pre {
+  margin: 0;
+  padding-top: 2rem;
+}
+
+.code-language {
+  position: absolute;
+  top: 0.4rem;
+  left: 1rem;
+  color: var(--muted);
+  font-size: 0.75rem;
+}
+
+.code-copy {
+  position: absolute;
+  top: 0.35rem;
+  right: 0.5rem;
+  font: inherit;
+  font-size: 0.75rem;
+  color: var(--text);
+  background: var(--background);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.15rem 0.6rem;
+  cursor: pointer;
+}
+
+/* Callouts, from > [!NOTE] and the others */
+
+.callout {
+  margin: 1.5rem 0;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--accent);
+  border-radius: 6px;
+  background: var(--surface);
+}
+
+.callout > :first-child {
+  margin-top: 0;
+}
+
+.callout > :last-child {
+  margin-bottom: 0;
+}
+
+.callout-title {
+  font-weight: 600;
+}
+
+/* Lists of posts, projects and talks */
+
+.posts,
+.cards,
+.timeline,
+.tags {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.post-item {
+  padding-block: 1rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.post-item h2,
+.card h2,
+.timeline h2,
+.timeline h3 {
+  margin: 0 0 0.25rem;
+  font-size: 1.1875rem;
+}
+
+.post-item h2 a,
+.card h2 a {
+  color: var(--text);
+  text-decoration: none;
+}
+
+.post-item h2 a:hover,
+.card h2 a:hover {
+  color: var(--accent);
+}
+
+.post-item .meta,
+.card p {
+  margin: 0.25rem 0;
+}
+
+.excerpt > :first-child {
+  margin-top: 0.5rem;
+}
+
+.excerpt > :last-child {
+  margin-bottom: 0;
+}
+
+.posts-grid,
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+  gap: 1rem;
+}
+
+.posts-grid .post-item,
+.card {
+  padding: 1rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+}
+
+.cover {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  border-radius: 6px;
+  margin-bottom: 0.75rem;
+}
+
+.timeline li {
+  padding-block: 0.75rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.tags li {
+  font-size: 0.875rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 0.1rem 0.6rem;
+}
+
+.tags a {
+  text-decoration: none;
+}
+
+/* Posts */
+
+.toc {
+  margin: 1.5rem 0;
+  padding: 0.75rem 1rem;
+  background: var(--surface);
+  border-radius: 8px;
+}
+
+.toc h2 {
+  margin: 0 0 0.5rem;
+  font-size: 1rem;
+}
+
+.toc ol {
+  margin: 0;
+  padding-left: 1.25rem;
+}
+
+.neighbours,
+.pagination {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 2.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+}
+
+.pagination span {
+  color: var(--muted);
+}
+
+.project-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  padding: 0;
+  list-style: none;
+}
+
+.footnotes {
+  margin-top: 3rem;
+  font-size: 0.9375rem;
+  color: var(--muted);
 }

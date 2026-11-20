@@ -143,6 +143,7 @@ Built 6 pages into dist in 9 ms, with 1 warning.
 404.html
 assets/settings.css
 assets/style.css
+assets/theme.js
 blog/first/index.html
 blog/index.html
 blog/page/2/index.html

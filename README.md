@@ -3,9 +3,9 @@
 A static site generator for developers who want a blog and portfolio online in minutes,
 with nothing to learn but Markdown.
 
-> **Status:** early development. The Markdown compiler, the frontmatter parser, the template language, the core and the
-> command line are finished, so gensane builds and serves a site from a folder. The default theme comes next; until then a
-> site brings its own templates. It isn't published on npm yet.
+> **Status:** early development. The Markdown compiler, the frontmatter parser, the template language, the core, the
+> command line and the default theme are finished, so a folder of Markdown becomes a site that can be built and served.
+> Search and `gensane init` come next. It isn't published on npm yet.
 
 ## What works today
 
@@ -73,9 +73,15 @@ Serving the site at http://localhost:4000/ (press Ctrl+C to stop).
 
 Read the [command line documentation](docs/cli/README.md) to see how it works.
 
+A **default theme**, so a folder of Markdown needs no templates at all:
+
+- [Six palettes](docs/cli/config.md#theme), each light and dark, all readable to WCAG AA, with a switch for readers.
+- A blog as a list or as cards, projects, talks, an about page with experience and education, and a table of contents on long posts.
+- Valid HTML and accessible pages, checked on every page of a test site, in less than 10 KB of CSS and 3 KB of JavaScript.
+- [Any part can be replaced](docs/cli/theme.md) by one file of the site's own.
+
 ## Planned
 
-- A default theme, with layout options
 - Client-side search, with no server needed
 - `npx gensane init`: scaffold a site with blog, projects, talks, experience and education, and ready-made deploy configs for
   GitHub Pages, Cloudflare, Netlify and Vercel
