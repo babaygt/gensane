@@ -366,3 +366,86 @@ describe("problems", () => {
     expect(result.ok ? undefined : result.error[0]?.span.file).toBe("site/content/notes/a.md");
   });
 });
+
+describe("a site under a path", () => {
+  const under = { site: { url: "https://ada.github.io/notes/" } };
+  const content = {
+    "blog/hello.md": `${minimal.post}See [about](/about/) and ![me](/images/me.png).\n`,
+    "pages/about.md": minimal.page,
+  };
+  const templates = {
+    ...plainTheme,
+    "post.html": '<a href="/">Home</a><link href="/assets/style.css">{{ page.html }}',
+  };
+
+  it("adds the path to links in pages, from content and from templates", () => {
+    const site = built({
+      content,
+      templates,
+      config: under,
+      publicFiles: ["images/me.png"],
+      themeAssets: ["assets/style.css"],
+    });
+    expect(fileOf(site, "blog/hello/index.html")).toBe(
+      '<a href="/notes/">Home</a><link href="/notes/assets/style.css"><p>See <a href="/notes/about/">about</a> and <img src="/notes/images/me.png" alt="me" />.</p>\n',
+    );
+  });
+
+  it("checks links as they are written, so /about/ still leads to the about page", () => {
+    expect(
+      problemsOf({
+        content,
+        templates,
+        config: under,
+        publicFiles: ["images/me.png"],
+        themeAssets: ["assets/style.css"],
+      }),
+    ).toEqual([]);
+  });
+
+  it("adds the path to links in the content of the feed", () => {
+    const site = built({
+      content,
+      templates,
+      config: under,
+      publicFiles: ["images/me.png"],
+      themeAssets: ["assets/style.css"],
+    });
+    expect(fileOf(site, "feed.xml")).toContain(
+      "&lt;a href=&quot;/notes/about/&quot;&gt;about&lt;/a&gt;",
+    );
+  });
+
+  it("leaves links as they are written when the site is served at the root, as in gensane dev", () => {
+    const site = built({
+      content,
+      templates,
+      config: { ...under, servedAtRoot: true },
+      publicFiles: ["images/me.png"],
+      themeAssets: ["assets/style.css"],
+    });
+    expect(fileOf(site, "blog/hello/index.html")).toContain('<a href="/about/">about</a>');
+  });
+
+  it("changes nothing for a site at the root", () => {
+    const site = built({
+      content,
+      templates,
+      config: { site: { url: "https://example.com" } },
+      publicFiles: ["images/me.png"],
+      themeAssets: ["assets/style.css"],
+    });
+    expect(fileOf(site, "blog/hello/index.html")).toContain('<a href="/">Home</a>');
+  });
+
+  it("changes only pages, not other files the site writes", () => {
+    const site = built({
+      content,
+      templates,
+      config: under,
+      publicFiles: ["images/me.png"],
+      themeAssets: ["assets/style.css"],
+    });
+    expect(fileOf(site, "sitemap.xml")).toContain("<loc>https://ada.github.io/notes/about/</loc>");
+  });
+});
