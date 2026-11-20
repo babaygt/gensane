@@ -58,7 +58,12 @@ const files: Record<string, string> = {
     LONG_POST,
     "cover: /images/diagram.png\n",
   ),
-  "content/blog/2026-11-18-again.md": post("Again", "2026-11-18", "Again.\n"),
+  // Two headings, one fewer than a table of contents needs.
+  "content/blog/2026-11-18-again.md": post(
+    "Again",
+    "2026-11-18",
+    "## One\n\nText.\n\n## Two\n\nText.\n",
+  ),
   "content/blog/2026-11-19-third.md": post("Third", "2026-11-19", "Third.\n"),
   "content/projects/gensane.md":
     "---\ntitle: Gensane\ndescription: A site generator\nstack: [TypeScript]\nrepo: https://github.com/babaygt/gensane\nstatus: active\nfeatured: true\nlinks:\n  - name: Docs\n    url: https://example.com/docs\n---\nBuilt by hand.\n",
@@ -163,6 +168,18 @@ describe("the default theme", () => {
         expect(accessibilityProblems(html)).toEqual([]);
       },
     );
+
+    const grid = await build({ blog: { layout: "grid" } });
+    it.each(pagesOf(grid).map(({ path, content }) => [path, content]))(
+      "%s is valid and accessible with the blog as cards, which show cover images",
+      async (_, html) => {
+        const report = await validator.validateString(html);
+        expect(
+          report.results.flatMap((result) => result.messages.map(({ message }) => message)),
+        ).toEqual([]);
+        expect(accessibilityProblems(html)).toEqual([]);
+      },
+    );
   });
 
   it("stays small: less than 10 KB of CSS and 3 KB of JavaScript", async () => {
@@ -182,7 +199,9 @@ describe("the default theme", () => {
 
 describe("the theme settings", () => {
   it("lays the blog out as a list or a grid, with covers only in the grid", async () => {
-    expect(pageOf(await build(), "blog/index.html")).toContain('<ul class="posts posts-list">');
+    const list = pageOf(await build(), "blog/page/2/index.html");
+    expect(list).toContain('<ul class="posts posts-list">');
+    expect(list).not.toContain('class="cover"');
     const grid = pageOf(await build({ blog: { layout: "grid" } }), "blog/page/2/index.html");
     expect(grid).toContain('<ul class="posts posts-grid">');
     expect(grid).toContain('<img class="cover" src="/images/diagram.png"');
@@ -292,6 +311,10 @@ function accessibilityProblems(html: string): string[] {
     if (!html.includes(landmark)) problems.push(`no ${landmark}>`);
   }
   if (!/<html lang="[a-z-]+">/.test(html)) problems.push("no language");
+  // Without it, phones show the page as a small desktop page.
+  if (!html.includes('<meta name="viewport" content="width=device-width, initial-scale=1">')) {
+    problems.push("no viewport for phones");
+  }
   for (const [image] of html.matchAll(/<img\b[^>]*>/g)) {
     if (!/\salt="/.test(image)) problems.push(`no alt: ${image}`);
   }
