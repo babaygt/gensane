@@ -133,6 +133,18 @@ describe("gensane build", () => {
     expect(run.output).toBe("Built 4 pages into dist in 0 ms, with 1 warning.");
   });
 
+  it("accepts links to the assets of the default theme", async () => {
+    const run = await gensane(["build"], {
+      files: {
+        "site/content/blog/hello.md": `${HELLO}![logo](/assets/logo.svg)\n`,
+        "gensane/themes/default/assets/logo.svg": "<svg/>",
+      },
+      config: WITH_ADDRESS,
+    });
+    expect(run).toMatchObject({ code: ExitCode.success, errors: "" });
+    expect(await run.fileSystem.readText("site/dist/assets/logo.svg")).toBe("<svg/>");
+  });
+
   it("prints the warnings of the config before the others, and still builds", async () => {
     const run = await gensane(["build"], {
       files: { "site/content/index.md": "---\ntitle: Home\n---\n" },
