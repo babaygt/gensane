@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { TEMPLATES } from "../core/index.ts";
 import { InternalError } from "../diagnostics/index.ts";
 import {
+  type Clock,
   type FileSystem,
   MemoryFileSystem,
   MemoryTerminal,
@@ -31,12 +32,16 @@ interface Setup {
   readonly files?: Readonly<Record<string, string>>;
   /** What `gensane.config.ts` exports; there is no config file when this is left out. */
   readonly config?: Readonly<Record<string, unknown>>;
+  /** Defaults to `gensane.config.ts`. */
+  readonly configFile?: string;
   readonly fileSystem?: FileSystem;
   readonly color?: boolean;
+  readonly clock?: Clock;
 }
 
 async function gensane(args: readonly string[], setup: Setup = {}): Promise<Run> {
-  const configFile = setup.config === undefined ? {} : { "site/gensane.config.ts": "" };
+  const configName = setup.configFile ?? "gensane.config.ts";
+  const configFile = setup.config === undefined ? {} : { [`site/${configName}`]: "" };
   const fileSystem =
     setup.fileSystem ?? new MemoryFileSystem({ ...plainTheme, ...configFile, ...setup.files });
   const moduleLoader: ModuleLoader = { load: async () => setup.config ?? {} };
@@ -44,7 +49,7 @@ async function gensane(args: readonly string[], setup: Setup = {}): Promise<Run>
   const code = await runCli(args, {
     fileSystem,
     moduleLoader,
-    clock: { now: () => new Date(0) },
+    clock: setup.clock ?? { now: () => new Date(0) },
     terminal,
     siteFolder: "site",
     version: "1.2.3",
@@ -176,6 +181,53 @@ describe("gensane build", () => {
   });
 });
 
+describe("what a build takes from the config and the clock", () => {
+  it("uses perPage, markdown and filters from the config", async () => {
+    const run = await gensane(["build"], {
+      files: {
+        "site/content/blog/one.md": "---\ntitle: Post 1\ndate: 2026-11-01\n---\n<b>bold</b>\n",
+        "site/content/blog/two.md": "---\ntitle: Post 2\ndate: 2026-11-02\n---\n<b>bold</b>\n",
+        "site/theme/post.html": "{{ page.title | shout }} {{ page.html }}",
+      },
+      config: {
+        default: {
+          site: { url: "https://example.com" },
+          perPage: 1,
+          markdown: { rawHtml: "escape" },
+          filters: { shout: (value: unknown) => String(value).toUpperCase() },
+        },
+      },
+    });
+    expect(await run.fileSystem.listFiles("site/dist")).toContain("blog/page/2/index.html");
+    expect(await run.fileSystem.readText("site/dist/blog/one/index.html")).toBe(
+      "POST 1 <p>&lt;b&gt;bold&lt;/b&gt;</p>\n",
+    );
+  });
+
+  it("points a problem with the site address at the config file the site has", async () => {
+    const run = await gensane(["check"], {
+      files: { "site/content/index.md": "---\ntitle: Home\n---\n" },
+      config: { default: { site: { url: "example.com" } } },
+      configFile: "gensane.config.mjs",
+    });
+    expect(run.errors.split("\n").slice(0, 2)).toEqual([
+      'error[GS412]: "site.url" must be the full address of the site, such as "https://example.com", but it is "example.com"',
+      "  ┌─ gensane.config.mjs",
+    ]);
+  });
+
+  it("says how long the build took", async () => {
+    const times = [1000, 1084];
+    const clock = { now: () => new Date(times.shift() ?? 0) };
+    const run = await gensane(["check"], {
+      files: { "site/content/index.md": "---\ntitle: Home\n---\n" },
+      config: WITH_ADDRESS,
+      clock,
+    });
+    expect(run.output).toBe("Checked 2 pages in 84 ms, with no warnings.");
+  });
+});
+
 describe("gensane check", () => {
   it("builds without writing anything", async () => {
     const run = await gensane(["check"], {
@@ -215,6 +267,7 @@ describe("mistakes in the command", () => {
       'did you mean "--drafts"?',
     ],
     [["build", "-q"], '"-q" is not an argument of gensane build', "see gensane build --help"],
+    [["build", "--hlep"], '"--hlep" is not an argument of gensane build', 'did you mean "--help"?'],
     [["build", "my-site"], 'gensane build doesn\'t take "my-site"', "see gensane build --help"],
     [["build", "--out"], "--out needs a folder after it", "see gensane build --help"],
     [["build", "--drafts=yes"], "--drafts doesn't take a value", "see gensane build --help"],

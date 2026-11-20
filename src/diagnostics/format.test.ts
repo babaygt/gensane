@@ -118,6 +118,16 @@ describe("formatDiagnostic", () => {
     expect(formatDiagnostic(problem, "short", plain).split("\n")).toHaveLength(4);
   });
 
+  it("keeps a narrow gutter when no line is shown, however long the line number is", () => {
+    const start = { line: 12, column: 1, offset: 0 };
+    const problem = { ...brokenLink, span: { file: "post.html", start, end: start } };
+    expect(formatDiagnostic(problem, undefined, plain).split("\n").slice(1)).toEqual([
+      "  ┌─ post.html",
+      "  │",
+      '  = hint: did you mean "/about/"?',
+    ]);
+  });
+
   describe("with color", () => {
     const colored = formatDiagnostic(brokenLink, SOURCE, { color: true });
 
@@ -127,6 +137,10 @@ describe("formatDiagnostic", () => {
         color: true,
       });
       expect(warning.split("\n")[0]).toContain("\u001B[1;33mwarning[GS413]");
+    });
+
+    it("colors the mark like the problem", () => {
+      expect(colored.split("\n")[4]).toContain("\u001B[1;31m^^^^^^^\u001B[0m");
     });
 
     it("is the same text once the colors are taken out", () => {
