@@ -21,6 +21,7 @@ import {
   opcodeOf,
   textFrame,
 } from "./web-socket.ts";
+import { localDay } from "../local-day.ts";
 
 /** Editors often save a file in several steps, so changes this close together become one build. */
 const QUIET_TIME = 30;
@@ -71,8 +72,13 @@ export class DevServer {
    */
   async build(change?: string): Promise<void> {
     const { clock, terminal } = this.#environment;
-    const started = clock.now().getTime();
-    const build = await buildFolder(this.#environment, { drafts: true, servedAtRoot: true });
+    const start = clock.now();
+    const started = start.getTime();
+    const build = await buildFolder(this.#environment, {
+      drafts: true,
+      servedAtRoot: true,
+      today: localDay(start),
+    });
     const files = build.kind === "config-failed" ? undefined : build.files;
     printProblems(build.problems, files, terminal);
 

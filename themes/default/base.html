@@ -6,6 +6,7 @@
 <title>{% block title %}{{ page.title }}{% if site.title %} · {{ site.title }}{% endif %}{% endblock %}</title>
 {% if page.description %}<meta name="description" content="{{ page.description }}">
 {% elif site.description %}<meta name="description" content="{{ site.description }}">
+{% endif %}{% if favicon %}<link rel="icon" href="{{ favicon }}">
 {% endif %}<link rel="stylesheet" href="/assets/settings.css">
 <link rel="stylesheet" href="/assets/style.css">
 {% if feed %}<link rel="alternate" type="application/atom+xml" title="{{ site.title | default("Feed") }}" href="{{ feed }}">
@@ -16,24 +17,25 @@
 <a class="skip" href="#content">Skip to content</a>
 <header class="site-header">
 <a class="site-title" href="/">{{ site.title | default("Home") }}</a>
-{% if navigation %}<nav aria-label="Main">
+{% if navigation %}<nav class="site-menu" aria-label="Main">
 <ul>
 {% for item in navigation %}<li><a href="{{ item.url }}"{% if page.url == item.url %} aria-current="page"{% endif %}>{{ item.title }}</a></li>
 {% endfor %}</ul>
 </nav>
-{% endif %}{% if search and page.url != search %}<form class="site-search" action="{{ search }}" role="search">
+{% endif %}<div class="site-tools">
+{% if search and page.url != search %}<form class="site-search" action="{{ search }}" role="search">
 <input type="search" name="q" placeholder="Search" aria-label="Search">
-<button type="submit">Search</button>
+<button class="icon-button" type="submit" aria-label="Search"><svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#search"></use></svg></button>
 </form>
-{% endif %}{% if theme.colorScheme == "auto" %}<button class="scheme-switch" type="button" hidden>Dark</button>
-{% endif %}</header>
+{% endif %}{% if theme.colorScheme == "auto" %}<button class="icon-button scheme-switch" type="button" aria-label="Switch between light and dark" hidden><svg class="icon icon-moon" aria-hidden="true"><use href="/assets/icons.svg#moon"></use></svg><svg class="icon icon-sun" aria-hidden="true"><use href="/assets/icons.svg#sun"></use></svg></button>
+{% endif %}</div>
+</header>
 <main id="content">
 {% block content %}{% endblock %}
 </main>
 <footer class="site-footer">
-{% if site.title %}<p>{{ site.title }}</p>
-{% endif %}{% if feed %}<p><a href="{{ feed }}">Feed</a></p>
-{% endif %}<p>Made with <a href="https://github.com/babaygt/gensane">gensane</a></p>
+{% include "partials/profiles.html" %}
+<p>{% if today %}© {{ today | date("yyyy") }} {% endif %}{% if site.author.name %}{{ site.author.name }}{% elif site.author %}{{ site.author }}{% else %}{{ site.title }}{% endif %}{% if feed %} · <a href="{{ feed }}">Feed</a>{% endif %} · Made with <a href="https://github.com/babaygt/gensane">gensane</a></p>
 </footer>
 </body>
 </html>

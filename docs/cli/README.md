@@ -39,6 +39,8 @@ Built 5 pages into dist in 14 ms, with no warnings.
 
 ```text files dist
 404.html
+assets/favicon.svg
+assets/icons.svg
 assets/search.js
 assets/settings.css
 assets/style.css

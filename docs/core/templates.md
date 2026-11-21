@@ -13,6 +13,8 @@ when there is nothing, so `{% if previous %}` works on every page.
 | `navigation`  | Every page   | The blog, projects, talks and about pages the site has, each with `title` and `url` |
 | `feed`        | Every page   | The address of the feed, `/feed.xml`, when the site has one                        |
 | `search`      | Every page   | The address of the search page, `/search/`, when the site has one                  |
+| `favicon`     | Every page   | The address of the site's icon: its own `favicon.svg` or `favicon.ico` in `public/`, or else one made from the first letter of `site.title` |
+| `today`       | Every page   | The day of the build, as a date for the `date` filter, such as `{{ today \| date("yyyy") }}` |
 | `pagination`  | List pages   | `items`, `current`, `total`, `previousUrl` and `nextUrl`                           |
 | `previous`    | Posts        | The post before this one in time                                                   |
 | `next`        | Posts        | The post after this one in time                                                    |

@@ -58,7 +58,19 @@ What every template sees as `site`. Four settings are known, and any other is pa
 | `title`       | The name of the site, also the title of the feed                                                   |
 | `url`         | The full address, such as `https://example.com`. The [feed and the sitemap](../core/feeds.md) need it |
 | `description` | The subtitle of the feed                                                                           |
-| `author`      | A name, or `{ name: "..." }` with more about the author                                            |
+| `author`      | A name, or `{ name: "...", avatar: "/images/me.jpg" }`; the default theme shows the picture on the home page |
+
+The default theme also shows these, as icon links on the home page and in the footer:
+
+| Setting    | Written as                                   | Leads to                                    |
+| ---------- | -------------------------------------------- | ------------------------------------------- |
+| `github`   | A user name, `"ada"`                         | `https://github.com/ada`                    |
+| `gitlab`   | A user name                                  | `https://gitlab.com/` and the name          |
+| `codeberg` | A user name                                  | `https://codeberg.org/` and the name        |
+| `mastodon` | The whole address, `"https://mastodon.social/@ada"`, since every server has its own | That address, with `rel="me"` so Mastodon can verify the site |
+| `bluesky`  | A handle, `"ada.example.com"`                | `https://bsky.app/profile/` and the handle  |
+| `linkedin` | The name in the address of the profile       | `https://www.linkedin.com/in/` and the name |
+| `email`    | An address                                   | A `mailto:` link                            |
 
 <!-- runs -->
 ```ts gensane.config.ts
@@ -141,6 +153,7 @@ Built 7 pages into dist in 9 ms, with 1 warning.
 
 ```text files dist
 404.html
+assets/icons.svg
 assets/search.js
 assets/settings.css
 assets/style.css

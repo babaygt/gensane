@@ -29,22 +29,36 @@ export interface VariableSources {
   readonly routes: readonly Route[];
   /** The address of the feed, when the site has one. */
   readonly feed: string | undefined;
+  /** The address of the site's icon, when it has one. */
+  readonly favicon: string | undefined;
+  /** The day of the build, as `YYYY-MM-DD`, when it is known. */
+  readonly today: string | undefined;
 }
 
 /**
  * Converts each entry once, so the same post is the same value in `collections.posts`,
  * in `pagination.items` and as `page`.
  */
+/** `2026-11-21` as templates see a date from frontmatter, so the `date` filter can write it. */
+function dateOf(day: string): TemplateData {
+  const [year = 0, month = 1, date = 1] = day.split("-").map(Number);
+  return { text: day, year, month, day: date };
+}
+
 export class TemplateVariables {
   readonly #site: TemplateData;
   readonly #theme: TemplateData;
   readonly #navigation: readonly TemplateData[];
   readonly #feed: string | undefined;
   readonly #search: string | undefined;
+  readonly #favicon: string | undefined;
+  readonly #today: TemplateData | undefined;
   readonly #pages = new Map<ContentEntry, TemplateData>();
   readonly #collections: TemplateData;
 
-  constructor({ site, theme, collections, routes, feed }: VariableSources) {
+  constructor({ site, theme, collections, routes, feed, favicon, today }: VariableSources) {
+    this.#favicon = favicon;
+    this.#today = today === undefined ? undefined : dateOf(today);
     this.#search = routes.find((route) => route.kind === "search")?.url;
     this.#site = site;
     this.#theme = { ...theme };
@@ -72,6 +86,8 @@ export class TemplateVariables {
       navigation: this.#navigation,
       feed: this.#feed,
       search: this.#search,
+      favicon: this.#favicon,
+      today: this.#today,
       collections: this.#collections,
       page: this.#pageOf(route),
       pagination: "pagination" in route ? this.#pagination(route.pagination) : undefined,

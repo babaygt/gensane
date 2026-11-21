@@ -6,19 +6,25 @@ changed with the [`theme` settings](config.md#theme), and any part of it can be 
 
 ## What it shows
 
-- **Every page:** the site's title, a menu of the blog, projects, talks and about pages the site has, a switch between light and dark
-  when the site follows the reader's system, and a footer with the feed.
-- **Posts:** the date, the reading time, the tags, a table of contents when the post has at least 3 headings, and the previous and
-  next post. Code blocks get their language as a label and a copy button.
-- **Lists:** posts as a list or as cards with their cover image, projects as cards, talks and experience as timelines.
+- **Every page:** the site's title, a menu of the blog, projects, talks and about pages the site has, a search button, a switch
+  between light and dark (a moon or a sun) when the site follows the reader's system, and a footer with the profiles, the year and
+  the feed. Its icon in the browser's tab is the first letter of the title in the accent color, unless `public/` has a
+  `favicon.svg` or `favicon.ico`.
+- **The home page:** the author's name, picture (`site.author.avatar`) and profile links, then the parts of the settings.
+- **Posts:** the date, the reading time, the tags, a table of contents when the post has at least 3 headings, and at the end the
+  tags again with the older and the newer post. Code blocks get their language as a label and a copy button.
+- **Lists:** posts as a list or as cards with their cover image; projects as cards with their status and links; talks with their
+  date beside them and buttons for slides and video; experience as a timeline.
 - **Drafts:** a "Draft" label, which only [`gensane dev`](dev.md) shows.
-- **Search:** a box in the header and a search page that finds as you type, in the
+- **Search:** a search page that finds as you type, which the button in the header leads to (in the `wide` width the header also
+  has the box itself), in the
   [search index](../core/site.md#search) the build writes. Titles count most, then tags, then descriptions, then the text, and the
   newest comes first among equally good results.
 
 It has no web fonts and no frameworks: less than 10 KB of CSS, and two scripts of less than 3 KB each as readers download them. Every
 page works without JavaScript except the switch, the copy buttons and search. Every page of a test site with every type of content is checked by an HTML validator, and for one main
-heading, headings in order, landmarks, text for every link and image, and a skip link. In a real browser, the tests also type into search, click the switch and the copy button, and change a file to see the page reload.
+heading, headings in order, landmarks, text for every link and image, and a skip link. In a real browser, the tests also type into search, click the switch and the copy button, check that the header stays on one line
+on a computer and that cards keep their own height, and change a file to see the page reload.
 
 ## Changing one part
 
@@ -77,28 +83,31 @@ Arguments:
 
 | File                            | What it is                                                                 |
 | ------------------------------- | -------------------------------------------------------------------------- |
-| `base.html`                     | The layout every page extends: head, header with the menu, main, footer    |
-| `home.html`                     | The home page, in the order of `theme.home.sections`                       |
-| `post.html`                     | A post                                                                     |
+| `base.html`                     | The layout every page extends: head, the header with the menu, search and the light/dark switch, main, the footer |
+| `home.html`                     | The home page: the author's name, picture and profiles, then the parts of `theme.home.sections` in order |
+| `post.html`                     | A post, ending with its tags and the older and newer posts                 |
 | `blog.html`                     | The list of posts                                                          |
 | `tag.html`                      | The posts of one tag                                                       |
 | `tags.html`                     | Every tag                                                                  |
 | `project.html`                  | A project                                                                  |
 | `projects.html`                 | The projects, as cards                                                     |
-| `talks.html`                    | The talks                                                                  |
+| `talks.html`                    | The talks, each with its date beside it                                    |
 | `about.html`                    | The about page, with experience and education                              |
 | `page.html`                     | Any other page                                                             |
 | `404.html`                      | The page for an address that doesn't exist                                 |
 | `search.html`                   | The search page, which finds as you type                                   |
 | `partials/post-item.html`       | One post in a list                                                         |
 | `partials/post-list.html`       | A list of posts with its pages                                             |
-| `partials/project-card.html`    | One project as a card                                                      |
+| `partials/project-card.html`    | One project as a card, with its status and links to its code and website   |
+| `partials/talk.html`            | One talk, with buttons for its slides and video                            |
+| `partials/profiles.html`        | Icon links to the profiles in `site`, on the home page and in the footer   |
 | `partials/tags.html`            | The tags of a post                                                         |
 | `partials/toc.html`             | The table of contents of a post                                            |
 | `partials/period.html`          | When a job or a study started and ended                                    |
 | `assets/style.css`              | The styles, which use the custom properties of `assets/settings.css`      |
 | `assets/theme.js`               | The switch between light and dark, and the label and copy button of code   |
 | `assets/search.js`              | Search: finds the words typed in `search-index.json`                        |
+| `assets/icons.svg`              | The icons, which pages use with `<use href>`; the brand icons are from Simple Icons (CC0) |
 
 ## Custom properties
 

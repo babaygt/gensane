@@ -37,9 +37,10 @@ function startSwitch(button) {
   const root = document.documentElement;
   const system = matchMedia("(prefers-color-scheme: dark)");
   const show = () => {
-    const shown = shownScheme(root.dataset["colorScheme"], system.matches);
-    button.textContent = nextScheme(shown) === "dark" ? "Dark" : "Light";
-    button.setAttribute("aria-label", `Use ${nextScheme(shown)} colors`);
+    const next = nextScheme(shownScheme(root.dataset["colorScheme"], system.matches));
+    // The moon shows while the page is light, and the sun while it is dark.
+    button.dataset["next"] = next;
+    button.setAttribute("aria-label", `Use ${next} colors`);
   };
   button.addEventListener("click", () => {
     const next = nextScheme(shownScheme(root.dataset["colorScheme"], system.matches));

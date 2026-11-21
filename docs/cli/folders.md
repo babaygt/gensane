@@ -51,6 +51,7 @@ Built 5 pages into dist in 9 ms, with no warnings.
 ```text files dist
 .nojekyll
 404.html
+assets/icons.svg
 assets/search.js
 assets/settings.css
 assets/style.css

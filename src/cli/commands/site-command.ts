@@ -4,6 +4,7 @@ import { type Environment, ExitCode } from "../environment.ts";
 import { printProblems, printUsageError } from "../report.ts";
 import type { SiteFiles } from "../site-folder.ts";
 import { Command, type OptionSpec, type OptionValues } from "./command.ts";
+import { localDay } from "../local-day.ts";
 
 export const DRAFTS_OPTION: OptionSpec = { type: "boolean", description: "Include drafts" };
 
@@ -30,14 +31,18 @@ export abstract class SiteCommand extends Command {
 
   async run(values: OptionValues, environment: Environment): Promise<number> {
     const { clock, terminal } = environment;
-    const started = clock.now().getTime();
+    const start = clock.now();
+    const started = start.getTime();
     const mistake = this.checkArguments(values, environment);
     if (mistake !== undefined) {
       printUsageError(terminal, mistake, `see gensane ${this.name} --help`);
       return ExitCode.usage;
     }
 
-    const build = await buildFolder(environment, { drafts: values["drafts"] === true });
+    const build = await buildFolder(environment, {
+      drafts: values["drafts"] === true,
+      today: localDay(start),
+    });
     if (build.kind === "config-failed") {
       printProblems(build.problems, undefined, terminal);
       terminal.write(`Found ${countProblems(build.problems)} in the config${this.whenStopped}.`);

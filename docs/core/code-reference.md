@@ -240,6 +240,15 @@ The settings of the default theme.
 | [`themeCss`](../../src/core/theme/theme-css.ts)       | The settings as CSS custom properties, in `assets/settings.css` |
 | [`THEME_CSS_PATH`](../../src/core/theme/theme-css.ts) | Where that file is written                                      |
 
+### [`src/core/theme/favicon.ts`](../../src/core/theme/favicon.ts)
+
+| Name                                                 | Purpose                                                          |
+| ---------------------------------------------------- | ---------------------------------------------------------------- |
+| [`faviconSvg`](../../src/core/theme/favicon.ts)      | The icon: a letter in the background color on the accent color  |
+| [`initialOf`](../../src/core/theme/favicon.ts)       | The first letter of the site's title                             |
+| [`FAVICON_PATH`](../../src/core/theme/favicon.ts)    | Where the made icon is written, `assets/favicon.svg`             |
+| [`OWN_FAVICONS`](../../src/core/theme/favicon.ts)    | The site's own icons in `public/`, which are used instead        |
+
 ### [`src/core/theme/contrast.ts`](../../src/core/theme/contrast.ts)
 
 | Name                                                    | Purpose                                                   |
