@@ -7,6 +7,7 @@ const answers: Answers = {
   url: "https://example.com",
   sections: SECTIONS,
   palette: "nord",
+  deploy: "none",
 };
 const details = { today: "2026-11-20", version: "1.2.3", folderName: "my-site" };
 
@@ -84,6 +85,16 @@ describe("starterSite", () => {
   ])("names the package of the folder %j as %j", (folderName, name) => {
     const json = starterSite(answers, { ...details, folderName })["package.json"] ?? "";
     expect(JSON.parse(json).name).toBe(name);
+  });
+
+  it("adds the files of the host, under the name of the folder", () => {
+    const files = starterSite(
+      { ...answers, deploy: "cloudflare" },
+      { ...details, folderName: "My Notes" },
+    );
+    expect(files["wrangler.jsonc"]).toContain('"name": "my-notes"');
+    expect(files[".gitignore"]).toBe("dist/\nnode_modules/\n.cloudflare/\n.wrangler/\n");
+    expect(Object.keys(starterSite(answers, details))).not.toContain("wrangler.jsonc");
   });
 
   it("keeps the built site, the packages and the Cloudflare output out of git", () => {
