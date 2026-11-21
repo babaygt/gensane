@@ -113,7 +113,9 @@ async function filesIn(folder: string): Promise<string[]> {
 async function check(site: string, step: CliStep): Promise<void> {
   const run = await gensane(site, step.args);
   const listings: Record<string, string[]> = {};
-  for (const folder of Object.keys(step.listings)) listings[folder] = await filesIn(join(site, folder));
+  for (const folder of Object.keys(step.listings)) {
+    listings[folder] = (await filesIn(join(site, folder))).map((path) => normalized(path, site));
+  }
   const files: Record<string, string> = {};
   for (const path of Object.keys(step.files)) {
     files[normalized(path, site)] = normalized(
@@ -155,7 +157,7 @@ describe("the documentation is complete", () => {
   const examples = pages.flatMap(({ text }) => findCliExamples(text));
   const commands = examples.flatMap(({ steps }) => steps.map(({ args }) => args.join(" ")));
 
-  it.each(["--help", "build --help", "check --help", "new --help", "dev --help", "theme --help"])(
+  it.each(["--help", "build --help", "check --help", "init --help", "new --help", "dev --help", "theme --help"])(
     "shows the output of gensane %s",
     (args) => {
       expect(commands).toContain(args);

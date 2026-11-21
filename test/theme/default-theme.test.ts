@@ -8,7 +8,12 @@ import { HtmlValidate } from "html-validate";
 import { afterAll, describe, expect, it } from "vitest";
 import { readSiteFolder, runCli } from "../../src/cli/index.ts";
 import { type BuiltSite, type ThemeSettings, buildSite } from "../../src/core/index.ts";
-import { ManualWatcher, MemoryTerminal, NodeFileSystem } from "../../src/ports/index.ts";
+import {
+  ManualWatcher,
+  MemoryTerminal,
+  NodeFileSystem,
+  ScriptedPrompter,
+} from "../../src/ports/index.ts";
 import { languageOf, nextScheme, shownScheme } from "../../themes/default/assets/theme.js";
 
 const defaultTheme = join(import.meta.dirname, "..", "..", "themes", "default");
@@ -298,6 +303,7 @@ describe("an ejected theme", () => {
       clock: { now: () => new Date(0) },
       terminal: new MemoryTerminal(),
       watcher: new ManualWatcher(),
+      prompter: new ScriptedPrompter(),
       stopped: new AbortController().signal,
       defaultTheme,
       siteFolder: site,

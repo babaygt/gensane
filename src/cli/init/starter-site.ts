@@ -1,0 +1,108 @@
+/** The files of a new site, made from the answers to `gensane init`'s questions. */
+
+export const SECTIONS = ["blog", "projects", "talks", "about"] as const;
+export type Section = (typeof SECTIONS)[number];
+
+export interface Answers {
+  readonly title: string;
+  /** Empty when there is no author. */
+  readonly author: string;
+  /** The full address of the site, or empty when it isn't known yet. */
+  readonly url: string;
+  readonly sections: readonly Section[];
+  readonly palette: string;
+}
+
+interface Details {
+  /** Today, as `YYYY-MM-DD`. */
+  readonly today: string;
+  /** The version of gensane, for `package.json`. */
+  readonly version: string;
+  /** The name of the folder, for `package.json`. */
+  readonly folderName: string;
+}
+
+/** Text in double quotes, which YAML and TypeScript both read the same way. */
+function quoted(text: string): string {
+  return JSON.stringify(text);
+}
+
+function packageJson({ version, folderName }: Details): string {
+  const name =
+    folderName
+      .toLowerCase()
+      .replaceAll(/[^a-z0-9-]+/g, "-")
+      .replaceAll(/^-+|-+$/g, "") || "my-site";
+  const json = {
+    name,
+    private: true,
+    type: "module",
+    scripts: { dev: "gensane dev", build: "gensane build", check: "gensane check" },
+    devDependencies: { gensane: `^${version}` },
+  };
+  return `${JSON.stringify(json, null, 2)}\n`;
+}
+
+function config({ title, author, url, palette }: Answers): string {
+  const site = [
+    `    title: ${quoted(title)},`,
+    url === ""
+      ? '    // url: "https://example.com", the address of the site, which the feed and the sitemap need'
+      : `    url: ${quoted(url)},`,
+    ...(author === "" ? [] : [`    author: ${quoted(author)},`]),
+  ];
+  return [
+    'import { defineConfig } from "gensane";',
+    "",
+    "export default defineConfig({",
+    "  site: {",
+    ...site,
+    "  },",
+    "  theme: {",
+    `    palette: ${quoted(palette)},`,
+    "  },",
+    "});",
+    "",
+  ].join("\n");
+}
+
+export function starterSite(answers: Answers, details: Details): Record<string, string> {
+  const { title, sections } = answers;
+  const { today } = details;
+  const files: Record<string, string> = {
+    "package.json": packageJson(details),
+    "gensane.config.ts": config(answers),
+    ".gitignore": "dist/\nnode_modules/\n.cloudflare/\n",
+    "content/index.md": `---\ntitle: Home\n---\nWelcome to ${title}. This text is in \`content/index.md\`.\n`,
+  };
+  if (sections.includes("blog")) {
+    files[`content/blog/${today}-hello-world.md`] = [
+      "---",
+      'title: "Hello, world"',
+      `date: ${today}`,
+      "tags: [gensane]",
+      "---",
+      `The first post of ${title}. Change it, or start a new one:`,
+      "",
+      "```sh",
+      'npx gensane new post "My next post"',
+      "```",
+      "",
+      "Run `npm run dev` to see the site while you write.",
+      "",
+    ].join("\n");
+  }
+  if (sections.includes("projects")) {
+    files["content/projects/first-project.md"] =
+      "---\ntitle: My first project\ndescription: What it does, in one sentence\nstack: [TypeScript]\nfeatured: true\n---\nWhat it is, why it exists, and how it works.\n";
+  }
+  if (sections.includes("talks")) {
+    files["content/talks/first-talk.md"] =
+      `---\ntitle: My first talk\nevent: A meetup\ndate: ${today}\n---\n`;
+  }
+  if (sections.includes("about")) {
+    files["content/pages/about.md"] =
+      "---\ntitle: About\n---\nWho you are, and what you work on.\n";
+  }
+  return files;
+}

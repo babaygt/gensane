@@ -4,6 +4,7 @@ import { InternalError, closestMatch } from "../diagnostics/index.ts";
 import { BuildCommand } from "./commands/build-command.ts";
 import { CheckCommand } from "./commands/check-command.ts";
 import { DevCommand } from "./commands/dev-command.ts";
+import { InitCommand } from "./commands/init-command.ts";
 import { NewCommand } from "./commands/new-command.ts";
 import { ThemeCommand } from "./commands/theme-command.ts";
 import type { Command, OptionValues } from "./commands/command.ts";
@@ -14,6 +15,7 @@ const COMMANDS: readonly Command[] = [
   new BuildCommand(),
   new CheckCommand(),
   new DevCommand(),
+  new InitCommand(),
   new NewCommand(),
   new ThemeCommand(),
 ];

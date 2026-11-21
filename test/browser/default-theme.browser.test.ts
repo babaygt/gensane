@@ -14,6 +14,7 @@ import {
   NodeModuleLoader,
   NodeWatcher,
   SystemClock,
+  ScriptedPrompter,
 } from "../../src/ports/index.ts";
 
 const defaultTheme = join(import.meta.dirname, "..", "..", "themes", "default");
@@ -52,6 +53,7 @@ beforeAll(async () => {
     clock: new SystemClock(),
     terminal,
     watcher: new NodeWatcher(),
+    prompter: new ScriptedPrompter(),
     stopped: stop.signal,
     defaultTheme,
     siteFolder: site,

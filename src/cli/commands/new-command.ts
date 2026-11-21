@@ -3,20 +3,12 @@ import { NEW_ENTRY_TYPES, isValidSlug, newEntry, slugify } from "../../core/inde
 import { closestMatch } from "../../diagnostics/index.ts";
 import type { ContentType } from "../../frontmatter/index.ts";
 import { type Environment, ExitCode } from "../environment.ts";
+import { localDay } from "../local-day.ts";
 import { printUsageError } from "../report.ts";
 import { Command, type OptionValues } from "./command.ts";
 
 const CONTENT = "content";
 const EXAMPLE = 'gensane new post "Hello World"';
-
-function twoDigits(value: number): string {
-  return String(value).padStart(2, "0");
-}
-
-/** Today on the person's own calendar, which can differ from the date in UTC. */
-function localDay(date: Date): string {
-  return `${date.getFullYear()}-${twoDigits(date.getMonth() + 1)}-${twoDigits(date.getDate())}`;
-}
 
 function isContentType(name: string): name is ContentType {
   return NEW_ENTRY_TYPES.some((type) => type === name);
