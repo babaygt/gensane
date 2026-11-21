@@ -29,7 +29,7 @@ const files: Record<string, string> = {
   "content/blog/2026-11-17-compilers.md": post(
     "Compilers",
     "2026-11-17",
-    "```ts\nconst answer = 42;\n```\n\n| Tool | Year | Since |\n| --- | :-: | --: |\n| pnpm | 2021 | 5 |\n",
+    '```ts\nconst answer = 42; // the answer\nconst name = "Ada";\n```\n\n| Tool | Year | Since |\n| --- | :-: | --: |\n| pnpm | 2021 | 5 |\n',
   ),
   "content/blog/2026-11-18-parsers.md": post("Parsers", "2026-11-18", "A note on parsing.\n"),
   "content/pages/about.md": "---\ntitle: About\n---\nHello.\n",
@@ -257,13 +257,37 @@ describe("in a real browser", { timeout: 30_000 }, () => {
     await page.context().close();
   });
 
+  it("colors code with the palette's colors", async () => {
+    const page = await open("/blog/compilers/");
+    const colors = await page.evaluate<Record<string, string>>(
+      `(() => {
+        const root = getComputedStyle(document.documentElement);
+        const probe = document.createElement("span");
+        document.body.append(probe);
+        const colorOf = (name) => {
+          probe.style.color = root.getPropertyValue(name);
+          return getComputedStyle(probe).color;
+        };
+        const tokenColor = (kind) => getComputedStyle(document.querySelector(".hl-" + kind)).color;
+        return {
+          keyword: tokenColor("keyword") === colorOf("--accent"),
+          string: tokenColor("string") === colorOf("--tip"),
+          number: tokenColor("number") === colorOf("--warning"),
+          comment: tokenColor("comment") === colorOf("--muted"),
+        };
+      })()`,
+    );
+    expect(colors).toEqual({ keyword: true, string: true, number: true, comment: true });
+    await page.context().close();
+  });
+
   it("labels a code block with its language, and copies it", async () => {
     const page = await open("/blog/compilers/");
     expect(await page.locator(".code-language").textContent()).toBe("ts");
     await page.locator(".code-copy").click();
     await expect.poll(() => page.locator(".code-copy").textContent()).toBe("Copied");
     expect(await page.evaluate<string>("navigator.clipboard.readText()")).toBe(
-      "const answer = 42;\n",
+      'const answer = 42; // the answer\nconst name = "Ada";\n',
     );
     await page.context().close();
   });

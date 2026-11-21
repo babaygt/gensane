@@ -74,12 +74,23 @@ describe("highlight", () => {
 
   it("doesn't take a word inside another word, or a number at the end of a name, for a keyword or a number", () => {
     expect(highlight("letter let2 x1 _if", "ts")).toBe("letter let2 x1 _if");
+    expect(highlight("1px2", "ts")).toBe(`${n("1")}px2`);
+  });
+
+  it("reads numbers as the languages write them", () => {
+    expect(highlight("0x1f 0b101 0o17 1_000 2.5e-3", "ts")).toBe(
+      [n("0x1f"), n("0b101"), n("0o17"), n("1_000"), n("2.5e-3")].join(" "),
+    );
   });
 
   it("ends a string at the end of its line, but lets a backtick string and a block comment span lines", () => {
     expect(highlight('"open\nnext', "ts")).toBe(`${s('"open')}\nnext`);
     expect(highlight("`a\nb`", "ts")).toBe(s("`a\nb`"));
     expect(highlight("/* a\nb", "ts")).toBe(c("/* a\nb"));
+  });
+
+  it("lets Python's triple-quoted strings span lines", () => {
+    expect(highlight('"""First\nsecond""" x', "python")).toBe(`${s('"""First\nsecond"""')} x`);
   });
 
   it("keeps an escaped quote inside its string", () => {
