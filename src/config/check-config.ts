@@ -150,12 +150,12 @@ class ConfigCheck {
         if (setting === "allow" || setting === "escape") continue;
         this.wrongValue(path, '"allow" or "escape"', setting, 'write "allow" or "escape"');
       } else if (name === "highlight") {
-        if (typeof setting !== "function") {
+        if (typeof setting !== "function" && setting !== false) {
           this.wrongValue(
             path,
-            "a function",
+            "a function, or false",
             setting,
-            "write a function, such as (code, language) => undefined",
+            "write a function, such as (code, language) => undefined, or false to color no code",
           );
         }
       } else if (name === "headingIds") {

@@ -357,6 +357,23 @@ pre {
   padding-top: 2rem;
 }
 
+.hl-keyword {
+  color: var(--accent);
+}
+
+.hl-string {
+  color: var(--tip);
+}
+
+.hl-number {
+  color: var(--warning);
+}
+
+.hl-comment {
+  color: var(--muted);
+  font-style: italic;
+}
+
 .code-language {
   position: absolute;
   top: 0.4rem;

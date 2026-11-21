@@ -4,6 +4,7 @@
  * every step are kept.
  */
 import { type Diagnostic, type Result, err, hasErrors, ok } from "../../diagnostics/index.ts";
+import { highlight } from "../../highlight/index.ts";
 import type { MarkdownOptions } from "../../markdown/index.ts";
 import { type TemplateFilter, compileTemplates, renderTemplate } from "../../template/index.ts";
 import { loadContent } from "../content/load-content.ts";
@@ -95,7 +96,8 @@ function finish(
 export function buildSite(input: SiteInput): Result<BuiltSite, readonly Diagnostic[]> {
   const config = input.config ?? {};
   const loaded = loadContent(input.content, {
-    ...(config.markdown === undefined ? {} : { markdown: config.markdown }),
+    // gensane's own highlighter, unless the config has one of its own or says `false`.
+    markdown: { ...config.markdown, highlight: config.markdown?.highlight ?? highlight },
     ...(config.contentFolder === undefined ? {} : { contentFolder: config.contentFolder }),
   });
   if (!loaded.ok) return finish([], loaded.error);

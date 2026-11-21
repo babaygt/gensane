@@ -17,6 +17,7 @@ A **Markdown compiler**:
 - GitHub features: tables, task lists, strikethrough, footnotes and callouts.
 - Heading ids and a table of contents.
 - Warnings with an exact file, line and column.
+- [Colors in code](docs/highlight/README.md) at build time, for TypeScript, JavaScript, JSON, CSS, HTML, shell, Python, Rust and Go.
 
 Read the [Markdown compiler documentation](docs/markdown-compiler/README.md) to see how it works.
 
@@ -106,6 +107,7 @@ pnpm example       # build, then serve the example site at http://localhost:4000
 src/
   diagnostics/   error reporting: source spans, diagnostics, Result type
   markdown/      the Markdown compiler
+  highlight/     colors in code
     blocks/      lines to block structure
     inlines/     emphasis, links and other syntax inside text
     passes/      steps over the syntax tree
