@@ -1,7 +1,7 @@
 // Every palette must be readable: each color text is written in, on each background of its side.
 import { describe, expect, it } from "vitest";
 import { READABLE_CONTRAST, contrast, isHexColor, luminance } from "./contrast.ts";
-import { PALETTES } from "./palettes.ts";
+import { CALLOUT_COLORS, PALETTES } from "./palettes.ts";
 
 const sides = Object.entries(PALETTES).flatMap(([name, palette]) =>
   (["light", "dark"] as const).map((mode) => ({ name, mode, colors: palette[mode] })),
@@ -38,4 +38,15 @@ it("has six palettes", () => {
     "gruvbox",
     "midnight",
   ]);
+});
+
+describe.each(sides)("callouts on the $mode side of $name", ({ mode, colors }) => {
+  it.each(Object.entries(CALLOUT_COLORS[mode]))(
+    "has %s readable on the background and the surface",
+    (_, color) => {
+      expect(contrast(color, colors.background)).toBeGreaterThanOrEqual(READABLE_CONTRAST);
+      expect(contrast(color, colors.surface)).toBeGreaterThanOrEqual(READABLE_CONTRAST);
+      expect(isHexColor(color)).toBe(true);
+    },
+  );
 });

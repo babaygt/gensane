@@ -90,6 +90,11 @@ describe("the example site", () => {
     }
   });
 
+  it("uses the default palette, which the screenshots of the theme show", async () => {
+    const settings = await readFile(join(site, "dist", "assets", "settings.css"), "utf8");
+    expect(settings).toContain("--background: #ffffff;");
+  });
+
   it("leaves out the draft, which only gensane dev shows", () => {
     expect(built.filter((path) => path.includes("type-checker"))).toEqual([]);
   });

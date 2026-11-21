@@ -1,6 +1,6 @@
 // The default theme, checked on a site with every type of content and every Markdown feature: every
 // page must be valid HTML, accessible, and free of problems, and the theme must stay small.
-import { mkdir, mkdtemp, readFile, rm, stat, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { gzipSync } from "node:zlib";
@@ -185,22 +185,27 @@ describe("the default theme", () => {
     );
   });
 
-  it("stays small: less than 10 KB of CSS, and less than 3 KB for each script as readers download it", async () => {
+  it("stays small: less than 3 KB for the CSS and for each script as readers download them", async () => {
     const assets = join(defaultTheme, "assets");
-    expect((await stat(join(assets, "style.css"))).size).toBeLessThan(10 * 1024);
-    for (const script of ["theme.js", "search.js"]) {
-      const source = await readFile(join(assets, script));
-      // Hosts send scripts compressed; the uncompressed file also has a limit, so it can't grow unseen.
+    // Hosts send them compressed; the uncompressed file also has a limit, so it can't grow unseen.
+    for (const [file, limit] of [
+      ["style.css", 12],
+      ["theme.js", 4],
+      ["search.js", 4],
+    ] as const) {
+      const source = await readFile(join(assets, file));
       expect(gzipSync(source).length).toBeLessThan(3 * 1024);
-      expect(source.length).toBeLessThan(4 * 1024);
+      expect(source.length).toBeLessThan(limit * 1024);
     }
   });
 
-  it("uses only the custom properties that the settings file writes", async () => {
+  it("uses only the custom properties that the settings file or the stylesheet itself write", async () => {
     const css = await readFile(join(defaultTheme, "assets", "style.css"), "utf8");
-    const used = new Set([...css.matchAll(/var\(--([a-z-]+)\)/g)].map(([, name]) => name));
+    const used = new Set([...css.matchAll(/var\(--([a-z-]+)/g)].map(([, name]) => name));
     const settings = pageOf(await build(), "assets/settings.css");
-    const written = new Set([...settings.matchAll(/--([a-z-]+):/g)].map(([, name]) => name));
+    const written = new Set(
+      [...`${settings}\n${css}`.matchAll(/--([a-z-]+):/g)].map(([, name]) => name),
+    );
     expect([...used].filter((name) => !written.has(name))).toEqual([]);
   });
 });
@@ -429,6 +434,11 @@ describe("an ejected theme", () => {
       });
       expect(after.ok && after.value).toEqual(before);
       expect(read.themeAssets.map(({ path }) => path)).toEqual([
+        "assets/callout-caution.svg",
+        "assets/callout-important.svg",
+        "assets/callout-note.svg",
+        "assets/callout-tip.svg",
+        "assets/callout-warning.svg",
         "assets/icons.svg",
         "assets/search.js",
         "assets/style.css",

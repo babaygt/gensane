@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { type Colors, PALETTES } from "./palettes.ts";
+import { CALLOUT_COLORS, type CalloutColors, type Colors, PALETTES } from "./palettes.ts";
 import { themeCss } from "./theme-css.ts";
 import { themeOf } from "./theme-settings.ts";
 
@@ -54,7 +54,7 @@ describe("themeOf", () => {
 });
 
 /** The custom properties of some colors, as the generated file writes them. */
-function lines(colors: Colors, indent: string): string[] {
+function lines(colors: Colors | CalloutColors, indent: string): string[] {
   return Object.entries(colors).map(([name, value]) => `${indent}--${name}: ${value};`);
 }
 
@@ -71,14 +71,17 @@ describe("themeCss", () => {
         '  --font: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;',
         "  --width: 42rem;",
         ...lines(light, "  "),
+        ...lines(CALLOUT_COLORS.light, "  "),
         "}",
         "@media (prefers-color-scheme: dark) {",
         '  :root:not([data-color-scheme="light"]) {',
         ...lines(dark, "    "),
+        ...lines(CALLOUT_COLORS.dark, "    "),
         "  }",
         "}",
         ':root[data-color-scheme="dark"] {',
         ...lines(dark, "  "),
+        ...lines(CALLOUT_COLORS.dark, "  "),
         "}",
         "",
       ].join("\n"),
@@ -90,6 +93,8 @@ describe("themeCss", () => {
     expect(css).toContain("color-scheme: light;");
     expect(css).toContain(`--background: ${light.background};`);
     expect(css).not.toContain(dark.background);
+    expect(css).toContain(`--caution: ${CALLOUT_COLORS.light.caution};`);
+    expect(css).not.toContain(CALLOUT_COLORS.dark.caution);
     expect(css).not.toContain("prefers-color-scheme");
   });
 
