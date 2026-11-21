@@ -485,6 +485,31 @@ describe("the theme", () => {
   });
 });
 
+describe("colors in code", () => {
+  const content = { "pages/about.md": `${minimal.page}\n\`\`\`ts\nconst a = 1;\n\`\`\`\n` };
+  const templates = { ...plainTheme, "about.html": "{{ page.html }}" };
+  const code = (markdown: NonNullable<SiteInput["config"]>) =>
+    fileOf(built({ content, templates, config: markdown }), "about/index.html") ?? "";
+
+  it("are added by gensane itself, at build time", () => {
+    expect(code({})).toContain(
+      '<pre><code class="language-ts"><span class="hl-keyword">const</span> a = <span class="hl-number">1</span>;',
+    );
+  });
+
+  it("come from the config's own highlighter instead, when it has one", () => {
+    expect(code({ markdown: { highlight: () => "mine" } })).toContain(
+      '<code class="language-ts">mine</code>',
+    );
+  });
+
+  it("are left out with highlight: false", () => {
+    expect(code({ markdown: { highlight: false } })).toContain(
+      '<code class="language-ts">const a = 1;\n</code>',
+    );
+  });
+});
+
 describe("the icon of the site", () => {
   const content = { "pages/about.md": minimal.page };
   const templates = { ...plainTheme, "about.html": "{{ favicon }}" };
