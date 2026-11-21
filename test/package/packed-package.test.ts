@@ -1,0 +1,103 @@
+// The package as npm would publish it: built, packed, installed from the packed file into a new folder,
+// and used there as a stranger would, through `node_modules/.bin/gensane`. Nothing is downloaded: the
+// package has no dependencies, and npm runs offline.
+import { execFile } from "node:child_process";
+import { cp, mkdtemp, readFile, readdir, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { promisify } from "node:util";
+import { afterAll, describe, expect, it } from "vitest";
+
+const run = promisify(execFile);
+const packageRoot = join(import.meta.dirname, "..", "..");
+const folders: string[] = [];
+afterAll(async () => {
+  await Promise.all(folders.map((folder) => rm(folder, { recursive: true, force: true })));
+});
+
+async function newFolder(name: string): Promise<string> {
+  const folder = await mkdtemp(join(tmpdir(), `gensane-${name}-`));
+  folders.push(folder);
+  return folder;
+}
+
+const npm = (folder: string, ...args: string[]) =>
+  run("npm", [...args, "--offline", "--no-audit", "--no-fund"], { cwd: folder });
+
+/** Builds into a copy of the package's files, so the repository's own `dist/` is left alone. */
+async function packedPackage(): Promise<{ tarball: string; files: string[] }> {
+  const copy = await newFolder("package");
+  for (const file of ["package.json", "README.md", "LICENSE", "themes"]) {
+    await cp(join(packageRoot, file), join(copy, file), { recursive: true });
+  }
+  await run(process.execPath, [
+    join(packageRoot, "node_modules", "typescript", "bin", "tsc"),
+    "-p",
+    join(packageRoot, "tsconfig.build.json"),
+    "--outDir",
+    join(copy, "dist"),
+  ]);
+  const { stdout } = await npm(copy, "pack", "--json");
+  const [packed] = JSON.parse(stdout) as [{ filename: string; files: { path: string }[] }];
+  return { tarball: join(copy, packed.filename), files: packed.files.map(({ path }) => path) };
+}
+
+const gensane = (folder: string, ...args: string[]) =>
+  run(join(folder, "node_modules", ".bin", "gensane"), args, {
+    cwd: folder,
+    env: { ...process.env, NO_COLOR: "1" },
+  });
+
+describe("the package as npm publishes it", { timeout: 120_000 }, () => {
+  const packed = packedPackage();
+
+  it("holds the program, its types and the default theme, and no tests, maps or sources", async () => {
+    const { files } = await packed;
+    expect(files).toContain("dist/cli/main.js");
+    expect(files).toContain("dist/index.d.ts");
+    expect(files).toContain("themes/default/base.html");
+    expect(files).toContain("LICENSE");
+    expect(files.filter((file) => /\.test\.|\.map$|^src\/|^test\//.test(file))).toEqual([]);
+  });
+
+  it("has every file its package.json points at", async () => {
+    const { files } = await packed;
+    const manifest = JSON.parse(await readFile(join(packageRoot, "package.json"), "utf8"));
+    const pointedAt = [
+      ...Object.values(manifest.bin as Record<string, string>),
+      ...Object.values(manifest.exports["."] as Record<string, string>),
+    ].map((path) => path.replace(/^\.\//, ""));
+    expect(pointedAt.length).toBeGreaterThan(2);
+    expect(pointedAt.filter((path) => !files.includes(path))).toEqual([]);
+  });
+
+  it("starts, builds and checks a site once it is installed from the packed file", async () => {
+    const { tarball } = await packed;
+    const folder = await newFolder("stranger");
+    await npm(folder, "init", "--yes");
+    await npm(folder, "install", tarball);
+    expect((await gensane(folder, "--version")).stdout.trim()).toMatch(/^\d+\.\d+\.\d+/);
+
+    await gensane(folder, "init", "my-site", "--yes");
+    const site = join(folder, "my-site");
+    await npm(site, "install", "--save-dev", tarball);
+    const build = await gensane(site, "build");
+    expect(build.stdout).toMatch(/^Built \d+ pages into dist/);
+    expect(await readdir(join(site, "dist"))).toContain("index.html");
+    expect(
+      (await readFile(join(site, "dist", "assets", "style.css"), "utf8")).length,
+    ).toBeGreaterThan(0);
+    const check = await gensane(site, "check");
+    expect(check.stdout).toMatch(/^Checked \d+ pages/);
+  });
+
+  it("tells npm where the code, the issues and the home page are", async () => {
+    const manifest = JSON.parse(await readFile(join(packageRoot, "package.json"), "utf8"));
+    expect(manifest).toMatchObject({
+      repository: { url: "git+https://github.com/babaygt/gensane.git" },
+      bugs: { url: "https://github.com/babaygt/gensane/issues" },
+      homepage: "https://gensane.dev",
+      license: "MIT",
+    });
+  });
+});
