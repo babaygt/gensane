@@ -155,7 +155,7 @@ Reads the arguments, picks the command, and turns every way it can end into an e
 
 | Name                                                   | Purpose                                                            |
 | ------------------------------------------------------ | ------------------------------------------------------------------ |
-| [`DevServer`](../../src/cli/dev/dev-server.ts)         | HTTP, builds after changes, and reload events                      |
+| [`DevServer`](../../src/cli/dev/dev-server.ts)         | HTTP, builds after changes, and reloads over WebSockets            |
 | [`#buildAfterChange`](../../src/cli/dev/dev-server.ts) | Never two builds at once, and one more for a change during a build |
 | [`changesSite`](../../src/cli/dev/dev-server.ts)       | Only `content/`, `theme/`, `public/` and the config                |
 
@@ -176,7 +176,19 @@ Pure.
 | Name                                                 | Purpose                                 |
 | ---------------------------------------------------- | --------------------------------------- |
 | [`withLiveReload`](../../src/cli/dev/live-reload.ts) | Adds the reload script before `</body>` |
-| [`EVENTS_PATH`](../../src/cli/dev/live-reload.ts)    | Where pages listen for the next build   |
+| [`RELOAD_PATH`](../../src/cli/dev/live-reload.ts)    | Where pages listen for the next build   |
+
+### [`src/cli/dev/web-socket.ts`](../../src/cli/dev/web-socket.ts)
+
+The part of the WebSocket protocol (RFC 6455) that live reload needs. Pure, apart from `node:crypto` for the handshake.
+
+| Name                                               | Purpose                                                        |
+| -------------------------------------------------- | -------------------------------------------------------------- |
+| [`acceptKey`](../../src/cli/dev/web-socket.ts)     | The server's answer to a browser's handshake key               |
+| [`frame`](../../src/cli/dev/web-socket.ts)         | A whole frame, as a server sends it, with its length encoded   |
+| [`textFrame`](../../src/cli/dev/web-socket.ts)     | A text message                                                 |
+| [`closeFrame`](../../src/cli/dev/web-socket.ts)    | Closing, with the reason as a code                             |
+| [`opcodeOf`](../../src/cli/dev/web-socket.ts)      | The kind of a frame a browser sent                             |
 
 ### [`src/cli/dev/problems-page.ts`](../../src/cli/dev/problems-page.ts)
 

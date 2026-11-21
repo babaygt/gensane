@@ -1,16 +1,26 @@
 /**
  * The server of `gensane dev`. It builds the site in memory, answers requests from that build, builds
- * again when a file changes, and tells every open page to reload.
+ * again when a file changes, and tells every open page to reload, over a WebSocket.
  */
 import { type IncomingMessage, type Server, type ServerResponse, createServer } from "node:http";
+import type { Duplex } from "node:stream";
 import { buildFolder, countProblems, countWarnings, pagesOf } from "../build-folder.ts";
 import { CONFIG_FILES } from "../config-file.ts";
 import type { Environment } from "../environment.ts";
 import { count, printProblems } from "../report.ts";
 import { type Answer, type ServedSite, answer } from "./answer.ts";
-import { EVENTS_PATH, RELOAD_EVENT, withLiveReload } from "./live-reload.ts";
+import { RELOAD_MESSAGE, RELOAD_PATH, withLiveReload } from "./live-reload.ts";
 import { filesToCopy } from "../site-folder.ts";
 import { problemsPage } from "./problems-page.ts";
+import {
+  GOING_AWAY,
+  NORMAL,
+  Opcode,
+  acceptKey,
+  closeFrame,
+  opcodeOf,
+  textFrame,
+} from "./web-socket.ts";
 
 /** Editors often save a file in several steps, so changes this close together become one build. */
 const QUIET_TIME = 30;
@@ -24,7 +34,8 @@ export function changesSite(path: string): boolean {
 export class DevServer {
   readonly #environment: Environment;
   readonly #server: Server;
-  readonly #pages = new Set<ServerResponse>();
+  /** The open pages, each waiting on a WebSocket for the next build. */
+  readonly #pages = new Set<Duplex>();
   #served: ServedSite = { kind: "site", files: new Map(), copies: new Map() };
   #building: Promise<void> | undefined;
   #buildAgain = false;
@@ -37,6 +48,9 @@ export class DevServer {
     this.#environment = environment;
     this.#server = createServer((request, response) => {
       void this.#respond(request, response);
+    });
+    this.#server.on("upgrade", (request: IncomingMessage, socket: Duplex) => {
+      this.#upgrade(request, socket);
     });
   }
 
@@ -85,7 +99,8 @@ export class DevServer {
         `${changed}Found ${countProblems(build.problems)}; the browser shows them until they are fixed.`,
       );
     }
-    for (const page of this.#pages) page.write(RELOAD_EVENT);
+    const reload = textFrame(RELOAD_MESSAGE);
+    for (const page of this.#pages) page.write(reload);
   }
 
   /** Builds again after a change, once the changes stop for a moment, and never two builds at once. */
@@ -117,7 +132,9 @@ export class DevServer {
     this.#closed = true;
     clearTimeout(this.#timer);
     await this.#building;
-    for (const page of this.#pages) page.end();
+    // A WebSocket is no longer one of the server's connections, so each one is closed here.
+    const goingAway = closeFrame(GOING_AWAY);
+    for (const page of this.#pages) page.end(goingAway);
     this.#server.closeAllConnections();
     await new Promise((resolve) => this.#server.close(resolve));
   }
@@ -128,23 +145,37 @@ export class DevServer {
       response.writeHead(405, { allow: "GET, HEAD" }).end();
       return;
     }
-    if (pathname === EVENTS_PATH) {
-      this.#listen(request, response);
-      return;
-    }
     await this.#send(answer(this.#served, pathname), response);
   }
 
-  /** Keeps the request open, so a reload can be sent to the page later. */
-  #listen(request: IncomingMessage, response: ServerResponse): void {
-    response.writeHead(200, {
-      "content-type": "text/event-stream",
-      "cache-control": "no-cache",
-      connection: "keep-alive",
+  /** Accepts a page's WebSocket, so a reload can be sent to it later. */
+  #upgrade(request: IncomingMessage, socket: Duplex): void {
+    const { pathname } = new URL(request.url ?? "/", "http://localhost");
+    const key = request.headers["sec-websocket-key"];
+    const refuse = (status: string) =>
+      socket.end(`HTTP/1.1 ${status}\r\nconnection: close\r\n\r\n`);
+    if (pathname !== RELOAD_PATH) return void refuse("404 Not Found");
+    if (request.headers.upgrade?.toLowerCase() !== "websocket" || typeof key !== "string") {
+      return void refuse("400 Bad Request");
+    }
+    socket.write(
+      [
+        "HTTP/1.1 101 Switching Protocols",
+        "upgrade: websocket",
+        "connection: Upgrade",
+        `sec-websocket-accept: ${acceptKey(key)}`,
+        "",
+        "",
+      ].join("\r\n"),
+    );
+    this.#pages.add(socket);
+    socket.on("data", (data: Uint8Array) => {
+      // A page only ever says goodbye, which is answered; anything else it sends is ignored.
+      if (data[0] !== undefined && opcodeOf(data[0]) === Opcode.close)
+        socket.end(closeFrame(NORMAL));
     });
-    response.write(": connected\n\n");
-    this.#pages.add(response);
-    request.on("close", () => this.#pages.delete(response));
+    socket.on("error", () => socket.destroy());
+    socket.on("close", () => this.#pages.delete(socket));
   }
 
   async #send(reply: Answer, response: ServerResponse): Promise<void> {
