@@ -73,7 +73,7 @@ export default defineConfig({
     "check": "gensane check"
   },
   "devDependencies": {
-    "gensane": "^0.0.0"
+    "gensane": "^0.1.0"
   }
 }
 ```

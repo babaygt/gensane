@@ -76,7 +76,7 @@ the site, but no feed yet: drafts never appear in the feed, so it waits for the 
 <!-- runs -->
 ```console
 $ gensane --help
-gensane 0.0.0: a static site generator for developer blogs and portfolios
+gensane 0.1.0: a static site generator for developer blogs and portfolios
 
 Usage: gensane <command> [arguments]
 
