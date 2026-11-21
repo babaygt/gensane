@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 200" role="img" aria-labelledby="title">
+  <title id="title">Markdown files go into the generator, which writes HTML, CSS and a search index</title>
+  <rect width="640" height="200" fill="#eceff4"/>
+  <g font-family="system-ui, sans-serif" font-size="18" text-anchor="middle" fill="#2e3440">
+    <rect x="30" y="70" width="150" height="60" rx="8" fill="#d8dee9"/>
+    <text x="105" y="106">Markdown</text>
+    <rect x="245" y="70" width="150" height="60" rx="8" fill="#5e81ac"/>
+    <text x="320" y="106" fill="#eceff4">gensane</text>
+    <rect x="460" y="70" width="150" height="60" rx="8" fill="#d8dee9"/>
+    <text x="535" y="106">HTML + CSS</text>
+  </g>
+  <path d="M185 100h52m-10-8 10 8-10 8M400 100h52m-10-8 10 8-10 8" stroke="#4c566a" stroke-width="3" fill="none"/>
+</svg>
