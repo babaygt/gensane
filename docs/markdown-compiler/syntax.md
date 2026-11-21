@@ -127,18 +127,21 @@ const answer = 42;
 <table>
 <thead>
 <tr>
-<th align="left">Tool</th>
-<th align="right">Since</th>
+<th class="align-left">Tool</th>
+<th class="align-right">Since</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td align="left">pnpm</td>
-<td align="right">2021</td>
+<td class="align-left">pnpm</td>
+<td class="align-right">2021</td>
 </tr>
 </tbody>
 </table>
 ```
+
+The alignment of a column is a class on its cells, `align-left`, `align-center` or `align-right`, which the theme styles; the
+default theme does. HTML no longer has the `align` attribute that the GitHub spec shows.
 
 ## Footnotes
 
