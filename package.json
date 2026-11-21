@@ -38,6 +38,7 @@
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
     "example": "pnpm build && cd example && node ../dist/cli/main.js dev",
+    "screenshots": "node scripts/screenshots.ts",
     "typecheck": "tsc --noEmit && tsc -p tsconfig.theme.json",
     "lint": "oxlint",
     "fmt": "oxfmt",
