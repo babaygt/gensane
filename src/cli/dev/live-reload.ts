@@ -1,9 +1,9 @@
-/** Reloads the browser after every build, over server-sent events. */
+/** Reloads the browser after every build, over a WebSocket. */
 
 /** Where the browser listens. No page of a site starts with `__gensane`. */
-export const EVENTS_PATH = "/__gensane/events";
+export const RELOAD_PATH = "/__gensane/reload";
 
-const SCRIPT = `<script>new EventSource("${EVENTS_PATH}").addEventListener("reload", () => location.reload());</script>`;
+const SCRIPT = `<script>new WebSocket("ws://" + location.host + "${RELOAD_PATH}").addEventListener("message", () => location.reload());</script>`;
 
 /** Adds the script before `</body>`, or at the end when the page has none. Only `gensane dev` adds it. */
 export function withLiveReload(html: string): string {
@@ -12,4 +12,4 @@ export function withLiveReload(html: string): string {
 }
 
 /** What is sent to every open page after a build. */
-export const RELOAD_EVENT = "event: reload\ndata: \n\n";
+export const RELOAD_MESSAGE = "reload";

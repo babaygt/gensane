@@ -42,6 +42,8 @@ content/blog/hello.md changed. Rebuilt 5 pages in 6 ms, with no warnings.
 ```
 
 Every open page then reloads by itself: each page gets a small script that listens for the next build, which only `gensane dev` adds.
+It listens on a WebSocket, which a browser doesn't count among the six connections it opens to a server at most, so any number of open
+pages and tabs can wait for the next build without slowing down the next page you open.
 
 ## While the site has errors
 
