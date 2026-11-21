@@ -62,6 +62,7 @@ the site, but no feed yet: drafts never appear in the feed, so it waits for the 
 | [`gensane check`](build-and-check.md)                | Does the same work without writing anything, for CI                      |
 | [`gensane dev`](dev.md)                              | Serves the site while you write, and reloads the browser on every change |
 | [`gensane init`](init.md)                            | Starts a new site, from a few questions                                  |
+| [`gensane deploy init`](deploy.md)                   | Adds the files that publish the site on GitHub Pages, Cloudflare or Netlify |
 | [`gensane new`](new.md)                              | Writes a new content file with the fields its type needs                 |
 | [`gensane theme eject`](theme.md#changing-all-of-it) | Copies the default theme into `theme/`, to change all of it              |
 
@@ -73,12 +74,13 @@ gensane 0.0.0: a static site generator for developer blogs and portfolios
 Usage: gensane <command> [arguments]
 
 Commands:
-  build  Build the site into dist/
-  check  Check the site for problems, without writing anything
-  dev    Serve the site while you write, and reload the browser on every change
-  init   Start a new site, from a few questions
-  new    Write a new content file, such as a post
-  theme  Copy the default theme into theme/, to change all of it
+  build   Build the site into dist/
+  check   Check the site for problems, without writing anything
+  dev     Serve the site while you write, and reload the browser on every change
+  deploy  Add the files that publish the site on a host
+  init    Start a new site, from a few questions
+  new     Write a new content file, such as a post
+  theme   Copy the default theme into theme/, to change all of it
 
 Run gensane <command> --help to see the arguments of a command.
 ```
@@ -104,6 +106,7 @@ Scripts and CI can tell from the exit code what happened.
 | [The default theme](theme.md)            | What the theme shows, changing one part of it, and its files            |
 | [build and check](build-and-check.md)    | Building, checking in CI, drafts and the output folder                 |
 | [init](init.md)                          | Starting a new site                                                    |
+| [deploy](deploy.md)                      | Publishing the site on GitHub Pages, Cloudflare or Netlify             |
 | [new](new.md)                            | Starting a post, a project, a talk or a page                           |
 | [dev](dev.md)                            | Serving the site while you write                                       |
 | [Problems](problems.md)                  | How problems are printed, mistakes in a command, and GS501 to GS506    |
