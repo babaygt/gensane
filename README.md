@@ -139,6 +139,7 @@ test/
   theme/         every page of the default theme: valid, accessible and small
   browser/       the default theme in a real browser
   example/       the example site: built with no warnings, every page checked
+  package/       the package as npm publishes it, installed and used from the packed file
   support/       helpers the tests above share
 example/         the example site
 docs/            documentation
