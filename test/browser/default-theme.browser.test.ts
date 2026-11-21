@@ -24,7 +24,7 @@ const post = (title: string, date: string, body: string) =>
 
 const files: Record<string, string> = {
   "gensane.config.mjs":
-    'export default { site: { title: "Ada\'s notes", url: "https://example.com" } };\n',
+    'export default { site: { title: "Ada Lovelace\'s notes", url: "https://example.com" } };\n',
   "content/blog/2026-11-17-compilers.md": post(
     "Compilers",
     "2026-11-17",
@@ -33,6 +33,10 @@ const files: Record<string, string> = {
   "content/blog/2026-11-18-parsers.md": post("Parsers", "2026-11-18", "A note on parsing.\n"),
   "content/pages/about.md": "---\ntitle: About\n---\nHello.\n",
   "content/projects/lamp.md": "---\ntitle: Lamp\ndescription: A small lamp\n---\n",
+  "content/projects/kettle.md":
+    "---\ntitle: Kettle\ndescription: A kettle with a picture\ncover: /cover.svg\n---\n",
+  "public/cover.svg":
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 9"><rect width="16" height="9"/></svg>\n',
   "content/talks/meetup.md": "---\ntitle: A meetup talk\nevent: Meetup\ndate: 2026-10-01\n---\n",
 };
 
@@ -192,6 +196,18 @@ describe("in a real browser", { timeout: 30_000 }, () => {
     expect(phone.menu[0]).toBeGreaterThan(phone.title + 20);
     expect(Math.abs(phone.search - phone.title)).toBeLessThan(12);
     expect(phone.searchBox).toBe(false);
+  });
+
+  it("makes each card as tall as its own content, so one without a cover isn't stretched", async () => {
+    const page = await open("/projects/");
+    const heights = await Promise.all(
+      (await page.locator(".card").all()).map(
+        async (card) => (await card.boundingBox())?.height ?? 0,
+      ),
+    );
+    expect(heights).toHaveLength(2);
+    expect(Math.abs((heights[0] ?? 0) - (heights[1] ?? 0))).toBeGreaterThan(50);
+    await page.context().close();
   });
 
   it("labels a code block with its language, and copies it", async () => {
