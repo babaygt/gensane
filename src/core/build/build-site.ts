@@ -17,6 +17,7 @@ import { buildSiteGraph } from "../site/site-graph.ts";
 import { siteAddressOf } from "../feeds/site-address.ts";
 import { withBasePath } from "./base-path.ts";
 import { SEARCH_INDEX_PATH, searchIndex } from "../search/search-index.ts";
+import { FAVICON_PATH, OWN_FAVICONS, faviconSvg, initialOf } from "../theme/favicon.ts";
 import { THEME_CSS_PATH, themeCss } from "../theme/theme-css.ts";
 import { type ThemeSettings, themeOf } from "../theme/theme-settings.ts";
 import { outputPath } from "./output-paths.ts";
@@ -43,6 +44,8 @@ export interface SiteConfig {
   readonly contentFolder?: string;
   /** The config file, for problems with the config. Defaults to `gensane.config.ts`. */
   readonly configFile?: string;
+  /** The day of the build, as `YYYY-MM-DD`, which templates see as `today`. */
+  readonly today?: string;
 }
 
 export interface SiteInput {
@@ -117,12 +120,26 @@ export function buildSite(input: SiteInput): Result<BuiltSite, readonly Diagnost
     graph.value.graph,
     config.configFile ?? "gensane.config.ts",
   );
+  // The site's own icon wins, then the theme's, and only then one is made.
+  const ownFavicon =
+    OWN_FAVICONS.find((path) => (input.publicFiles ?? []).includes(path)) ??
+    (input.themeAssets ?? []).find((path) => path === FAVICON_PATH);
+  const title = config.site?.["title"];
+  const letter =
+    ownFavicon === undefined && typeof title === "string" ? initialOf(title) : undefined;
+  const madeFavicon =
+    letter === undefined
+      ? []
+      : [{ path: FAVICON_PATH, content: faviconSvg(letter, theme.colors.light) }];
   const variables = new TemplateVariables({
     site: config.site ?? {},
     theme,
     collections: graph.value.graph.collections,
     routes: graph.value.graph.routes,
     feed: feeds.files.some(({ path }) => path === "feed.xml") ? "/feed.xml" : undefined,
+    favicon:
+      ownFavicon === undefined ? madeFavicon.map(({ path }) => `/${path}`)[0] : `/${ownFavicon}`,
+    today: config.today,
   });
   const files: OutputFile[] = [];
   const problems: Diagnostic[] = [...warnings];
@@ -157,6 +174,7 @@ export function buildSite(input: SiteInput): Result<BuiltSite, readonly Diagnost
     ...files,
     ...feeds.files,
     { path: THEME_CSS_PATH, content: themeCss(theme) },
+    ...madeFavicon,
     ...(hasSearch ? [{ path: SEARCH_INDEX_PATH, content: searchIndex(loaded.value.entries) }] : []),
   ];
   const found = [...problems, ...feeds.problems];

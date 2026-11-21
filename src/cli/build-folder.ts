@@ -27,6 +27,8 @@ export type FolderBuild =
 
 interface BuildOptions {
   readonly drafts: boolean;
+  /** The day of the build, as `YYYY-MM-DD`, which templates see as `today`. */
+  readonly today: string;
   /** `gensane dev` serves the site at `/`, so it leaves links as they are written. */
   readonly servedAtRoot?: boolean;
 }
@@ -56,7 +58,7 @@ export async function buildFolder(
   if (!loaded.ok) return { kind: "config-failed", problems: loaded.error };
   const files = await readSiteFolder(fileSystem, siteFolder, defaultTheme);
   const built = buildSite({
-    config: siteConfigOf(loaded.value, options),
+    config: { ...siteConfigOf(loaded.value, options), today: options.today },
     content: files.content,
     templates: files.templates,
     publicFiles: files.publicFiles,

@@ -10,9 +10,12 @@
 <div class="content">
 {{ page.html }}
 </div>
+<footer class="post-footer">
+{% include "partials/tags.html" %}
 {% if previous or next %}<nav class="neighbours" aria-label="More posts">
-{% if previous %}<a href="{{ previous.url }}" rel="prev">← {{ previous.title }}</a>{% endif %}
-{% if next %}<a href="{{ next.url }}" rel="next">{{ next.title }} →</a>{% endif %}
+{% if previous %}<a class="neighbour" href="{{ previous.url }}" rel="prev"><span class="meta">← Older</span>{{ previous.title }}</a>{% endif %}
+{% if next %}<a class="neighbour neighbour-next" href="{{ next.url }}" rel="next"><span class="meta">Newer →</span>{{ next.title }}</a>{% endif %}
 </nav>
-{% endif %}</article>
+{% endif %}</footer>
+</article>
 {% endblock %}

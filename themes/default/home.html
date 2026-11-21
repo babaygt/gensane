@@ -1,27 +1,35 @@
 {% extends "base.html" %}
 {% block title %}{{ site.title | default(page.title) }}{% endblock %}
 {% block content %}
-<h1 class="home-title">{{ site.title | default(page.title) }}</h1>
+<section class="hero">
+{% if site.author.avatar %}<img class="avatar" src="{{ site.author.avatar }}" alt="" width="96" height="96">
+{% endif %}<h1>{% if site.author.name %}{{ site.author.name }}{% elif site.author %}{{ site.author }}{% else %}{{ site.title | default(page.title) }}{% endif %}</h1>
+{% if site.description %}<p class="lead">{{ site.description }}</p>
+{% endif %}{% include "partials/profiles.html" %}
+</section>
 {% for section in theme.home.sections %}{% if section == "intro" %}{% if page.html %}<section class="intro">
 {{ page.html }}
 </section>
 {% endif %}{% elif section == "recent-posts" %}{% if collections.posts %}<section>
-<h2>Recent posts</h2>
+<h2 class="section-title">Recent posts</h2>
 <ul class="posts posts-{{ theme.blog.layout }}">
 {% for post in collections.posts | take(5) %}{% include "partials/post-item.html" %}
 {% endfor %}</ul>
-</section>
+{% for item in navigation | where("title", "Blog") %}<p class="more"><a href="{{ item.url }}">All posts →</a></p>
+{% endfor %}</section>
 {% endif %}{% elif section == "featured-projects" %}{% if collections.projects | where("featured", true) %}<section>
-<h2>Projects</h2>
+<h2 class="section-title">Projects</h2>
 <ul class="cards">
 {% for project in collections.projects | where("featured", true) | take(3) %}{% include "partials/project-card.html" %}
 {% endfor %}</ul>
-</section>
+{% for item in navigation | where("title", "Projects") %}<p class="more"><a href="{{ item.url }}">All projects →</a></p>
+{% endfor %}</section>
 {% endif %}{% elif section == "talks" %}{% if collections.talks %}<section>
-<h2>Talks</h2>
-<ul class="timeline">
-{% for talk in collections.talks | take(3) %}<li>{{ talk.title }} <span class="meta">{{ talk.event }}, <time datetime="{{ talk.date }}">{{ talk.date | date("MMM yyyy") }}</time></span></li>
+<h2 class="section-title">Talks</h2>
+<ul class="talks">
+{% for talk in collections.talks | take(2) %}{% include "partials/talk.html" %}
 {% endfor %}</ul>
-</section>
+{% for item in navigation | where("title", "Talks") %}<p class="more"><a href="{{ item.url }}">All talks →</a></p>
+{% endfor %}</section>
 {% endif %}{% endif %}{% endfor %}
 {% endblock %}

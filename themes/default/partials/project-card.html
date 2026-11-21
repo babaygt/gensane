@@ -2,5 +2,9 @@
 {% if project.cover %}<img class="cover" src="{{ project.cover }}" alt="" loading="lazy">
 {% endif %}<h2><a href="{{ project.url }}">{{ project.title }}</a>{% if project.draft %} <span class="draft">Draft</span>{% endif %}</h2>
 {% if project.description %}<p>{{ project.description }}</p>
-{% endif %}{% if project.stack %}<p class="meta">{{ project.stack | join(" · ") }}</p>
-{% endif %}</li>
+{% endif %}<div class="card-footer">
+{% if project.status %}<span class="status status-{{ project.status }}">{{ project.status | capitalize }}</span>
+{% endif %}{% if project.stack %}<span class="meta">{{ project.stack | join(" · ") }}</span>
+{% endif %}{% if project.repo or project.website %}<span class="card-links">{% if project.repo %}<a href="{{ project.repo }}" aria-label="Code of {{ project.title }}"><svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#code"></use></svg></a>{% endif %}{% if project.website %}<a href="{{ project.website }}" aria-label="Website of {{ project.title }}"><svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#website"></use></svg></a>{% endif %}</span>
+{% endif %}</div>
+</li>
