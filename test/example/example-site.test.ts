@@ -34,9 +34,13 @@ await cp(join(packageRoot, "example"), site, {
 });
 await installGensane(site);
 const build = await gensane("build");
-const built = (await readdir(join(site, "dist"), { recursive: true }))
-  .map((path) => path.split("\\").join("/"))
-  .toSorted();
+// A failed build writes nothing; the first test then shows why, instead of this file failing to load.
+const built =
+  build.code === 0
+    ? (await readdir(join(site, "dist"), { recursive: true }))
+        .map((path) => path.split("\\").join("/"))
+        .toSorted()
+    : [];
 const pages = await Promise.all(
   built
     .filter((path) => path.endsWith(".html"))
