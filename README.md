@@ -8,8 +8,8 @@ no dependencies: the Markdown compiler, the template language and everything els
   <img alt="The home page of the example site: a developer's name and picture, links to their profiles, projects as cards, recent posts and talks" src="docs/images/palette-default-light.png">
 </picture>
 
-> **Status:** everything below works and is tested, but gensane isn't on npm yet. Until it is, run it from this repository, as
-> [Contributing](CONTRIBUTING.md) shows.
+> **Status:** the first release, 0.1. Everything below works and is tested; [issues](https://github.com/babaygt/gensane/issues)
+> and ideas are welcome.
 
 ## Start
 

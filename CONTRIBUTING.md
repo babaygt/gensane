@@ -12,7 +12,7 @@ pnpm check         # everything CI checks: types, lint, formatting and tests
 pnpm example       # builds gensane, then serves the example site at http://localhost:4000/
 ```
 
-To use it on a site of your own before it is on npm, build it and run its program:
+To try a change on a site of your own, build it and run its program:
 
 ```sh
 pnpm build
@@ -105,6 +105,12 @@ docs/            the documentation
 
 Each folder in `src/` is a module with one public entry point, its `index.ts`. Only `ports` and `cli` may use Node's built-in modules
 such as `node:fs`; every other module is pure and works only on what it is given. `test/architecture` enforces both rules.
+
+## Releasing
+
+1. Raise the version in `package.json`, and the versions the documentation shows (`pnpm check` points at each one).
+2. Build first, so npm finds the program when it starts: `pnpm build`.
+3. `npm publish`. Before anything is uploaded, it runs `pnpm check` and builds again, so a release always passes every test.
 
 ## Reporting a problem
 
