@@ -203,7 +203,8 @@ Built 4 pages into dist in 8 ms, with no warnings.
 <p>I like &lt;b&gt;bold&lt;/b&gt; ideas.</p>
 ```
 
-A `highlight` function gets the code and the language of each code block and gives back the HTML for inside `<code>`, or `undefined`
+Gensane [colors code by itself](../highlight/README.md) in the languages a blog uses most; `highlight: false` turns that off. A
+`highlight` function of your own replaces it: it gets the code and the language of each code block and gives back the HTML for inside `<code>`, or `undefined`
 to leave the block as it is. A highlighter such as [Shiki](https://shiki.style) fits in a few lines; this one only marks comments:
 
 <!-- runs -->

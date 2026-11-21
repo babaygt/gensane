@@ -53,13 +53,18 @@ export interface MarkdownOptions {
   readonly rawHtml?: "allow" | "escape";
   /** Give headings an `id` so links can point at them. Defaults to `true`. */
   readonly headingIds?: boolean;
-  /** Colors code blocks at build time: the HTML inside `<code>`, or `undefined` to leave a block as it is. */
-  readonly highlight?: Highlighter;
+  /**
+   * Colors code blocks at build time: the HTML inside `<code>`, or `undefined` to leave a block as it
+   * is. `false`, like leaving it out, colors nothing.
+   */
+  readonly highlight?: Highlighter | false;
 }
 
 /** Highlighting runs after raw HTML is escaped, so the HTML it gives is kept. */
-function highlighted(document: Document, highlight: Highlighter | undefined): Document {
-  return highlight === undefined ? document : highlightCode(document, highlight);
+function highlighted(document: Document, highlight: Highlighter | false | undefined): Document {
+  return highlight === undefined || highlight === false
+    ? document
+    : highlightCode(document, highlight);
 }
 
 /** Parses Markdown into a syntax tree: block structure first, then the text inside blocks. */
