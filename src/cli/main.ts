@@ -5,6 +5,7 @@ import { fileURLToPath } from "node:url";
 import {
   NodeFileSystem,
   NodeModuleLoader,
+  NodePrompter,
   NodeTerminal,
   NodeWatcher,
   SystemClock,
@@ -29,6 +30,7 @@ process.exitCode = await runCli(args, {
   clock: new SystemClock(),
   terminal: new NodeTerminal(process.stdout, process.stderr, process.env),
   watcher: new NodeWatcher(),
+  prompter: new NodePrompter(process.stdin, process.stdout),
   defaultTheme: fileURLToPath(new URL("../../themes/default", import.meta.url)),
   stopped: stop.signal,
   siteFolder: process.cwd(),

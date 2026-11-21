@@ -8,6 +8,7 @@ import {
   MemoryFileSystem,
   MemoryTerminal,
   type ModuleLoader,
+  ScriptedPrompter,
 } from "../ports/index.ts";
 import { ExitCode } from "./environment.ts";
 import { runCli } from "./run-cli.ts";
@@ -53,6 +54,7 @@ async function gensane(args: readonly string[], setup: Setup = {}): Promise<Run>
     clock: setup.clock ?? { now: () => new Date(0) },
     terminal,
     watcher: new ManualWatcher(),
+    prompter: new ScriptedPrompter(),
     stopped: new AbortController().signal,
     defaultTheme: "gensane/themes/default",
     siteFolder: "site",
@@ -313,6 +315,7 @@ describe("help and version", () => {
     "  build  Build the site into dist/",
     "  check  Check the site for problems, without writing anything",
     "  dev    Serve the site while you write, and reload the browser on every change",
+    "  init   Start a new site, from a few questions",
     "  new    Write a new content file, such as a post",
     "  theme  Copy the default theme into theme/, to change all of it",
     "",

@@ -7,7 +7,7 @@ then search for that name. Names starting with `#` are private methods of a clas
 
 ### [`src/cli/main.ts`](../../src/cli/main.ts)
 
-The `gensane` program: the real disk, clock, terminal and watcher, and Ctrl+C for `dev`.
+The `gensane` program: the real disk, clock, terminal, watcher and questions, and Ctrl+C for `dev`.
 
 ### [`src/cli/index.ts`](../../src/cli/index.ts)
 
@@ -27,7 +27,7 @@ Reads the arguments, picks the command, and turns every way it can end into an e
 
 | Name                                          | Purpose                                                                          |
 | --------------------------------------------- | -------------------------------------------------------------------------------- |
-| [`Environment`](../../src/cli/environment.ts) | The disk, config loader, clock, terminal, watcher and stop signal a command gets |
+| [`Environment`](../../src/cli/environment.ts) | The disk, config loader, clock, terminal, watcher, prompter and stop signal a command gets |
 | [`ExitCode`](../../src/cli/environment.ts)    | 0, 1 and 2                                                                       |
 
 ## Commands
@@ -63,7 +63,27 @@ Reads the arguments, picks the command, and turns every way it can end into an e
 | Name                                                  | Purpose                                                   |
 | ----------------------------------------------------- | --------------------------------------------------------- |
 | [`NewCommand`](../../src/cli/commands/new-command.ts) | The type, the title, `--slug`, and never replacing a file |
-| [`localDay`](../../src/cli/commands/new-command.ts)   | Today on the computer's own calendar                      |
+
+### [`src/cli/commands/init-command.ts`](../../src/cli/commands/init-command.ts)
+
+| Name                                                    | Purpose                                                                   |
+| ------------------------------------------------------- | ------------------------------------------------------------------------- |
+| [`InitCommand`](../../src/cli/commands/init-command.ts) | The folder, `--yes`, the questions, and never writing into a full folder |
+| [`askUntil`](../../src/cli/commands/init-command.ts)    | Asks again, with the reason, until an answer fits                        |
+
+### [`src/cli/init/starter-site.ts`](../../src/cli/init/starter-site.ts)
+
+| Name                                                  | Purpose                                                    |
+| ----------------------------------------------------- | ---------------------------------------------------------- |
+| [`starterSite`](../../src/cli/init/starter-site.ts)   | The files of a new site, made from the answers             |
+| [`Answers`](../../src/cli/init/starter-site.ts)       | The title, the author, the address, the parts, the palette |
+| [`SECTIONS`](../../src/cli/init/starter-site.ts)      | The parts a site can start with                            |
+
+### [`src/cli/local-day.ts`](../../src/cli/local-day.ts)
+
+| Name                                         | Purpose                                                       |
+| -------------------------------------------- | ------------------------------------------------------------- |
+| [`localDay`](../../src/cli/local-day.ts)     | Today on the computer's own calendar, for `new` and `init`    |
 
 ### [`src/cli/commands/dev-command.ts`](../../src/cli/commands/dev-command.ts)
 
@@ -232,3 +252,12 @@ The public entry point of the ports.
 | [`Watcher`](../../src/ports/watcher.ts)       | Tells when files change        |
 | [`NodeWatcher`](../../src/ports/watcher.ts)   | Node's `fs.watch`              |
 | [`ManualWatcher`](../../src/ports/watcher.ts) | A watcher tests change by hand |
+
+### [`src/ports/prompter.ts`](../../src/ports/prompter.ts)
+
+| Name                                               | Purpose                                                  |
+| -------------------------------------------------- | -------------------------------------------------------- |
+| [`Prompter`](../../src/ports/prompter.ts)          | Asks the person at the terminal, as `gensane init` does  |
+| [`NodePrompter`](../../src/ports/prompter.ts)      | Node's `readline`, at a real terminal                    |
+| [`ScriptedPrompter`](../../src/ports/prompter.ts)  | Answers from a list, for tests                           |
+| [`AskingStopped`](../../src/ports/prompter.ts)     | The person stopped with Ctrl+C                           |

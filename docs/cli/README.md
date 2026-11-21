@@ -61,6 +61,7 @@ the site, but no feed yet: drafts never appear in the feed, so it waits for the 
 | [`gensane build`](build-and-check.md)                | Builds the site into `dist/`                                             |
 | [`gensane check`](build-and-check.md)                | Does the same work without writing anything, for CI                      |
 | [`gensane dev`](dev.md)                              | Serves the site while you write, and reloads the browser on every change |
+| [`gensane init`](init.md)                            | Starts a new site, from a few questions                                  |
 | [`gensane new`](new.md)                              | Writes a new content file with the fields its type needs                 |
 | [`gensane theme eject`](theme.md#changing-all-of-it) | Copies the default theme into `theme/`, to change all of it              |
 
@@ -75,6 +76,7 @@ Commands:
   build  Build the site into dist/
   check  Check the site for problems, without writing anything
   dev    Serve the site while you write, and reload the browser on every change
+  init   Start a new site, from a few questions
   new    Write a new content file, such as a post
   theme  Copy the default theme into theme/, to change all of it
 
@@ -90,7 +92,7 @@ Scripts and CI can tell from the exit code what happened.
 | Code | Meaning                                                                         |
 | ---- | ------------------------------------------------------------------------------- |
 | 0    | It worked. Warnings don't change this.                                          |
-| 1    | The site has errors, or a file couldn't be read or written                      |
+| 1    | The site has errors, a file couldn't be read or written, or `init` wrote nothing |
 | 2    | The command was written wrong, such as a command or an argument that isn't there |
 
 ## Pages
@@ -101,6 +103,7 @@ Scripts and CI can tell from the exit code what happened.
 | [The config](config.md)                  | `gensane.config.ts` and every setting                                  |
 | [The default theme](theme.md)            | What the theme shows, changing one part of it, and its files            |
 | [build and check](build-and-check.md)    | Building, checking in CI, drafts and the output folder                 |
+| [init](init.md)                          | Starting a new site                                                    |
 | [new](new.md)                            | Starting a post, a project, a talk or a page                           |
 | [dev](dev.md)                            | Serving the site while you write                                       |
 | [Problems](problems.md)                  | How problems are printed, mistakes in a command, and GS501 to GS506    |

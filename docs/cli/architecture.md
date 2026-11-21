@@ -28,6 +28,7 @@ memory, so most tests need no disk, no clock and no network.
 | [`Clock`](../../src/ports/clock.ts)               | The computer's clock              | A fixed time, or one that moves on        |
 | [`Terminal`](../../src/ports/terminal.ts)         | The output and error streams      | One that keeps what is written            |
 | [`Watcher`](../../src/ports/watcher.ts)           | `fs.watch` over the site folder   | One that tests change by hand             |
+| [`Prompter`](../../src/ports/prompter.ts)         | Questions at the terminal         | One that answers from a list              |
 
 The real disk and the disk in memory pass the same tests, so the fake can't behave differently from the real thing.
 

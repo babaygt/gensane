@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { ManualWatcher, MemoryFileSystem, MemoryTerminal } from "../../ports/index.ts";
+import {
+  ManualWatcher,
+  MemoryFileSystem,
+  MemoryTerminal,
+  ScriptedPrompter,
+} from "../../ports/index.ts";
 import { ExitCode } from "../environment.ts";
 import { runCli } from "../run-cli.ts";
 
@@ -19,6 +24,7 @@ async function gensane(
     clock: { now: () => now },
     terminal,
     watcher: new ManualWatcher(),
+    prompter: new ScriptedPrompter(),
     stopped: new AbortController().signal,
     defaultTheme: "gensane/themes/default",
     siteFolder: "site",

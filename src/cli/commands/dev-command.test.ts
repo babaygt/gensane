@@ -8,6 +8,7 @@ import {
   MemoryFileSystem,
   MemoryTerminal,
   type ModuleLoader,
+  ScriptedPrompter,
 } from "../../ports/index.ts";
 import { ExitCode } from "../environment.ts";
 import { runCli } from "../run-cli.ts";
@@ -55,6 +56,7 @@ async function startDev(
     clock: { now: () => new Date(0) },
     terminal,
     watcher,
+    prompter: new ScriptedPrompter(),
     stopped: stop.signal,
     defaultTheme: "gensane/themes/default",
     siteFolder: "site",
@@ -285,6 +287,7 @@ it("stops at once when it is asked to stop before it has started, such as by Ctr
     clock: { now: () => new Date(0) },
     terminal: new MemoryTerminal(),
     watcher,
+    prompter: new ScriptedPrompter(),
     stopped: stop.signal,
     defaultTheme: "gensane/themes/default",
     siteFolder: "site",
@@ -307,6 +310,7 @@ describe("mistakes", () => {
       clock: { now: () => new Date(0) },
       terminal,
       watcher: new ManualWatcher(),
+      prompter: new ScriptedPrompter(),
       stopped: new AbortController().signal,
       defaultTheme: "gensane/themes/default",
       siteFolder: "site",
@@ -327,6 +331,7 @@ describe("mistakes", () => {
       clock: { now: () => new Date(0) },
       terminal,
       watcher: new ManualWatcher(),
+      prompter: new ScriptedPrompter(),
       stopped: new AbortController().signal,
       defaultTheme: "gensane/themes/default",
       siteFolder: "site",
