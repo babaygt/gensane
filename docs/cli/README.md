@@ -39,6 +39,11 @@ Built 5 pages into dist in 14 ms, with no warnings.
 
 ```text files dist
 404.html
+assets/callout-caution.svg
+assets/callout-important.svg
+assets/callout-note.svg
+assets/callout-tip.svg
+assets/callout-warning.svg
 assets/favicon.svg
 assets/icons.svg
 assets/search.js

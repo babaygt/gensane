@@ -21,7 +21,7 @@ changed with the [`theme` settings](config.md#theme), and any part of it can be 
   [search index](../core/site.md#search) the build writes. Titles count most, then tags, then descriptions, then the text, and the
   newest comes first among equally good results.
 
-It has no web fonts and no frameworks: less than 10 KB of CSS, and two scripts of less than 3 KB each as readers download them. Every
+It has no web fonts and no frameworks: the CSS and each of its two scripts are less than 3 KB as readers download them. Every
 page works without JavaScript except the switch, the copy buttons and search. Every page of a test site with every type of content is checked by an HTML validator, and for one main
 heading, headings in order, landmarks, text for every link and image, and a skip link. In a real browser, the tests also type into search, click the switch and the copy button, check that the header stays on one line
 on a computer and that cards keep their own height, and change a file to see the page reload.
@@ -107,6 +107,11 @@ Arguments:
 | `assets/style.css`              | The styles, which use the custom properties of `assets/settings.css`      |
 | `assets/theme.js`               | The switch between light and dark, and the label and copy button of code   |
 | `assets/search.js`              | Search: finds the words typed in `search-index.json`                        |
+| `assets/callout-note.svg`       | The icon of a note callout, used as a mask so it takes the callout's color |
+| `assets/callout-tip.svg`        | The icon of a tip callout                                                  |
+| `assets/callout-important.svg`  | The icon of an important callout                                           |
+| `assets/callout-warning.svg`    | The icon of a warning callout                                              |
+| `assets/callout-caution.svg`    | The icon of a caution callout                                              |
 | `assets/icons.svg`              | The icons, which pages use with `<use href>`; the brand icons are from Simple Icons (CC0) |
 
 ## Custom properties
@@ -123,5 +128,13 @@ Arguments:
 | `--muted`      | Dates, reading time and other text that matters less           |
 | `--border`     | Lines                                                          |
 | `--accent`     | Links and the parts that stand out                             |
+| `--note`       | Note callouts                                                  |
+| `--tip`        | Tip callouts                                                   |
+| `--important`  | Important callouts                                             |
+| `--warning`    | Warning callouts                                               |
+| `--caution`    | Caution callouts                                               |
+
+The five callout colors are the same in every palette, a little darker or lighter than GitHub's, so each is readable on the
+background and the surface of every palette, light and dark.
 
 A site's language is `en` unless its config has `site: { language: "de" }`, which goes into `<html lang>`.

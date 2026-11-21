@@ -385,9 +385,34 @@ pre {
   margin: 1.5rem 0;
   padding: 0.75rem 1rem;
   border: 1px solid var(--border);
-  border-left: 4px solid var(--accent);
+  border-left: 4px solid var(--callout, var(--accent));
   border-radius: 6px;
   background: var(--surface);
+}
+
+.callout-note {
+  --callout: var(--note);
+  --icon: url(callout-note.svg);
+}
+
+.callout-tip {
+  --callout: var(--tip);
+  --icon: url(callout-tip.svg);
+}
+
+.callout-important {
+  --callout: var(--important);
+  --icon: url(callout-important.svg);
+}
+
+.callout-warning {
+  --callout: var(--warning);
+  --icon: url(callout-warning.svg);
+}
+
+.callout-caution {
+  --callout: var(--caution);
+  --icon: url(callout-caution.svg);
 }
 
 .callout > :first-child {
@@ -399,7 +424,19 @@ pre {
 }
 
 .callout-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--callout, var(--text));
   font-weight: 600;
+}
+
+.callout-title::before {
+  content: "";
+  width: 1.25rem;
+  height: 1.25rem;
+  background: currentColor;
+  mask: var(--icon) center / contain no-repeat;
 }
 
 /* Lists of posts, projects and talks */

@@ -29,7 +29,14 @@ export {
   type SiteInput,
   buildSite,
 } from "./build/build-site.ts";
-export { type Colors, PALETTES, type Palette, type PaletteName } from "./theme/palettes.ts";
+export {
+  CALLOUT_COLORS,
+  type CalloutColors,
+  type Colors,
+  PALETTES,
+  type Palette,
+  type PaletteName,
+} from "./theme/palettes.ts";
 export { READABLE_CONTRAST, contrast, isHexColor } from "./theme/contrast.ts";
 export { THEME_CHOICES, type Theme, type ThemeSettings, themeOf } from "./theme/theme-settings.ts";
 export { THEME_CSS_PATH, themeCss } from "./theme/theme-css.ts";

@@ -80,7 +80,7 @@ A **default theme**, so a folder of Markdown needs no templates at all:
 
 - [Six palettes](docs/cli/config.md#theme), each light and dark, all readable to WCAG AA, with a switch for readers.
 - A blog as a list or as cards, projects, talks, an about page with experience and education, and a table of contents on long posts.
-- Valid HTML and accessible pages, checked on every page of a test site, with less than 10 KB of CSS and two small scripts.
+- Valid HTML and accessible pages, checked on every page of a test site, with less than 3 KB of CSS and two small scripts as readers download them.
 - [Any part can be replaced](docs/cli/theme.md) by one file of the site's own.
 - [Search](docs/core/site.md#search) that finds as you type, with no server: the build writes an index, and a small script looks in it.
 
