@@ -13,6 +13,7 @@ const docsFolder = join(packageRoot, "docs", "markdown-compiler");
 const pagePaths = [
   ...readdirSync(docsFolder).map((name) => join(docsFolder, name)),
   join(packageRoot, "README.md"),
+  join(packageRoot, "CONTRIBUTING.md"),
 ];
 const pages = pagePaths.map((path) => ({
   path,
