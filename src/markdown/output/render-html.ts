@@ -207,7 +207,9 @@ function renderTable(table: Table): string {
 function renderRow(row: TableRow, tag: "th" | "td", alignments: readonly TableAlignment[]): string {
   const cells = row.cells.map((cell, column) => {
     const alignment = alignments[column] ?? "none";
-    const align = alignment === "none" ? "" : ` align="${alignment}"`;
+    // A class for the theme, not the old `align` attribute, which HTML no longer has and any stylesheet
+    // overrides, nor a style, which a strict Content Security Policy blocks.
+    const align = alignment === "none" ? "" : ` class="align-${alignment}"`;
     return `<${tag}${align}>${renderText(cell)}</${tag}>\n`;
   });
   return `<tr>\n${cells.join("")}</tr>\n`;
