@@ -1,0 +1,175 @@
+import { describe, expect, it } from "vitest";
+import {
+  ManualWatcher,
+  MemoryFileSystem,
+  MemoryTerminal,
+  ScriptedPrompter,
+} from "../../ports/index.ts";
+import { ExitCode } from "../environment.ts";
+import { runCli } from "../run-cli.ts";
+
+/** 20 November 2026 on the computer's own calendar, late in the evening. */
+const EVENING = new Date(2026, 10, 20, 23, 30);
+
+async function gensane(
+  args: readonly string[],
+  {
+    files = {},
+    prompter = new ScriptedPrompter(),
+  }: { files?: Record<string, string>; prompter?: ScriptedPrompter } = {},
+) {
+  const fileSystem = new MemoryFileSystem(files);
+  const terminal = new MemoryTerminal();
+  const code = await runCli(args, {
+    fileSystem,
+    moduleLoader: { load: async () => ({}) },
+    clock: { now: () => EVENING },
+    terminal,
+    watcher: new ManualWatcher(),
+    prompter,
+    stopped: new AbortController().signal,
+    defaultTheme: "gensane/themes/default",
+    siteFolder: "site",
+    version: "1.2.3",
+  });
+  return {
+    code,
+    output: terminal.output.join("\n"),
+    errors: terminal.errors.join("\n"),
+    fileSystem,
+    prompter,
+  };
+}
+
+describe("gensane init", () => {
+  it("takes every default with --yes, and says what to do next", async () => {
+    const run = await gensane(["init", "my-site", "--yes"]);
+    expect(run.code).toBe(ExitCode.success);
+    expect(await run.fileSystem.listFiles("site/my-site")).toHaveLength(8);
+    expect(await run.fileSystem.readText("site/my-site/gensane.config.ts")).toContain(
+      'title: "My site",',
+    );
+    expect(
+      await run.fileSystem.readText("site/my-site/content/blog/2026-11-20-hello-world.md"),
+    ).toContain("date: 2026-11-20");
+    expect(run.output).toBe(
+      [
+        "Created a site with 8 files in my-site.",
+        "",
+        "Next:",
+        "  cd my-site",
+        "  npm install",
+        "  npm run dev",
+      ].join("\n"),
+    );
+  });
+
+  it("starts the site in the folder it runs in, without a folder", async () => {
+    const run = await gensane(["init", "--yes"]);
+    expect(run.code).toBe(ExitCode.success);
+    expect(await run.fileSystem.readText("site/gensane.config.ts")).toContain('title: "Site",');
+    expect(run.output).toContain("in this folder.");
+    expect(run.output).not.toContain("cd ");
+  });
+
+  it("asks each question, and uses the answers", async () => {
+    const prompter = new ScriptedPrompter([
+      "Ada's notes",
+      "Ada",
+      "https://ada.dev",
+      "blog, about",
+      "paper",
+    ]);
+    const run = await gensane(["init", "notes"], { prompter });
+    expect(run.code).toBe(ExitCode.success);
+    expect(prompter.asked).toEqual([
+      "The title of the site",
+      "Your name",
+      "The address of the site, if you know it",
+      "The parts you want: blog, projects, talks, about",
+      "The colors: default, paper, nord, solarized, gruvbox, midnight",
+    ]);
+    const config = await run.fileSystem.readText("site/notes/gensane.config.ts");
+    expect(config).toContain('title: "Ada\'s notes",');
+    expect(config).toContain('url: "https://ada.dev",');
+    expect(config).toContain('author: "Ada",');
+    expect(config).toContain('palette: "paper",');
+    expect((await run.fileSystem.listFiles("site/notes/content")).toSorted()).toEqual([
+      "blog/2026-11-20-hello-world.md",
+      "index.md",
+      "pages/about.md",
+    ]);
+  });
+
+  it("asks again after an answer that doesn't fit, and says why", async () => {
+    const prompter = new ScriptedPrompter([
+      "",
+      "",
+      "ada.dev",
+      "https://ada.dev",
+      "blog, news",
+      "Blog",
+      "nrd",
+      "nord",
+    ]);
+    const run = await gensane(["init", "notes"], { prompter });
+    expect(run.code).toBe(ExitCode.success);
+    expect(run.errors.split("\n")).toEqual([
+      "That isn't a full address, such as https://example.com; leave it empty for now.",
+      "Choose from blog, projects, talks, about.",
+      "Did you mean nord?",
+    ]);
+    const config = await run.fileSystem.readText("site/notes/gensane.config.ts");
+    expect(config).toContain('url: "https://ada.dev",');
+    expect(config).toContain('palette: "nord",');
+  });
+
+  it.each(["https://ada.dev/notes?page=2", "ftp://ada.dev", "https://"])(
+    "doesn't take %j as the address",
+    async (url) => {
+      const prompter = new ScriptedPrompter(["", "", url, ""]);
+      const run = await gensane(["init", "notes"], { prompter });
+      expect(run.errors).toContain("That isn't a full address");
+      expect(await run.fileSystem.readText("site/notes/gensane.config.ts")).toContain("// url:");
+    },
+  );
+
+  it("refuses a folder that already has files, and writes nothing", async () => {
+    const run = await gensane(["init", "notes", "--yes"], {
+      files: { "site/notes/notes.md": "mine\n" },
+    });
+    expect(run.code).toBe(ExitCode.problems);
+    expect(run.errors).toContain("notes already has files, so gensane init won't write into it");
+    expect(await run.fileSystem.listFiles("site/notes")).toEqual(["notes.md"]);
+  });
+
+  it("writes into a folder that only has git in it", async () => {
+    const run = await gensane(["init", "notes", "--yes"], {
+      files: { "site/notes/.git/HEAD": "ref\n" },
+    });
+    expect(run.code).toBe(ExitCode.success);
+  });
+
+  it("doesn't ask where nobody can answer, and says how to take the defaults", async () => {
+    const prompter = new ScriptedPrompter([], { canAsk: false });
+    const run = await gensane(["init", "notes"], { prompter });
+    expect(run.code).toBe(ExitCode.usage);
+    expect(run.errors).toContain("use --yes to take every default");
+    expect(prompter.asked).toEqual([]);
+    expect(await run.fileSystem.listFiles("site/notes")).toEqual([]);
+  });
+
+  it("writes nothing when the person stops at a question", async () => {
+    const prompter = new ScriptedPrompter(["Ada's notes", null]);
+    const run = await gensane(["init", "notes"], { prompter });
+    expect(run.code).toBe(ExitCode.problems);
+    expect(run.errors).toBe("Stopped, so nothing was written.");
+    expect(await run.fileSystem.listFiles("site/notes")).toEqual([]);
+  });
+
+  it("takes only one folder", async () => {
+    const run = await gensane(["init", "one", "two", "--yes"]);
+    expect(run.code).toBe(ExitCode.usage);
+    expect(run.errors).toContain("gensane init takes one folder");
+  });
+});
