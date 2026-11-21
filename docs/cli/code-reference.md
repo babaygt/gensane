@@ -68,16 +68,32 @@ Reads the arguments, picks the command, and turns every way it can end into an e
 
 | Name                                                    | Purpose                                                                   |
 | ------------------------------------------------------- | ------------------------------------------------------------------------- |
-| [`InitCommand`](../../src/cli/commands/init-command.ts) | The folder, `--yes`, the questions, and never writing into a full folder |
+| [`InitCommand`](../../src/cli/commands/init-command.ts) | The folder, `--yes`, `--deploy`, the questions, and never writing into a full folder |
 | [`askUntil`](../../src/cli/commands/init-command.ts)    | Asks again, with the reason, until an answer fits                        |
+
+### [`src/cli/commands/deploy-command.ts`](../../src/cli/commands/deploy-command.ts)
+
+| Name                                                        | Purpose                                                    |
+| ----------------------------------------------------------- | ---------------------------------------------------------- |
+| [`DeployCommand`](../../src/cli/commands/deploy-command.ts) | `deploy init <host>`, and never replacing a file           |
+
+### [`src/cli/init/deploy-files.ts`](../../src/cli/init/deploy-files.ts)
+
+| Name                                                  | Purpose                                                       |
+| ----------------------------------------------------- | ------------------------------------------------------------- |
+| [`deployFiles`](../../src/cli/init/deploy-files.ts)    | The file that publishes the site on a host                    |
+| [`publishSteps`](../../src/cli/init/deploy-files.ts)   | What to do after the file is written                          |
+| [`DEPLOY_TARGETS`](../../src/cli/init/deploy-files.ts) | GitHub Pages, Cloudflare and Netlify                          |
+| [`isDeployTarget`](../../src/cli/init/deploy-files.ts) | Whether a name is one of them                                 |
 
 ### [`src/cli/init/starter-site.ts`](../../src/cli/init/starter-site.ts)
 
 | Name                                                  | Purpose                                                    |
 | ----------------------------------------------------- | ---------------------------------------------------------- |
 | [`starterSite`](../../src/cli/init/starter-site.ts)   | The files of a new site, made from the answers             |
-| [`Answers`](../../src/cli/init/starter-site.ts)       | The title, the author, the address, the parts, the palette |
+| [`Answers`](../../src/cli/init/starter-site.ts)       | The title, the author, the address, the parts, the palette, the host |
 | [`SECTIONS`](../../src/cli/init/starter-site.ts)      | The parts a site can start with                            |
+| [`siteNameOf`](../../src/cli/init/starter-site.ts) | A name for the site from its folder, for npm and Cloudflare |
 
 ### [`src/cli/local-day.ts`](../../src/cli/local-day.ts)
 

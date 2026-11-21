@@ -5,6 +5,12 @@ import { AskingStopped, type Prompter, type Terminal } from "../../ports/index.t
 import { type Environment, ExitCode } from "../environment.ts";
 import { localDay } from "../local-day.ts";
 import { printUsageError } from "../report.ts";
+import {
+  DEPLOY_TARGETS,
+  type DeployTarget,
+  isDeployTarget,
+  publishSteps,
+} from "../init/deploy-files.ts";
 import { type Answers, SECTIONS, type Section, starterSite } from "../init/starter-site.ts";
 import { Command, type OptionValues } from "./command.ts";
 
@@ -59,6 +65,11 @@ export class InitCommand extends Command {
     "The folder is made if it doesn't exist; it must be empty, apart from .git. Without a folder, the site starts in the folder gensane runs in.";
   readonly options = {
     yes: { type: "boolean", description: "Take every default without asking" },
+    deploy: {
+      type: "string",
+      valueName: "host",
+      description: `Add the files to publish on this host: ${DEPLOY_TARGETS.join(", ")}`,
+    },
   } as const;
 
   async run(
@@ -70,6 +81,18 @@ export class InitCommand extends Command {
     const [folder = ".", ...rest] = positionals;
     if (rest.length > 0) {
       printUsageError(terminal, "gensane init takes one folder", "such as: gensane init my-site");
+      return ExitCode.usage;
+    }
+    const deployOption = values["deploy"];
+    if (typeof deployOption === "string" && !isDeployTarget(deployOption)) {
+      const close = closestMatch(deployOption, [...DEPLOY_TARGETS]);
+      printUsageError(
+        terminal,
+        `gensane init can't publish on "${deployOption}"`,
+        close === undefined
+          ? `choose from ${DEPLOY_TARGETS.join(", ")}`
+          : `did you mean "${close}"?`,
+      );
       return ExitCode.usage;
     }
     const target = join(siteFolder, folder);
@@ -102,6 +125,7 @@ export class InitCommand extends Command {
       url: "",
       sections: [...SECTIONS],
       palette: "default",
+      deploy: typeof deployOption === "string" ? deployOption : "none",
     };
     let answers = defaults;
     if (!takeDefaults) {
@@ -126,6 +150,11 @@ export class InitCommand extends Command {
     if (shown !== ".") terminal.write(`  cd ${shown}`);
     terminal.write("  npm install");
     terminal.write("  npm run dev");
+    if (answers.deploy !== "none") {
+      terminal.write("");
+      terminal.write("To publish:");
+      for (const step of publishSteps(answers.deploy)) terminal.write(`  ${step}`);
+    }
     return ExitCode.success;
   }
 
@@ -173,6 +202,27 @@ export class InitCommand extends Command {
         };
       },
     );
-    return { title, author, url, sections, palette };
+    const hosts = [...DEPLOY_TARGETS, "none"];
+    const deploy =
+      defaults.deploy !== "none"
+        ? defaults.deploy
+        : await askUntil<DeployTarget | "none">(
+            prompter,
+            terminal,
+            `Where you will publish it: ${hosts.join(", ")}`,
+            "none",
+            (answer) => {
+              const host = answer.toLowerCase();
+              if (host === "none" || isDeployTarget(host)) return { value: host };
+              const close = closestMatch(host, hosts);
+              return {
+                problem:
+                  close === undefined
+                    ? `Choose from ${hosts.join(", ")}.`
+                    : `Did you mean ${close}?`,
+              };
+            },
+          );
+    return { title, author, url, sections, palette, deploy };
   }
 }

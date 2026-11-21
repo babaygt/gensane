@@ -1,5 +1,7 @@
 /** The files of a new site, made from the answers to `gensane init`'s questions. */
 
+import { type DeployTarget, deployFiles } from "./deploy-files.ts";
+
 export const SECTIONS = ["blog", "projects", "talks", "about"] as const;
 export type Section = (typeof SECTIONS)[number];
 
@@ -11,6 +13,8 @@ export interface Answers {
   readonly url: string;
   readonly sections: readonly Section[];
   readonly palette: string;
+  /** Where the site will be published, if that is known. */
+  readonly deploy: DeployTarget | "none";
 }
 
 interface Details {
@@ -27,14 +31,19 @@ function quoted(text: string): string {
   return JSON.stringify(text);
 }
 
-function packageJson({ version, folderName }: Details): string {
-  const name =
+/** A name for the site from the name of its folder, as npm and Cloudflare accept it. */
+export function siteNameOf(folderName: string): string {
+  return (
     folderName
       .toLowerCase()
       .replaceAll(/[^a-z0-9-]+/g, "-")
-      .replaceAll(/^-+|-+$/g, "") || "my-site";
+      .replaceAll(/^-+|-+$/g, "") || "my-site"
+  );
+}
+
+function packageJson({ version, folderName }: Details): string {
   const json = {
-    name,
+    name: siteNameOf(folderName),
     private: true,
     type: "module",
     scripts: { dev: "gensane dev", build: "gensane build", check: "gensane check" },
@@ -67,12 +76,18 @@ function config({ title, author, url, palette }: Answers): string {
 }
 
 export function starterSite(answers: Answers, details: Details): Record<string, string> {
-  const { title, sections } = answers;
-  const { today } = details;
+  const { title, sections, deploy } = answers;
+  const { today, folderName } = details;
+  const ignored = [
+    "dist/",
+    "node_modules/",
+    ".cloudflare/",
+    ...(deploy === "cloudflare" ? [".wrangler/"] : []),
+  ];
   const files: Record<string, string> = {
     "package.json": packageJson(details),
     "gensane.config.ts": config(answers),
-    ".gitignore": "dist/\nnode_modules/\n.cloudflare/\n",
+    ".gitignore": `${ignored.join("\n")}\n`,
     "content/index.md": `---\ntitle: Home\n---\nWelcome to ${title}. This text is in \`content/index.md\`.\n`,
   };
   if (sections.includes("blog")) {
@@ -104,5 +119,6 @@ export function starterSite(answers: Answers, details: Details): Record<string, 
     files["content/pages/about.md"] =
       "---\ntitle: About\n---\nWho you are, and what you work on.\n";
   }
+  if (deploy !== "none") Object.assign(files, deployFiles(deploy, siteNameOf(folderName)));
   return files;
 }

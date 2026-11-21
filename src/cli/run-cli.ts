@@ -3,6 +3,7 @@ import { parseArgs } from "node:util";
 import { InternalError, closestMatch } from "../diagnostics/index.ts";
 import { BuildCommand } from "./commands/build-command.ts";
 import { CheckCommand } from "./commands/check-command.ts";
+import { DeployCommand } from "./commands/deploy-command.ts";
 import { DevCommand } from "./commands/dev-command.ts";
 import { InitCommand } from "./commands/init-command.ts";
 import { NewCommand } from "./commands/new-command.ts";
@@ -15,6 +16,7 @@ const COMMANDS: readonly Command[] = [
   new BuildCommand(),
   new CheckCommand(),
   new DevCommand(),
+  new DeployCommand(),
   new InitCommand(),
   new NewCommand(),
   new ThemeCommand(),
