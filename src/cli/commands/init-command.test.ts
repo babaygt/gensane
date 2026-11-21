@@ -200,6 +200,13 @@ describe("gensane init", () => {
     expect(prompter.asked).toHaveLength(5);
   });
 
+  it("takes the name of a host written with capitals, as people write GitHub", async () => {
+    const prompter = new ScriptedPrompter(["", "", "", "", "", "GitHub"]);
+    const run = await gensane(["init", "notes"], { prompter });
+    expect(run.errors).toBe("");
+    expect(await run.fileSystem.isFile("site/notes/.github/workflows/deploy.yml")).toBe(true);
+  });
+
   it("refuses a host it doesn't know, before asking anything", async () => {
     const prompter = new ScriptedPrompter([]);
     const run = await gensane(["init", "notes", "--deploy", "githb"], { prompter });
