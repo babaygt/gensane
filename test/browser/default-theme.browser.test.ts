@@ -1,8 +1,8 @@
 // What only a real browser can show: search while typing, the switch between light and dark, the copy
-// button of code blocks, the alignment of table columns, and the reload after a change. A real
-// `gensane dev` serves a site from a temporary folder, and Chromium, without a window, uses its pages.
-// Code that runs in the page is written as text, because this project is type-checked without the
-// browser's types.
+// button of code blocks, the alignment of table columns, the reload after a change, and many open
+// pages at once. A real `gensane dev` serves a site from a temporary folder, and Chromium, without a
+// window, uses its pages. Code that runs in the page is written as text, because this project is
+// type-checked without the browser's types.
 import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
@@ -169,6 +169,20 @@ describe("in a real browser", { timeout: 30_000 }, () => {
       .poll(() => page.locator("h1").textContent(), { timeout: 10_000 })
       .toBe("Parsers again");
     await page.context().close();
+  });
+
+  it("keeps loading pages at once while many pages wait for the next build", async () => {
+    // A browser opens at most six connections to a server; a page waiting for a reload must not use one.
+    const context = await browser.newContext();
+    const pages: Page[] = [];
+    for (let count = 1; count <= 9; count++) {
+      const page = await context.newPage();
+      page.on("pageerror", (error) => errors.push(`page ${count}: ${error.message}`));
+      await page.goto(`${address}/blog/`, { timeout: 3_000 });
+      pages.push(page);
+    }
+    expect(pages).toHaveLength(9);
+    await context.close();
   });
 
   it("had no JavaScript errors on any page", () => {

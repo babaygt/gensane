@@ -1,6 +1,5 @@
 // `gensane dev` with real HTTP on a free port, a site in memory and a watcher the tests trigger.
-import { get } from "node:http";
-import { createServer } from "node:net";
+import { connect, createServer } from "node:net";
 import { afterEach, describe, expect, it } from "vitest";
 import { TEMPLATES } from "../../core/index.ts";
 import {
@@ -72,21 +71,42 @@ async function startDev(
   return { address, fileSystem, watcher, terminal, output, config, stop: stopDev };
 }
 
-/** Listens to the reload events, as a page in the browser does. */
+/** Listens for reloads on a WebSocket, as a page in the browser does. */
 async function listenForReloads(address: string) {
-  let received = "";
-  const request = get(`${address}/__gensane/events`, (response) => {
-    response.setEncoding("utf8");
-    response.on("data", (chunk: string) => {
-      received += chunk;
-    });
+  const messages: string[] = [];
+  let closedWith: number | undefined;
+  const socket = new WebSocket(`${address.replace("http:", "ws:")}/__gensane/reload`);
+  socket.addEventListener("message", (event) => messages.push(String(event.data)));
+  socket.addEventListener("close", (event) => {
+    closedWith = event.code;
   });
-  request.on("error", () => {});
-  await waitFor(() => received.includes(": connected"));
+  await new Promise((resolve, reject) => {
+    socket.addEventListener("open", resolve);
+    socket.addEventListener("error", reject);
+  });
   return {
-    count: () => received.split("event: reload").length - 1,
-    close: () => request.destroy(),
+    count: () => messages.filter((message) => message === "reload").length,
+    closedWith: () => closedWith,
+    close: () => socket.close(),
   };
+}
+
+/** A WebSocket handshake written by hand, to a path and with the protocol it asks for. */
+const handshake = (path: string, upgrade: string) =>
+  `GET ${path} HTTP/1.1\r\nhost: localhost\r\nconnection: Upgrade\r\nupgrade: ${upgrade}\r\nsec-websocket-version: 13\r\nsec-websocket-key: dGhlIHNhbXBsZSBub25jZQ==\r\n\r\n`;
+
+/** The first line the server answers a request with, written by hand. */
+async function firstLineOf(address: string, request: string): Promise<string> {
+  const { port } = new URL(address);
+  const socket = connect(Number(port), "localhost");
+  socket.write(request);
+  let received = "";
+  for await (const chunk of socket) {
+    received += String(chunk);
+    if (received.includes("\r\n")) break;
+  }
+  socket.destroy();
+  return received.split("\r\n")[0] ?? "";
 }
 
 async function fetchText(url: string) {
@@ -111,7 +131,7 @@ describe("gensane dev", () => {
     expect(page.status).toBe(200);
     expect(page.headers.get("content-type")).toBe("text/html; charset=utf-8");
     expect(page.body).toBe(
-      '<h1>Soon</h1><script>new EventSource("/__gensane/events").addEventListener("reload", () => location.reload());</script>',
+      '<h1>Soon</h1><script>new WebSocket("ws://" + location.host + "/__gensane/reload").addEventListener("message", () => location.reload());</script>',
     );
   });
 
@@ -179,7 +199,7 @@ describe("gensane dev", () => {
     expect(problems.status).toBe(500);
     expect(problems.body).toContain("<title>Found 1 error and 0 warnings</title>");
     expect(problems.body).toContain("  ┌─ content/blog/hello.md:6:9");
-    expect(problems.body).toContain("<script>new EventSource");
+    expect(problems.body).toContain("<script>new WebSocket");
     expect(dev.output().split("\n").at(-1)).toBe(
       "content/blog/hello.md changed. Found 1 error and 0 warnings; the browser shows them until they are fixed.",
     );
@@ -190,6 +210,46 @@ describe("gensane dev", () => {
     await waitFor(() => page.count() === 2);
     expect((await fetchText(`${dev.address}/`)).status).toBe(200);
     page.close();
+  });
+
+  it("tells every open page to reload, and stops sending to one that closed", async () => {
+    const dev = await startDev({ "site/content/blog/hello.md": HELLO });
+    const first = await listenForReloads(dev.address);
+    const second = await listenForReloads(dev.address);
+    second.close();
+    await waitFor(() => second.closedWith() !== undefined);
+    expect(second.closedWith()).toBe(1000);
+    dev.watcher.change("content/blog/hello.md");
+    await waitFor(() => first.count() === 1);
+    expect(second.count()).toBe(0);
+    first.close();
+  });
+
+  it("says it is going away to every open page when it stops", async () => {
+    const dev = await startDev({ "site/content/blog/hello.md": HELLO });
+    const page = await listenForReloads(dev.address);
+    expect(await dev.stop()).toBe(ExitCode.success);
+    await waitFor(() => page.closedWith() !== undefined);
+    expect(page.closedWith()).toBe(1001);
+  });
+
+  it("refuses a WebSocket anywhere else, and a request that isn't one", async () => {
+    const dev = await startDev({ "site/content/blog/hello.md": HELLO });
+    expect(await firstLineOf(dev.address, handshake("/__gensane/reload", "websocket"))).toBe(
+      "HTTP/1.1 101 Switching Protocols",
+    );
+    expect(await firstLineOf(dev.address, handshake("/blog/", "websocket"))).toBe(
+      "HTTP/1.1 404 Not Found",
+    );
+    expect(await firstLineOf(dev.address, handshake("/__gensane/reload", "something"))).toBe(
+      "HTTP/1.1 400 Bad Request",
+    );
+    expect(
+      await firstLineOf(
+        dev.address,
+        "GET /__gensane/reload HTTP/1.1\r\nhost: localhost\r\nconnection: Upgrade\r\nupgrade: websocket\r\n\r\n",
+      ),
+    ).toBe("HTTP/1.1 400 Bad Request");
   });
 
   it("adds the reload script only to pages, not to the feed", async () => {
