@@ -153,6 +153,11 @@ Built 7 pages into dist in 9 ms, with 1 warning.
 
 ```text files dist
 404.html
+assets/callout-caution.svg
+assets/callout-important.svg
+assets/callout-note.svg
+assets/callout-tip.svg
+assets/callout-warning.svg
 assets/icons.svg
 assets/search.js
 assets/settings.css
@@ -323,6 +328,11 @@ Built 2 pages into dist in 8 ms, with no warnings.
   --muted: #4c566a;
   --border: #d8dee9;
   --accent: #3b5f8f;
+  --note: #0861c9;
+  --tip: #187533;
+  --important: #7548c9;
+  --warning: #885b00;
+  --caution: #c4222c;
 }
 ```
 

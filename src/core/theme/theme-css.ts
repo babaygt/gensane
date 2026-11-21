@@ -2,7 +2,7 @@
  * The theme settings as CSS custom properties, in one file the default theme's stylesheet uses. This
  * way the stylesheet has no code for each setting.
  */
-import type { Colors } from "./palettes.ts";
+import { CALLOUT_COLORS, type CalloutColors, type Colors } from "./palettes.ts";
 import type { Theme } from "./theme-settings.ts";
 
 /** Where the file is written in the site. */
@@ -16,7 +16,7 @@ const FONTS = {
 
 const WIDTHS = { narrow: "36rem", normal: "42rem", wide: "52rem" } as const;
 
-function colorsOf(colors: Colors, indent: string): string[] {
+function colorsOf(colors: Colors | CalloutColors, indent: string): string[] {
   return Object.entries(colors).map(([name, value]) => `${indent}--${name}: ${value};`);
 }
 
@@ -30,6 +30,7 @@ export function themeCss(theme: Theme): string {
     `  --font: ${FONTS[theme.font]};`,
     `  --width: ${WIDTHS[theme.width]};`,
     ...colorsOf(theme.colorScheme === "dark" ? dark : light, "  "),
+    ...colorsOf(CALLOUT_COLORS[theme.colorScheme === "dark" ? "dark" : "light"], "  "),
     "}",
   ];
   if (theme.colorScheme === "auto") {
@@ -38,10 +39,12 @@ export function themeCss(theme: Theme): string {
       "@media (prefers-color-scheme: dark) {",
       '  :root:not([data-color-scheme="light"]) {',
       ...colorsOf(dark, "    "),
+      ...colorsOf(CALLOUT_COLORS.dark, "    "),
       "  }",
       "}",
       ':root[data-color-scheme="dark"] {',
       ...colorsOf(dark, "  "),
+      ...colorsOf(CALLOUT_COLORS.dark, "  "),
       "}",
     );
   }

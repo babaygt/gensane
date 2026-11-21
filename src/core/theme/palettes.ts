@@ -138,3 +138,33 @@ export const PALETTES = {
 } as const satisfies Readonly<Record<string, Palette>>;
 
 export type PaletteName = keyof typeof PALETTES;
+
+/** The colors of callouts, one for each kind, as GitHub shows them. */
+export interface CalloutColors {
+  readonly note: string;
+  readonly tip: string;
+  readonly important: string;
+  readonly warning: string;
+  readonly caution: string;
+}
+
+/**
+ * The same on every palette, and readable on the background and the surface of every palette's side;
+ * GitHub's own colors were darkened or lightened just enough for that.
+ */
+export const CALLOUT_COLORS: { readonly light: CalloutColors; readonly dark: CalloutColors } = {
+  light: {
+    note: "#0861c9",
+    tip: "#187533",
+    important: "#7548c9",
+    warning: "#885b00",
+    caution: "#c4222c",
+  },
+  dark: {
+    note: "#7cb3fa",
+    tip: "#62c670",
+    important: "#c19ffa",
+    warning: "#d9a945",
+    caution: "#fb938e",
+  },
+};

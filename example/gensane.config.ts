@@ -14,7 +14,6 @@ export default defineConfig({
   },
   perPage: 4,
   theme: {
-    palette: "nord",
     home: { sections: ["intro", "featured-projects", "recent-posts", "talks"] },
   },
 });
