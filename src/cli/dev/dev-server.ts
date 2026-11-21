@@ -128,6 +128,11 @@ export class DevServer {
     }
   }
 
+  /** How many pages wait for the next build. */
+  get openPages(): number {
+    return this.#pages.size;
+  }
+
   async close(): Promise<void> {
     this.#closed = true;
     clearTimeout(this.#timer);
