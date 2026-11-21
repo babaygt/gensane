@@ -1,6 +1,6 @@
 // The default theme, checked on a site with every type of content and every Markdown feature: every
 // page must be valid HTML, accessible, and free of problems, and the theme must stay small.
-import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, rm, stat, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { gzipSync } from "node:zlib";
@@ -197,6 +197,14 @@ describe("the default theme", () => {
       expect(gzipSync(source).length).toBeLessThan(3 * 1024);
       expect(source.length).toBeLessThan(limit * 1024);
     }
+  });
+
+  it("points only at files the theme has, from its stylesheet", async () => {
+    const css = await readFile(join(defaultTheme, "assets", "style.css"), "utf8");
+    const pointedAt = [...css.matchAll(/url\(([^)]+)\)/g)].map(([, file]) => file ?? "");
+    expect(pointedAt.length).toBeGreaterThan(4);
+    for (const file of pointedAt)
+      await expect(stat(join(defaultTheme, "assets", file))).resolves.toBeTruthy();
   });
 
   it("uses only the custom properties that the settings file or the stylesheet itself write", async () => {

@@ -9,6 +9,7 @@ import { dirname, join } from "node:path";
 import { type Browser, type Page, chromium } from "playwright";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { runCli } from "../../src/cli/index.ts";
+import { CALLOUT_COLORS } from "../../src/core/index.ts";
 import {
   MemoryTerminal,
   NodeFileSystem,
@@ -32,6 +33,15 @@ const files: Record<string, string> = {
   ),
   "content/blog/2026-11-18-parsers.md": post("Parsers", "2026-11-18", "A note on parsing.\n"),
   "content/pages/about.md": "---\ntitle: About\n---\nHello.\n",
+  "content/pages/callouts.md": `---\ntitle: Callouts\n---\n${[
+    "NOTE",
+    "TIP",
+    "IMPORTANT",
+    "WARNING",
+    "CAUTION",
+  ]
+    .map((kind) => `> [!${kind}]\n> A ${kind.toLowerCase()}.\n`)
+    .join("\n")}`,
   "content/projects/lamp.md": "---\ntitle: Lamp\ndescription: A small lamp\n---\n",
   "content/projects/kettle.md":
     "---\ntitle: Kettle\ndescription: A kettle with a picture\ncover: /cover.svg\n---\n",
@@ -79,6 +89,12 @@ afterAll(async () => {
   await stopped;
   await rm(site, { recursive: true, force: true });
 });
+
+/** `#0861c9` as a browser writes a computed color, `rgb(8, 97, 201)`. */
+function rgb(hex: string): string {
+  const parts = [1, 3, 5].map((index) => Number.parseInt(hex.slice(index, index + 2), 16));
+  return `rgb(${parts.join(", ")})`;
+}
 
 /** A new page in light colors, which fails the test file on any JavaScript error. */
 async function open(path: string): Promise<Page> {
@@ -207,6 +223,37 @@ describe("in a real browser", { timeout: 30_000 }, () => {
     );
     expect(heights).toHaveLength(2);
     expect(Math.abs((heights[0] ?? 0) - (heights[1] ?? 0))).toBeGreaterThan(50);
+    await page.context().close();
+  });
+
+  it("gives each kind of callout its own color and icon", async () => {
+    const page = await open("/callouts/");
+    const callouts = await page.evaluate<
+      { kind: string; border: string; title: string; icon: string }[]
+    >(
+      `[...document.querySelectorAll(".callout")].map((callout) => {
+        const title = callout.querySelector(".callout-title");
+        const icon = getComputedStyle(title, "::before");
+        return {
+          kind: callout.className.replace("callout callout-", ""),
+          border: getComputedStyle(callout).borderLeftColor,
+          title: getComputedStyle(title).color,
+          icon: icon.content === "none" ? "" : icon.maskImage,
+        };
+      })`,
+    );
+    expect(callouts.map(({ kind }) => kind)).toEqual([
+      "note",
+      "tip",
+      "important",
+      "warning",
+      "caution",
+    ]);
+    for (const { kind, border, title, icon } of callouts) {
+      const color = rgb(CALLOUT_COLORS.light[kind as keyof typeof CALLOUT_COLORS.light]);
+      expect({ kind, border, title }).toEqual({ kind, border: color, title: color });
+      expect(icon).toMatch(new RegExp(`/assets/callout-${kind}\\.svg"\\)$`));
+    }
     await page.context().close();
   });
 
