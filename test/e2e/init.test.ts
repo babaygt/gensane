@@ -10,6 +10,7 @@ import { promisify } from "node:util";
 import * as fc from "fast-check";
 import { afterAll, expect, it } from "vitest";
 import { runCli } from "../../src/cli/index.ts";
+import { DEPLOY_TARGETS } from "../../src/cli/init/deploy-files.ts";
 import { SECTIONS } from "../../src/cli/init/starter-site.ts";
 import { PALETTES } from "../../src/core/index.ts";
 import {
@@ -121,9 +122,10 @@ it("makes a site that builds from any answers", { timeout: 240_000 }, async () =
     url: fc.constantFrom("", "https://example.com", "https://ada.dev/notes"),
     sections: fc.subarray([...SECTIONS]),
     palette: fc.constantFrom(...Object.keys(PALETTES)),
+    deploy: fc.constantFrom("none", ...DEPLOY_TARGETS),
   });
   await fc.assert(
-    fc.asyncProperty(answers, async ({ title, author, url, sections, palette }) => {
+    fc.asyncProperty(answers, async ({ title, author, url, sections, palette, deploy }) => {
       const fileSystem = new MemoryFileSystem();
       const prompter = new ScriptedPrompter([
         title,
@@ -131,6 +133,7 @@ it("makes a site that builds from any answers", { timeout: 240_000 }, async () =
         url,
         sections.join(", ") || ",",
         palette,
+        deploy,
       ]);
       const code = await runCli(["init", "notes"], {
         fileSystem,

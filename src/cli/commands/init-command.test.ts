@@ -88,6 +88,7 @@ describe("gensane init", () => {
       "The address of the site, if you know it",
       "The parts you want: blog, projects, talks, about",
       "The colors: default, paper, nord, solarized, gruvbox, midnight",
+      "Where you will publish it: github, cloudflare, netlify, none",
     ]);
     const config = await run.fileSystem.readText("site/notes/gensane.config.ts");
     expect(config).toContain('title: "Ada\'s notes",');
@@ -165,6 +166,47 @@ describe("gensane init", () => {
     expect(run.code).toBe(ExitCode.problems);
     expect(run.errors).toBe("Stopped, so nothing was written.");
     expect(await run.fileSystem.listFiles("site/notes")).toEqual([]);
+  });
+
+  it("adds the files of the host it is asked for, and says how to publish", async () => {
+    const prompter = new ScriptedPrompter(["", "", "", "", "", "Cloudflre", "cloudflare"]);
+    const run = await gensane(["init", "notes"], { prompter });
+    expect(run.code).toBe(ExitCode.success);
+    expect(run.errors).toBe("Did you mean cloudflare?");
+    expect(await run.fileSystem.readText("site/notes/wrangler.jsonc")).toContain('"name": "notes"');
+    expect(await run.fileSystem.readText("site/notes/.gitignore")).toBe(
+      "dist/\nnode_modules/\n.cloudflare/\n.wrangler/\n",
+    );
+    expect(run.output).toContain("Created a site with 9 files in notes.");
+    expect(run.output.endsWith("To publish:\n  npm run build && npx wrangler deploy")).toBe(true);
+  });
+
+  it("publishes nowhere by default, and keeps Wrangler's folder out of .gitignore", async () => {
+    const run = await gensane(["init", "notes", "--yes"]);
+    expect(await run.fileSystem.readText("site/notes/.gitignore")).toBe(
+      "dist/\nnode_modules/\n.cloudflare/\n",
+    );
+    expect(run.output).not.toContain("To publish");
+  });
+
+  it("takes the host from --deploy, with --yes or without asking for it", async () => {
+    const withYes = await gensane(["init", "notes", "--yes", "--deploy", "github"]);
+    expect(await withYes.fileSystem.listFiles("site/notes/.github")).toEqual([
+      "workflows/deploy.yml",
+    ]);
+    const prompter = new ScriptedPrompter([]);
+    const asked = await gensane(["init", "notes", "--deploy", "netlify"], { prompter });
+    expect(await asked.fileSystem.isFile("site/notes/netlify.toml")).toBe(true);
+    expect(prompter.asked).toHaveLength(5);
+  });
+
+  it("refuses a host it doesn't know, before asking anything", async () => {
+    const prompter = new ScriptedPrompter([]);
+    const run = await gensane(["init", "notes", "--deploy", "githb"], { prompter });
+    expect(run.code).toBe(ExitCode.usage);
+    expect(run.errors).toContain('gensane init can\'t publish on "githb"');
+    expect(run.errors).toContain('did you mean "github"?');
+    expect(prompter.asked).toEqual([]);
   });
 
   it("takes only one folder", async () => {
