@@ -51,6 +51,20 @@ describe("NodePrompter", () => {
     await expect(answer).rejects.toBeInstanceOf(AskingStopped);
     expect(shown().endsWith("\n")).toBe(true);
   });
+
+  it("passes on any other failure, rather than taking it for Ctrl+C", async () => {
+    const { input, output } = terminal();
+    const write = output.write.bind(output);
+    let writes = 0;
+    output.write = ((...args: Parameters<typeof write>) => {
+      writes++;
+      if (writes === 1) throw new Error("the terminal is gone");
+      return write(...args);
+    }) as typeof output.write;
+    await expect(new NodePrompter(input, output).ask("Your name", "Ada")).rejects.toThrow(
+      "the terminal is gone",
+    );
+  });
 });
 
 describe("ScriptedPrompter", () => {
