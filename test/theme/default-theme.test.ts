@@ -95,14 +95,22 @@ afterAll(async () => {
   await rm(site, { recursive: true, force: true });
 });
 
-async function build(theme: ThemeSettings = {}, drafts = false): Promise<BuiltSite> {
+const SITE = { title: "Ada's notes", url: "https://example.com", description: "Notes" };
+
+async function build(
+  theme: ThemeSettings = {},
+  drafts = false,
+  siteSettings: Record<string, unknown> = SITE,
+  today?: string,
+): Promise<BuiltSite> {
   const read = await readSiteFolder(new NodeFileSystem(), site, defaultTheme);
   const built = buildSite({
     config: {
-      site: { title: "Ada's notes", url: "https://example.com", description: "Notes" },
+      site: siteSettings,
       perPage: 2,
       theme,
       drafts,
+      ...(today === undefined ? {} : { today }),
     },
     content: read.content,
     templates: read.templates,
@@ -111,6 +119,12 @@ async function build(theme: ThemeSettings = {}, drafts = false): Promise<BuiltSi
   });
   if (!built.ok) throw new Error(built.error.map(({ message }) => message).join("\n"));
   return built.value;
+}
+
+/** The footer of the home page. */
+function footerOf(built: BuiltSite): string {
+  const home = pageOf(built, "index.html");
+  return home.slice(home.indexOf('<footer class="site-footer">'));
 }
 
 const pagesOf = (built: BuiltSite) => built.files.filter(({ path }) => path.endsWith(".html"));
@@ -206,8 +220,10 @@ describe("the theme settings", () => {
       await build({ home: { sections: ["talks", "recent-posts"] } }),
       "index.html",
     );
-    expect(home.indexOf("<h2>Talks</h2>")).toBeLessThan(home.indexOf("<h2>Recent posts</h2>"));
-    expect(home).not.toContain("<h2>Projects</h2>");
+    const heading = (title: string) => home.indexOf(`<h2 class="section-title">${title}</h2>`);
+    expect(heading("Talks")).toBeGreaterThan(-1);
+    expect(heading("Talks")).toBeLessThan(heading("Recent posts"));
+    expect(heading("Projects")).toBe(-1);
     expect(home).not.toContain("I write about");
   });
 
@@ -228,7 +244,7 @@ describe("the theme settings", () => {
   });
 
   it("has the switch between light and dark only when the site follows the reader's system", async () => {
-    expect(pageOf(await build(), "index.html")).toContain('class="scheme-switch"');
+    expect(pageOf(await build(), "index.html")).toContain('class="icon-button scheme-switch"');
     expect(pageOf(await build({ colorScheme: "dark" }), "index.html")).not.toContain(
       "scheme-switch",
     );
@@ -276,6 +292,112 @@ describe("the theme settings", () => {
   });
 });
 
+describe("the parts of a page", () => {
+  const profiles = {
+    github: "ada",
+    gitlab: "ada-gl",
+    codeberg: "ada-cb",
+    mastodon: "https://mastodon.social/@ada",
+    bluesky: "ada.example.com",
+    linkedin: "ada-l",
+    email: "ada@example.com",
+  };
+
+  it("links to every profile in the config, on the home page and in the footer", async () => {
+    const home = pageOf(await build({}, false, { ...SITE, ...profiles }), "index.html");
+    for (const link of [
+      '<a href="https://github.com/ada" aria-label="GitHub">',
+      '<a href="https://gitlab.com/ada-gl" aria-label="GitLab">',
+      '<a href="https://codeberg.org/ada-cb" aria-label="Codeberg">',
+      '<a href="https://mastodon.social/@ada" rel="me" aria-label="Mastodon">',
+      '<a href="https://bsky.app/profile/ada.example.com" aria-label="Bluesky">',
+      '<a href="https://www.linkedin.com/in/ada-l" aria-label="LinkedIn">',
+      '<a href="mailto:ada@example.com" aria-label="Email">',
+    ]) {
+      expect(home.split(link)).toHaveLength(3);
+    }
+  });
+
+  it("has no list of profiles when the config has none", async () => {
+    expect(pageOf(await build(), "index.html")).not.toContain('class="profiles"');
+  });
+
+  it("starts the home page with the author's name and picture, and the site's description", async () => {
+    const author = { name: "Ada", avatar: "/images/diagram.png" };
+    const home = pageOf(await build({}, false, { ...SITE, author }), "index.html");
+    expect(home).toContain(
+      '<section class="hero">\n<img class="avatar" src="/images/diagram.png" alt="" width="96" height="96">\n<h1>Ada</h1>\n<p class="lead">Notes</p>',
+    );
+  });
+
+  it.each([
+    [{ ...SITE, author: "Ada Lovelace" }, "<h1>Ada Lovelace</h1>"],
+    [SITE, "<h1>Ada&#39;s notes</h1>"],
+  ])("names the home page after the author, or else the site", async (settings, heading) => {
+    const home = pageOf(await build({}, false, settings), "index.html");
+    expect(home).toContain(heading);
+    expect(home).not.toContain('class="avatar"');
+  });
+
+  it("shows a project's status, and links to its code and website", async () => {
+    const card = pageOf(await build(), "projects/index.html");
+    expect(card).toContain('<span class="status status-active">Active</span>');
+    expect(card).toContain(
+      '<a href="https://github.com/babaygt/gensane" aria-label="Code of Gensane">',
+    );
+    expect(card).toContain('<a href="https://gensane.dev" aria-label="Website of Gensane">');
+  });
+
+  it("shows each talk with its date beside it, and buttons for its slides and video", async () => {
+    const talks = pageOf(await build(), "talks/index.html");
+    expect(talks).toContain('<time class="talk-date" datetime="2026-10-01">Oct 2026</time>');
+    expect(talks).toContain('<a class="button" href="https://example.com/slides">Slides</a>');
+    expect(talks).toContain('<a class="button" href="https://example.com/video">Video</a>');
+  });
+
+  it("ends a post with its tags, and the older and newer posts", async () => {
+    const again = pageOf(await build(), "blog/again/index.html");
+    const end = again.slice(again.indexOf('<footer class="post-footer">'));
+    expect(end).toContain('<ul class="tags" aria-label="Tags">');
+    expect(end).toContain(
+      '<a class="neighbour" href="/blog/hello/" rel="prev"><span class="meta">← Older</span>Hello</a>',
+    );
+    expect(end).toContain(
+      '<a class="neighbour neighbour-next" href="/blog/third/" rel="next"><span class="meta">Newer →</span>Third</a>',
+    );
+  });
+
+  it("writes the year of the build in the footer, when it is known", async () => {
+    expect(footerOf(await build({}, false, SITE, "2026-11-21"))).toContain(
+      "<p>© 2026 Ada&#39;s notes · ",
+    );
+    expect(footerOf(await build())).toContain("<p>Ada&#39;s notes · ");
+  });
+
+  it("has a search button and a switch with a sun and a moon in the header", async () => {
+    const home = pageOf(await build(), "index.html");
+    const header = home.slice(
+      home.indexOf('<header class="site-header">'),
+      home.indexOf("</header>"),
+    );
+    expect(header).toContain('<button class="icon-button" type="submit" aria-label="Search">');
+    expect(header).toContain('<use href="/assets/icons.svg#moon"></use>');
+    expect(header).toContain('<use href="/assets/icons.svg#sun"></use>');
+  });
+
+  it("has every icon the templates use in its icon file", async () => {
+    const used = new Set<string>();
+    for (const file of ["base.html", "partials/profiles.html", "partials/project-card.html"]) {
+      const text = await readFile(join(defaultTheme, file), "utf8");
+      for (const [, name] of text.matchAll(/icons\.svg#([a-z]+)/g)) used.add(name ?? "");
+    }
+    const icons = await readFile(join(defaultTheme, "assets", "icons.svg"), "utf8");
+    const symbols = [...icons.matchAll(/<symbol id="([a-z]+)"/g)].map(([, name]) => name);
+    expect(used.size).toBeGreaterThan(10);
+    expect([...used].filter((name) => !symbols.includes(name))).toEqual([]);
+  });
+});
+
 describe("an ejected theme", () => {
   it("builds exactly the same site as the default theme it was copied from", async () => {
     const before = await build();
@@ -307,6 +429,7 @@ describe("an ejected theme", () => {
       });
       expect(after.ok && after.value).toEqual(before);
       expect(read.themeAssets.map(({ path }) => path)).toEqual([
+        "assets/icons.svg",
         "assets/search.js",
         "assets/style.css",
         "assets/theme.js",

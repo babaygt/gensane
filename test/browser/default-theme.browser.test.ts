@@ -32,6 +32,8 @@ const files: Record<string, string> = {
   ),
   "content/blog/2026-11-18-parsers.md": post("Parsers", "2026-11-18", "A note on parsing.\n"),
   "content/pages/about.md": "---\ntitle: About\n---\nHello.\n",
+  "content/projects/lamp.md": "---\ntitle: Lamp\ndescription: A small lamp\n---\n",
+  "content/talks/meetup.md": "---\ntitle: A meetup talk\nevent: Meetup\ndate: 2026-10-01\n---\n",
 };
 
 let site = "";
@@ -87,6 +89,28 @@ async function open(path: string): Promise<Page> {
   return page;
 }
 
+/** Where the parts of the header are, at a width of the window. */
+async function headerAt(width: number) {
+  const context = await browser.newContext({ viewport: { width, height: 800 } });
+  const page = await context.newPage();
+  await page.goto(`${address}/`);
+  const top = async (selector: string) =>
+    Math.round((await page.locator(selector).boundingBox())?.y ?? -1);
+  const menu = await Promise.all(
+    (await page.locator(".site-menu a").all()).map(async (link) =>
+      Math.round((await link.boundingBox())?.y ?? -1),
+    ),
+  );
+  const result = {
+    title: await top(".site-title"),
+    menu,
+    search: await top(".site-search button"),
+    searchBox: await page.locator(".site-search input").isVisible(),
+  };
+  await context.close();
+  return result;
+}
+
 describe("in a real browser", { timeout: 30_000 }, () => {
   it("finds posts while the words are typed, best first", async () => {
     const page = await open("/search/");
@@ -104,11 +128,11 @@ describe("in a real browser", { timeout: 30_000 }, () => {
     await page.context().close();
   });
 
-  it("searches from the box in the header of another page", async () => {
+  it("leads from the search button in the header to the search page, and searches there", async () => {
     const page = await open("/blog/");
-    await page.fill(".site-search input", "compilers");
-    await page.press(".site-search input", "Enter");
-    await page.waitForURL(/\/search\/\?q=compilers$/);
+    await page.click(".site-search button");
+    await page.waitForURL(/\/search\/\?q=$/);
+    await page.fill("#search-query", "compilers");
     await expect
       .poll(() => page.locator(".search-results a").allTextContents())
       .toEqual(["Compilers"]);
@@ -136,6 +160,38 @@ describe("in a real browser", { timeout: 30_000 }, () => {
     await page.locator(".scheme-switch").click();
     expect(await background()).toBe(light);
     await page.context().close();
+  });
+
+  it("shows a moon while the page is light, and a sun once it is dark", async () => {
+    const page = await open("/");
+    const visible = async (name: string) =>
+      page.locator(`.scheme-switch .icon-${name}`).isVisible();
+    await expect.poll(() => visible("moon")).toBe(true);
+    expect(await visible("sun")).toBe(false);
+    expect(await page.locator(".scheme-switch").getAttribute("aria-label")).toBe("Use dark colors");
+    await page.locator(".scheme-switch").click();
+    expect(await visible("sun")).toBe(true);
+    expect(await visible("moon")).toBe(false);
+    expect(await page.locator(".scheme-switch").getAttribute("aria-label")).toBe(
+      "Use light colors",
+    );
+    await page.context().close();
+  });
+
+  it("keeps the header on one line on a computer, and the menu below the name on a phone", async () => {
+    const computer = await headerAt(1280);
+    expect(computer.menu.length).toBe(4);
+    expect(new Set(computer.menu).size).toBe(1);
+    expect(Math.abs((computer.menu[0] ?? 0) - computer.title)).toBeLessThan(12);
+    expect(Math.abs(computer.search - computer.title)).toBeLessThan(12);
+    // The box itself only fits next to the menu in the wide setting; the button leads to it.
+    expect(computer.searchBox).toBe(false);
+
+    const phone = await headerAt(390);
+    expect(new Set(phone.menu).size).toBe(1);
+    expect(phone.menu[0]).toBeGreaterThan(phone.title + 20);
+    expect(Math.abs(phone.search - phone.title)).toBeLessThan(12);
+    expect(phone.searchBox).toBe(false);
   });
 
   it("labels a code block with its language, and copies it", async () => {

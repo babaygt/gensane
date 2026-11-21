@@ -485,6 +485,71 @@ describe("the theme", () => {
   });
 });
 
+describe("the icon of the site", () => {
+  const content = { "pages/about.md": minimal.page };
+  const templates = { ...plainTheme, "about.html": "{{ favicon }}" };
+
+  it("is made from the first letter of the title, in the palette's colors", () => {
+    const site = built({ content, templates, config: { site: { title: "ivy's notes" } } });
+    expect(fileOf(site, "about/index.html")).toBe("/assets/favicon.svg");
+    const icon = fileOf(site, "assets/favicon.svg") ?? "";
+    expect(icon).toContain('<rect width="64" height="64" rx="14" fill="#5b4bdb"/>');
+    expect(icon).toMatch(/fill="#ffffff">I<\/text>/);
+  });
+
+  it("writes a letter that is HTML safely", () => {
+    const site = built({ content, templates, config: { site: { title: "<site>" } } });
+    expect(fileOf(site, "assets/favicon.svg")).toContain(">&lt;</text>");
+  });
+
+  it.each([
+    [["favicon.svg"], [], "/favicon.svg"],
+    [["favicon.ico"], [], "/favicon.ico"],
+    [[], ["assets/favicon.svg"], "/assets/favicon.svg"],
+  ])(
+    "uses the site's or the theme's own icon (%j, %j) instead of making one",
+    (publicFiles, themeAssets, url) => {
+      const site = built({
+        content,
+        templates,
+        publicFiles,
+        themeAssets,
+        config: { site: { title: "Ivy" } },
+      });
+      expect(fileOf(site, "about/index.html")).toBe(url);
+      expect(fileOf(site, "assets/favicon.svg")).toBeUndefined();
+    },
+  );
+
+  it.each([{}, { title: "   " }])(
+    "is left out when the title has no letter (%j)",
+    (siteSettings) => {
+      const site = built({ content, templates, config: { site: siteSettings } });
+      expect(fileOf(site, "about/index.html")).toBe("");
+      expect(fileOf(site, "assets/favicon.svg")).toBeUndefined();
+    },
+  );
+});
+
+describe("the day of the build", () => {
+  const content = { "pages/about.md": minimal.page };
+  const templates = {
+    ...plainTheme,
+    "about.html": '{% if today %}{{ today | date("d MMM yyyy") }}{% endif %}',
+  };
+
+  it("is a date templates can write", () => {
+    const site = built({ content, templates, config: { today: "2026-11-21" } });
+    expect(fileOf(site, "about/index.html")).toBe("21 Nov 2026");
+  });
+
+  it("is nothing when it isn't known, without a warning", () => {
+    const site = built({ content, templates, config: { site: { url: "https://example.com" } } });
+    expect(fileOf(site, "about/index.html")).toBe("");
+    expect(site.warnings).toEqual([]);
+  });
+});
+
 describe("navigation and the feed", () => {
   const menu =
     '{% for item in navigation %}{{ item.title }} {{ item.url }};{% endfor %} {{ feed | default("no feed") }}';

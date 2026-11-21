@@ -46,10 +46,12 @@ export function accessibilityProblems(html: string): string[] {
   for (const [image] of html.matchAll(/<img\b[^>]*>/g)) {
     if (!/\salt="/.test(image)) problems.push(`no alt: ${image}`);
   }
-  for (const [, text] of html.matchAll(/<a\b[^>]*>([\s\S]*?)<\/a>/g)) {
+  // A link is named by its text, the text of an image in it, or its `aria-label`, as browsers name it.
+  for (const [, start, text] of html.matchAll(/<a\b([^>]*)>([\s\S]*?)<\/a>/g)) {
     if (
       (text ?? "").replaceAll(/<[^>]+>/g, "").trim() === "" &&
-      !/<img\b[^>]*alt="[^"]+"/.test(text ?? "")
+      !/<img\b[^>]*alt="[^"]+"/.test(text ?? "") &&
+      !/\saria-label="[^"]*\S[^"]*"/.test(start ?? "")
     ) {
       problems.push("a link without text");
     }
