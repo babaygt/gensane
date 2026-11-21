@@ -134,6 +134,11 @@ describe("the example site", () => {
     ["a task list", "blog/property-based-testing/index.html", 'type="checkbox"'],
     ["a table of contents", "blog/property-based-testing/index.html", 'class="toc"'],
     ["code with its language", "blog/writing-a-tiny-parser/index.html", 'class="language-ts"'],
+    [
+      "colors in code",
+      "blog/writing-a-tiny-parser/index.html",
+      '<span class="hl-keyword">function</span>',
+    ],
     ["a block quote", "blog/reading-a-stack-trace/index.html", "<blockquote>"],
     [
       "an image",

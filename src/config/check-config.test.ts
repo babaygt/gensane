@@ -290,13 +290,14 @@ describe("any config", () => {
 });
 
 describe("markdown.highlight", () => {
-  it("accepts a function", () => {
+  it("accepts a function, or false", () => {
     expect(problemsOf({ markdown: { highlight: () => undefined } })).toEqual([]);
+    expect(problemsOf({ markdown: { highlight: false } })).toEqual([]);
   });
 
   it("refuses anything else", () => {
     expect(messagesOf({ markdown: { highlight: "shiki" } })).toEqual([
-      '"markdown.highlight" must be a function, but "shiki" is text',
+      '"markdown.highlight" must be a function, or false, but "shiki" is text',
     ]);
   });
 });
