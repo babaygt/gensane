@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { EVENTS_PATH, withLiveReload } from "./live-reload.ts";
+import { RELOAD_PATH, withLiveReload } from "./live-reload.ts";
 
-const SCRIPT = `<script>new EventSource("${EVENTS_PATH}").addEventListener("reload", () => location.reload());</script>`;
+const SCRIPT = `<script>new WebSocket("ws://" + location.host + "${RELOAD_PATH}").addEventListener("message", () => location.reload());</script>`;
 
 describe("withLiveReload", () => {
   it("adds the script just before </body>", () => {
