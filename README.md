@@ -66,6 +66,8 @@ Built 4 pages in 15 ms, with no warnings.
 Serving the site at http://localhost:4000/ (press Ctrl+C to stop).
 ```
 
+- [`gensane init`](docs/cli/init.md) starts a new site from a few questions, and
+  [`gensane deploy init`](docs/cli/deploy.md) adds what publishes it on GitHub Pages, Cloudflare or Netlify.
 - [`gensane build`](docs/cli/build-and-check.md) writes the site into `dist/`, and `gensane check` does the same without writing, for CI.
 - [`gensane dev`](docs/cli/dev.md) serves the site, builds again on every change and reloads the browser, and shows problems in the page.
 - [`gensane new`](docs/cli/new.md) starts a post, a project, a talk or a page with the fields it needs.
@@ -82,10 +84,7 @@ A **default theme**, so a folder of Markdown needs no templates at all:
 - [Any part can be replaced](docs/cli/theme.md) by one file of the site's own.
 - [Search](docs/core/site.md#search) that finds as you type, with no server: the build writes an index, and a small script looks in it.
 
-## Planned
-
-- `npx gensane init`: scaffold a site with blog, projects, talks, experience and education, and ready-made deploy configs for
-  GitHub Pages, Cloudflare, Netlify and Vercel
+An [example site](example/), the portfolio of a developer who doesn't exist, uses every feature; the tests build it on every change.
 
 ## Development
 
@@ -98,6 +97,7 @@ pnpm test:watch    # watch mode
 pnpm coverage      # tests with coverage report
 pnpm check         # typecheck + lint + format check + tests
 pnpm build         # emit dist/
+pnpm example       # build, then serve the example site at http://localhost:4000/
 ```
 
 ### Code layout
@@ -126,15 +126,21 @@ src/
     links/       checking links and images
   config/        the settings of a site, and checking them
   cli/           the command line: reading the site folder, commands, the dev server
-    commands/    build, check, new and dev
+    commands/    build, check, dev, deploy, init, new and theme
+    init/        the files of a new site, and the files that publish it
     dev/         answering requests, live reload, the problems page
-  ports/         the disk, the config loader, the clock, the terminal and the watcher
+  ports/         the disk, the config loader, the clock, the terminal, the watcher and questions
   index.ts       public API
 test/
   architecture/  tests that enforce module boundaries
   conformance/   the official CommonMark spec examples
   docs/          tests that keep the documentation true
   e2e/           the real gensane program in a temporary folder
+  theme/         every page of the default theme: valid, accessible and small
+  browser/       the default theme in a real browser
+  example/       the example site: built with no warnings, every page checked
+  support/       helpers the tests above share
+example/         the example site
 docs/            documentation
 ```
 

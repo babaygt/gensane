@@ -20,6 +20,7 @@
   },
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
+    "example": "pnpm build && cd example && node ../dist/cli/main.js dev",
     "typecheck": "tsc --noEmit && tsc -p tsconfig.theme.json",
     "lint": "oxlint",
     "fmt": "oxfmt",

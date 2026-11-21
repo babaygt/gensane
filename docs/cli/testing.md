@@ -1,6 +1,6 @@
 # Testing
 
-The command line is tested at five levels, from fast and pure to slow and real.
+The command line is tested at six levels, from fast and pure to slow and real.
 
 | Level                          | What runs                                                                                     | Examples                                                    |
 | ------------------------------ | --------------------------------------------------------------------------------------------- | ----------------------------------------------------------- |
@@ -8,7 +8,8 @@ The command line is tested at five levels, from fast and pure to slow and real.
 | Commands in memory             | `runCli` with a disk in memory, a fixed clock, and a terminal that keeps its output          | `run-cli.test.ts`, `new-command.test.ts`                    |
 | Real HTTP and real Node        | The dev server on a free port; the config loader and the watcher on the real system          | `dev-command.test.ts`, `module-loader.test.ts`              |
 | The real program               | `gensane` in a temporary folder, and every example on these pages                            | `test/e2e/cli.test.ts`, `test/docs/cli-docs.test.ts`        |
-| A real browser                 | Chromium, without a window, on pages `gensane dev` serves: search, the switch, the copy button, reloads | `test/browser/default-theme.browser.test.ts`                |
+| The example site               | `gensane build` and `check` on `example/` with no warnings; every page valid and accessible, and every feature still shown | `test/example/example-site.test.ts` |
+| A real browser                 | Chromium, without a window, on pages `gensane dev` serves: search, the switch, the copy button, table alignment, reloads | `test/browser/default-theme.browser.test.ts`                |
 
 ## Property tests
 

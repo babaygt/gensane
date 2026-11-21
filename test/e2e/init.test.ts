@@ -5,7 +5,6 @@ import { execFile } from "node:child_process";
 import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
-import { pathToFileURL } from "node:url";
 import { promisify } from "node:util";
 import * as fc from "fast-check";
 import { afterAll, expect, it } from "vitest";
@@ -13,6 +12,7 @@ import { runCli } from "../../src/cli/index.ts";
 import { DEPLOY_TARGETS } from "../../src/cli/init/deploy-files.ts";
 import { SECTIONS } from "../../src/cli/init/starter-site.ts";
 import { PALETTES } from "../../src/core/index.ts";
+import { installGensane } from "../support/installed-gensane.ts";
 import {
   ManualWatcher,
   MemoryFileSystem,
@@ -31,18 +31,6 @@ async function newFolder(): Promise<string> {
   const folder = await mkdtemp(join(tmpdir(), "gensane-init-"));
   folders.push(folder);
   return folder;
-}
-
-/** What `npm install` would do for the site: `import "gensane"` finds this package's source. */
-async function installGensane(site: string): Promise<void> {
-  const installed = join(site, "node_modules", "gensane");
-  await mkdir(installed, { recursive: true });
-  await writeFile(
-    join(installed, "package.json"),
-    '{ "name": "gensane", "type": "module", "exports": "./index.js" }\n',
-  );
-  const source = pathToFileURL(join(packageRoot, "src", "index.ts")).href;
-  await writeFile(join(installed, "index.js"), `export * from ${JSON.stringify(source)};\n`);
 }
 
 async function gensane(folder: string, ...args: string[]) {
