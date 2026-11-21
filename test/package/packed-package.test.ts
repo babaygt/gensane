@@ -2,7 +2,7 @@
 // and used there as a stranger would, through `node_modules/.bin/gensane`. Nothing is downloaded: the
 // package has no dependencies, and npm runs offline.
 import { execFile } from "node:child_process";
-import { cp, mkdtemp, readFile, readdir, rm } from "node:fs/promises";
+import { cp, mkdtemp, readFile, readdir, rm, stat } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { promisify } from "node:util";
@@ -21,8 +21,20 @@ async function newFolder(name: string): Promise<string> {
   return folder;
 }
 
+/**
+ * The environment without npm's own settings: when the tests run inside `npm publish`, npm passes
+ * settings such as `npm_config_dry_run` down, and the npm started here would follow them.
+ */
+const cleanEnvironment = () =>
+  Object.fromEntries(
+    Object.entries(process.env).filter(([name]) => !name.toLowerCase().startsWith("npm_")),
+  );
+
 const npm = (folder: string, ...args: string[]) =>
-  run("npm", [...args, "--offline", "--no-audit", "--no-fund"], { cwd: folder });
+  run("npm", [...args, "--offline", "--no-audit", "--no-fund"], {
+    cwd: folder,
+    env: cleanEnvironment(),
+  });
 
 /** Builds into a copy of the package's files, so the repository's own `dist/` is left alone. */
 async function packedPackage(): Promise<{ tarball: string; files: string[] }> {
@@ -89,6 +101,28 @@ describe("the package as npm publishes it", { timeout: 120_000 }, () => {
     ).toBeGreaterThan(0);
     const check = await gensane(site, "check");
     expect(check.stdout).toMatch(/^Checked \d+ pages/);
+  });
+
+  it("can be published: not private, with a real version, and checked and built before it goes out", async () => {
+    const manifest = JSON.parse(await readFile(join(packageRoot, "package.json"), "utf8"));
+    expect(manifest.private).toBeUndefined();
+    expect(manifest.version).toMatch(/^(?!0\.0\.0$)\d+\.\d+\.\d+$/);
+    // `npm publish` (npm 11) drops a command whose path starts with `./`, though `npm pack` keeps it.
+    for (const path of Object.values(manifest.bin as Record<string, string>)) {
+      expect(path).not.toMatch(/^\.\//);
+    }
+    // `dist/` isn't in git, so publishing from a fresh copy must build it first.
+    expect(manifest.scripts.prepublishOnly).toBe("pnpm check && pnpm build");
+  });
+
+  it("still packs inside `npm publish --dry-run`, which passes its settings down", async () => {
+    process.env["npm_config_dry_run"] = "true";
+    try {
+      const { tarball } = await packedPackage();
+      await expect(stat(tarball)).resolves.toBeTruthy();
+    } finally {
+      delete process.env["npm_config_dry_run"];
+    }
   });
 
   it("tells npm where the code, the issues and the home page are", async () => {
