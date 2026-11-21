@@ -97,11 +97,11 @@ describe("markdownToHtml", () => {
       );
     });
 
-    it("writes column alignment on every cell", () => {
+    it("writes column alignment on every cell, as a class the theme styles", () => {
       const output = html("| a | b | c |\n| :- | :-: | -: |\n| d | e | f |");
-      expect(output).toContain('<th align="left">a</th>');
-      expect(output).toContain('<th align="center">b</th>');
-      expect(output).toContain('<td align="right">f</td>');
+      expect(output).toContain('<th class="align-left">a</th>');
+      expect(output).toContain('<th class="align-center">b</th>');
+      expect(output).toContain('<td class="align-right">f</td>');
     });
 
     it("escapes cell text", () => {

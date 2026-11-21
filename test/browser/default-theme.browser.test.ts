@@ -1,7 +1,8 @@
 // What only a real browser can show: search while typing, the switch between light and dark, the copy
-// button of code blocks, and the reload after a change. A real `gensane dev` serves a site from a
-// temporary folder, and Chromium, without a window, uses its pages. Code that runs in the page is written
-// as text, because this project is type-checked without the browser's types.
+// button of code blocks, the alignment of table columns, and the reload after a change. A real
+// `gensane dev` serves a site from a temporary folder, and Chromium, without a window, uses its pages.
+// Code that runs in the page is written as text, because this project is type-checked without the
+// browser's types.
 import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
@@ -27,7 +28,7 @@ const files: Record<string, string> = {
   "content/blog/2026-11-17-compilers.md": post(
     "Compilers",
     "2026-11-17",
-    "```ts\nconst answer = 42;\n```\n",
+    "```ts\nconst answer = 42;\n```\n\n| Tool | Year | Since |\n| --- | :-: | --: |\n| pnpm | 2021 | 5 |\n",
   ),
   "content/blog/2026-11-18-parsers.md": post("Parsers", "2026-11-18", "A note on parsing.\n"),
   "content/pages/about.md": "---\ntitle: About\n---\nHello.\n",
@@ -145,6 +146,15 @@ describe("in a real browser", { timeout: 30_000 }, () => {
     expect(await page.evaluate<string>("navigator.clipboard.readText()")).toBe(
       "const answer = 42;\n",
     );
+    await page.context().close();
+  });
+
+  it("aligns table columns as the Markdown says, over the theme's own alignment", async () => {
+    const page = await open("/blog/compilers/");
+    const aligned = await page.evaluate<string[]>(
+      '[...document.querySelectorAll("th, td")].map((cell) => getComputedStyle(cell).textAlign)',
+    );
+    expect(aligned).toEqual(["left", "center", "right", "left", "center", "right"]);
     await page.context().close();
   });
 
