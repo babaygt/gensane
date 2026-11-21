@@ -6,6 +6,15 @@ import { declaresSymbol, findLinks, headingIds, isExternalLink, linkedSymbol } f
 /** Every link on a page must lead to a file, and every linked name must exist in that file. */
 export function checkLinks(path: string, text: string): void {
   const localLinks = findLinks(text).filter((link) => !isExternalLink(link.target));
+  // Pictures in HTML too, such as the screenshots of the README, but not the HTML of examples in code.
+  const outsideCode = text.replaceAll(/^(`{3,})[^\n]*\n[\s\S]*?^\1\s*$/gm, "");
+  const pictures = [...outsideCode.matchAll(/\s(?:src|srcset)="([^"]+)"/g)]
+    .map(([, target]) => target ?? "")
+    .filter((target) => !isExternalLink(target));
+
+  it.each(pictures)("shows %s", (target) => {
+    expect(existsSync(resolve(dirname(path), target))).toBe(true);
+  });
 
   it.each(localLinks.map((link) => [link.target, link] as const))("links to %s", (target) => {
     const [file = "", part] = target.split("#");
