@@ -40,6 +40,7 @@
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
     "example": "pnpm build && cd example && node ../dist/cli/main.js dev",
+    "website": "pnpm build && node scripts/website.ts",
     "screenshots": "node scripts/screenshots.ts",
     "typecheck": "tsc --noEmit && tsc -p tsconfig.theme.json",
     "lint": "oxlint",

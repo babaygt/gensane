@@ -1,7 +1,7 @@
-// Takes the screenshots of the README from the example site: the top of its home page in each palette,
-// light and dark. Run with `pnpm screenshots` after the theme changes.
+// Takes the screenshots of the README and gensane.dev from the example site: the top of its home page in
+// each palette, light and dark. Run with `pnpm screenshots` after the theme changes.
 import { type ChildProcess, spawn } from "node:child_process";
-import { cp, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { copyFile, cp, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { chromium } from "playwright";
@@ -10,6 +10,7 @@ import { installGensane } from "../test/support/installed-gensane.ts";
 
 const root = join(import.meta.dirname, "..");
 const images = join(root, "docs", "images");
+const website = join(root, "website", "public", "images");
 
 /** Starts `gensane dev` on a copy of the example with this palette, and gives its address. */
 async function serveExample(
@@ -68,6 +69,9 @@ try {
         await page.goto(address);
         const name = `palette-${palette}-${scheme}`;
         await page.screenshot({ path: join(images, `${name}.png`) });
+        // gensane.dev shows the default palette's pair too.
+        if (palette === "default")
+          await copyFile(join(images, `${name}.png`), join(website, `${name}.png`));
         await context.close();
         console.log(`docs/images/${name}.png`);
       }

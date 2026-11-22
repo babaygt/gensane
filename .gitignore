@@ -5,3 +5,5 @@ reports/
 .stryker-tmp/
 *.log
 .DS_Store
+website/public/example/
+.wrangler/
