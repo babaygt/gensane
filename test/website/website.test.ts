@@ -148,13 +148,37 @@ describe("gensane.dev's documentation", () => {
         pictures.push(src);
     }
     expect(pictures).toContain("/docs/images/palette-nord-light.png");
-    // Only its other files: the pages themselves are on the site as pages, not as Markdown.
+    // Only its other files: the pages of docs/ are on the site as pages, and as the Markdown copies of
+    // llms.txt, each an index.md beside its page, but never as the files of docs/ themselves.
     const built = await readdir(join(folder, "website", "dist", "docs"), { recursive: true });
-    expect(built.filter((path) => path.endsWith(".md"))).toEqual([]);
+    const markdown = built
+      .map((path) => path.split("\\").join("/"))
+      .filter((path) => path.endsWith(".md"));
+    expect(markdown.length).toBeGreaterThan(50);
+    expect(markdown.filter((path) => path !== "index.md" && !path.endsWith("/index.md"))).toEqual(
+      [],
+    );
     for (const src of pictures) {
       expect(src).toMatch(/^\//);
       expect(existsSync(join(folder, "website", "dist", src))).toBe(true);
     }
+  });
+
+  it("lists the documentation in llms.txt, in reading order, with a Markdown copy of each page", async () => {
+    const list = await page("llms.txt");
+    expect(list).toMatch(/^# gensane\n\n> A static site generator/);
+    expect(list).toContain("\n## Documentation\n");
+    const start = list.indexOf(
+      "- [Quick start](https://gensane.dev/docs/start/quick-start/index.md)",
+    );
+    const tutorial = list.indexOf(
+      "- [Your first site](https://gensane.dev/docs/start/tutorial/index.md)",
+    );
+    expect(start).toBeGreaterThan(0);
+    expect(tutorial).toBeGreaterThan(start);
+    expect(await page("docs/start/tutorial/index.md")).toMatch(
+      /^# Your first site\n\nThis tutorial makes a small site/,
+    );
   });
 
   it("leads a link between pages of the documentation to the page on the site", async () => {

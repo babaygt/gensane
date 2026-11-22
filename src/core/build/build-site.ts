@@ -17,6 +17,7 @@ import { type Route, TEMPLATES } from "../site/routes.ts";
 import { buildSiteGraph } from "../site/site-graph.ts";
 import { siteAddressOf } from "../feeds/site-address.ts";
 import { withBasePath } from "./base-path.ts";
+import { llmsFiles } from "../llms/llms-files.ts";
 import { SEARCH_INDEX_PATH, searchIndex } from "../search/search-index.ts";
 import { FAVICON_PATH, OWN_FAVICONS, faviconSvg, initialOf } from "../theme/favicon.ts";
 import { THEME_CSS_PATH, themeCss } from "../theme/theme-css.ts";
@@ -41,6 +42,8 @@ export interface SiteConfig {
   readonly theme?: ThemeSettings;
   /** Extra filters for templates. */
   readonly filters?: Readonly<Record<string, TemplateFilter>>;
+  /** Write `llms.txt` and a Markdown copy of each page, for AI tools. Defaults to `false`. */
+  readonly llms?: boolean;
   /** Where the content files are, for the paths in problems. Defaults to `content`. */
   readonly contentFolder?: string;
   /** The config file, for problems with the config. Defaults to `gensane.config.ts`. */
@@ -178,6 +181,7 @@ export function buildSite(input: SiteInput): Result<BuiltSite, readonly Diagnost
     { path: THEME_CSS_PATH, content: themeCss(theme) },
     ...madeFavicon,
     ...(hasSearch ? [{ path: SEARCH_INDEX_PATH, content: searchIndex(loaded.value.entries) }] : []),
+    ...(config.llms === true ? llmsFiles(config.site ?? {}, graph.value.graph) : []),
   ];
   const found = [...problems, ...feeds.problems];
   if (hasErrors(found)) return finish(allFiles, found);

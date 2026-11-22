@@ -13,6 +13,8 @@ interface EntryDetails {
   /** Fields that the type of content doesn't define, for templates. */
   readonly extra: Readonly<Record<string, unknown>>;
   readonly html: string;
+  /** The body as it is written, for the Markdown copies of `llms.txt`. */
+  readonly markdown: string;
   readonly tableOfContents: readonly TableOfContentsEntry[];
   readonly excerpt: string;
   /** In minutes. */

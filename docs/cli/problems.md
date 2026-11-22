@@ -133,7 +133,7 @@ $ gensane check
 error[GS504]: "colours" is not a setting
   ┌─ gensane.config.ts
   │
-  = hint: the settings are site, perPage, markdown, filters and theme
+  = hint: the settings are site, perPage, markdown, filters, theme and llms
 
 Found 1 error and 0 warnings in the config.
 $ echo $?

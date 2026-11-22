@@ -8,4 +8,5 @@ export default defineConfig({
       "A static site generator for developer blogs and portfolios, with no dependencies.",
     github: "babaygt/gensane",
   },
+  llms: true,
 });
