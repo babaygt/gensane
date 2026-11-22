@@ -175,19 +175,19 @@ title: Search
 
 ```jinja page.html
 {% for crumb in breadcrumbs %}{{ crumb.title }} / {% endfor %}{{ page.title }}
-{% for item in section.items %}{% if item.current %}[{{ item.title }}]{% else %}{{ item.title }}{% endif %}{% if item.open %} (open){% endif %} {% endfor %}
+{% for item in section.items %}{% if item.current %}[{{ item.title }}]{% else %}{{ item.title }}{% endif %}{% if item.open %} (open){% endif %}{% if not loop.last %}, {% endif %}{% endfor %}
 {% if previous %}← {{ previous.title }}{% endif %}{% if next %} | {{ next.title }} →{% endif %}
 ```
 
 ```html docs/guides/search/index.html
 Docs / Guides / Search
-Start Guides (open) 
+Start, Guides (open)
 ← Guides
 ```
 
 ```html docs/start/index.html
 Docs / Start
-[Start] Guides 
+[Start], Guides
 ← Docs | Guides →
 ```
 

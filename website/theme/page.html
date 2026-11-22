@@ -18,7 +18,8 @@
 <div class="content">
 {{ page.html }}
 </div>
-{% if previous or next %}<nav class="neighbours" aria-label="More pages">
+{% if page.edit %}<p class="edit"><a href="{{ page.edit }}">Edit this page on GitHub</a></p>
+{% endif %}{% if previous or next %}<nav class="neighbours" aria-label="More pages">
 {% if previous %}<a class="neighbour" href="{{ previous.url }}" rel="prev"><span class="meta">← Previous</span>{{ previous.title }}</a>{% endif %}
 {% if next %}<a class="neighbour neighbour-next" href="{{ next.url }}" rel="next"><span class="meta">Next →</span>{{ next.title }}</a>{% endif %}
 </nav>
