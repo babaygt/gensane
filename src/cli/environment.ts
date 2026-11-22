@@ -20,6 +20,8 @@ export interface Environment {
   readonly stopped: AbortSignal;
   /** The folder of the default theme, which ships with gensane. */
   readonly defaultTheme: string;
+  /** The folder of the agent skill, which ships with gensane. */
+  readonly skill: string;
   /** The folder gensane runs in, which is the site folder. */
   readonly siteFolder: string;
   readonly version: string;

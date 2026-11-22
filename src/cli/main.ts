@@ -32,6 +32,7 @@ process.exitCode = await runCli(args, {
   watcher: new NodeWatcher(),
   prompter: new NodePrompter(process.stdin, process.stdout),
   defaultTheme: fileURLToPath(new URL("../../themes/default", import.meta.url)),
+  skill: fileURLToPath(new URL("../../skills/gensane", import.meta.url)),
   stopped: stop.signal,
   siteFolder: process.cwd(),
   version,

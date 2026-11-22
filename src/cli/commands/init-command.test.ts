@@ -29,6 +29,7 @@ async function gensane(
     prompter,
     stopped: new AbortController().signal,
     defaultTheme: "gensane/themes/default",
+    skill: "gensane/skills/gensane",
     siteFolder: "site",
     version: "1.2.3",
   });

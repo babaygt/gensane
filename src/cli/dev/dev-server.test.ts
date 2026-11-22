@@ -27,6 +27,7 @@ async function startServer(): Promise<{ server: DevServer; address: string }> {
     prompter: new ScriptedPrompter(),
     stopped: new AbortController().signal,
     defaultTheme: "gensane/themes/default",
+    skill: "gensane/skills/gensane",
     siteFolder: "site",
     version: "1.2.3",
   });
