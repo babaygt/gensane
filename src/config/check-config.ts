@@ -19,7 +19,7 @@ export interface CheckedConfig {
   readonly warnings: readonly Diagnostic[];
 }
 
-const SETTINGS = ["site", "perPage", "markdown", "filters", "theme"];
+const SETTINGS = ["site", "perPage", "markdown", "filters", "theme", "llms"];
 const SITE_SETTINGS = ["title", "url", "description", "author"];
 /** The profiles the default theme shows as icons. Known here, so a misspelled one gets a warning. */
 const PROFILES = ["github", "gitlab", "codeberg", "mastodon", "bluesky", "linkedin", "email"];
@@ -101,6 +101,11 @@ class ConfigCheck {
     if (isGroup(value)) return true;
     this.wrongValue(path, "a group of settings", value, "write the settings between { and }");
     return false;
+  }
+
+  trueOrFalse(path: string, value: unknown): void {
+    if (typeof value !== "boolean")
+      this.wrongValue(path, "true or false", value, "write true or false");
   }
 
   text(path: string, value: unknown): void {
@@ -320,6 +325,7 @@ export function checkConfig(
     else if (name === "markdown") check.markdown(setting);
     else if (name === "filters") check.filters(setting);
     else if (name === "theme") check.theme(setting);
+    else if (name === "llms") check.trueOrFalse("llms", setting);
     else check.unknownSetting(name, name, SETTINGS, `the settings are ${listed(SETTINGS)}`);
   }
   if (hasErrors(check.problems)) return err(check.problems);

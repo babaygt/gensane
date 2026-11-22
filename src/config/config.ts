@@ -13,6 +13,8 @@ export interface GensaneConfig {
   readonly filters?: Readonly<Record<string, TemplateFilter>>;
   /** The settings of the default theme: colors, font, width and layout. */
   readonly theme?: ThemeSettings;
+  /** Write `llms.txt` and a Markdown copy of each page, for AI tools. Defaults to `false`. */
+  readonly llms?: boolean;
 }
 
 export interface SiteSettings {

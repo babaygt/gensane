@@ -267,6 +267,15 @@ The settings of the default theme.
 | [`luminance`](../../src/core/theme/contrast.ts)         | How bright a color looks                                  |
 | [`READABLE_CONTRAST`](../../src/core/theme/contrast.ts) | 4.5 to 1, the level AA for text                           |
 
+## llms.txt
+
+### [`src/core/llms/llms-files.ts`](../../src/core/llms/llms-files.ts)
+
+| Name                                           | Purpose                                                                   |
+| ---------------------------------------------- | ------------------------------------------------------------------------- |
+| [`llmsFiles`](../../src/core/llms/llms-files.ts) | `llms.txt` and a Markdown copy of each page that isn't a draft            |
+| [`LLMS_PATH`](../../src/core/llms/llms-files.ts) | Where `llms.txt` is written in the site                                   |
+
 ## Search
 
 ### [`src/core/search/search-index.ts`](../../src/core/search/search-index.ts)

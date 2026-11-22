@@ -236,6 +236,7 @@ class ContentLoader {
       urlSpan: slugField === undefined ? start : (slugSpan ?? start),
       extra,
       html,
+      markdown: body,
       tableOfContents: buildTableOfContents(markdown.document),
       excerpt: excerptOf(markdown.document),
       readingTime: readingTimeOf(html),

@@ -339,6 +339,68 @@ Built 2 pages into dist in 8 ms, with no warnings.
 
 With `colorScheme: "auto"`, the file also has the dark colors, for readers whose system is dark and for the switch on the page.
 
+### `llms`
+
+`true` writes [`llms.txt`](https://llmstxt.org/), a list of the site's pages for AI tools such as chat assistants and coding
+agents, and a Markdown copy of each page beside its HTML, at its address with `index.md` added. A tool that reads the list can then
+read each page as the text it was written in, without the HTML around it. It is `false` unless a site asks for it.
+
+The list has the site's title and description, then its pages, each [section](../core/site.md#sections) in reading order, its
+posts and its projects, each with its description. Drafts are never in it. With `site.url`, the links are full addresses.
+
+<!-- runs -->
+```ts gensane.config.ts
+import { defineConfig } from "@gensane/cli";
+
+export default defineConfig({
+  site: { title: "Ada's notes", url: "https://ada.dev", description: "Notes on compilers and testing" },
+  llms: true,
+});
+```
+
+```markdown content/pages/about.md
+---
+title: About
+description: Who Ada is
+---
+I build compilers and the tests that keep them honest.
+```
+
+```markdown content/blog/2026-11-17-hello.md
+---
+title: Hello
+date: 2026-11-17
+---
+The first post.
+```
+
+```console
+$ gensane build
+Built 6 pages into dist in 8 ms, with no warnings.
+```
+
+```text dist/llms.txt
+# Ada's notes
+
+> Notes on compilers and testing
+
+## Pages
+
+- [About](https://ada.dev/about/index.md): Who Ada is
+
+## Posts
+
+- [Hello](https://ada.dev/blog/hello/index.md)
+```
+
+```markdown dist/about/index.md
+# About
+
+> Who Ada is
+
+I build compilers and the tests that keep them honest.
+```
+
 ## While serving
 
 [`gensane dev`](dev.md) runs the config again when it changes. Files the config imports aren't run again until `gensane dev` is
