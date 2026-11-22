@@ -14,7 +14,7 @@ no dependencies: the Markdown compiler, the template language and everything els
 ## Start
 
 ```sh
-npx gensane init my-site
+npx @gensane/cli init my-site
 cd my-site
 npm install
 npm run dev
@@ -55,7 +55,7 @@ Then write Markdown: posts in `content/blog/`, projects, talks, experience and e
 Readers see the side their system prefers, and can switch with the sun and moon button. Choose a palette in `gensane.config.ts`:
 
 ```ts
-import { defineConfig } from "gensane";
+import { defineConfig } from "@gensane/cli";
 
 export default defineConfig({
   site: { title: "Ada's notes", url: "https://ada.dev", author: "Ada", github: "ada" },

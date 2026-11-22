@@ -95,6 +95,12 @@ Reads the arguments, picks the command, and turns every way it can end into an e
 | [`SECTIONS`](../../src/cli/init/starter-site.ts)      | The parts a site can start with                            |
 | [`siteNameOf`](../../src/cli/init/starter-site.ts) | A name for the site from its folder, for npm and Cloudflare |
 
+### [`src/cli/package-name.ts`](../../src/cli/package-name.ts)
+
+| Name                                               | Purpose                                                              |
+| -------------------------------------------------- | -------------------------------------------------------------------- |
+| [`PACKAGE_NAME`](../../src/cli/package-name.ts)    | `@gensane/cli`, the name a site installs and its config imports      |
+
 ### [`src/cli/local-day.ts`](../../src/cli/local-day.ts)
 
 | Name                                         | Purpose                                                       |
