@@ -25,6 +25,7 @@ that builds at once. `npm run dev` serves it at `http://localhost:4000/` and rel
 
 Then write Markdown: posts in `content/blog/`, projects, talks, experience and education in their folders, and pages in
 `content/pages/`. [`gensane new post "Hello World"`](docs/cli/new.md) starts one with the fields it needs.
+[Your first site](docs/start/tutorial.md) goes from an empty folder to a site online, step by step.
 
 ## What you get
 
