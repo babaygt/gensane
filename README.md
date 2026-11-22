@@ -8,8 +8,8 @@ no dependencies: the Markdown compiler, the template language and everything els
   <img alt="The home page of the example site: a developer's name and picture, links to their profiles, projects as cards, recent posts and talks" src="docs/images/palette-default-light.png">
 </picture>
 
-> **Status:** the first release, 0.1. Everything below works and is tested; [issues](https://github.com/babaygt/gensane/issues)
-> and ideas are welcome.
+> **Status:** 0.2, with sections, `llms.txt` and a skill for coding agents ([what changed](CHANGELOG.md)). Everything below
+> works and is tested; [issues](https://github.com/babaygt/gensane/issues) and ideas are welcome.
 
 ## Start
 

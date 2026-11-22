@@ -124,6 +124,9 @@ describe("the package as npm publishes it", { timeout: 120_000 }, () => {
     for (const path of Object.values(manifest.bin as Record<string, string>)) {
       expect(path).not.toMatch(/^\.\//);
     }
+    // Every version says what changed in it.
+    const changelog = await readFile(join(packageRoot, "CHANGELOG.md"), "utf8");
+    expect(changelog).toContain(`\n## ${manifest.version}\n`);
     // `dist/` isn't in git, so publishing from a fresh copy must build it first.
     expect(manifest.scripts.prepublishOnly).toBe("pnpm check && pnpm build");
   });

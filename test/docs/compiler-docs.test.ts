@@ -14,6 +14,7 @@ const pagePaths = [
   ...readdirSync(docsFolder).map((name) => join(docsFolder, name)),
   join(packageRoot, "README.md"),
   join(packageRoot, "CONTRIBUTING.md"),
+  join(packageRoot, "CHANGELOG.md"),
 ];
 const pages = pagePaths.map((path) => ({
   path,
