@@ -426,3 +426,48 @@ describe("routes", () => {
     expect(result.ok ? undefined : result.error[0]?.span.file).toBe("site/content/pages/talks.md");
   });
 });
+
+describe("pages in a section", () => {
+  const files = {
+    "pages/docs/index.md": "---\ntitle: Docs\n---\n",
+    "pages/docs/a.md": "---\ntitle: A\norder: 1\n---\n",
+    "pages/docs/b.md": "---\ntitle: B\norder: 2\n---\n",
+    "pages/now.md": "---\ntitle: Now\n---\n",
+  };
+  const routeOf = (url: string) => graphOf(files).routes.find((route) => route.url === url);
+
+  it("know the pages before and after them as a reader goes through the section", () => {
+    const route = routeOf("/docs/a/");
+    expect(route?.kind === "page" && [route.previous?.url, route.next?.url]).toEqual([
+      "/docs/",
+      "/docs/b/",
+    ]);
+    const last = routeOf("/docs/b/");
+    expect(last?.kind === "page" && [last.previous?.url, last.next?.url]).toEqual([
+      "/docs/a/",
+      undefined,
+    ]);
+  });
+
+  it("leaves a page outside a section with no section and no neighbours", () => {
+    expect(routeOf("/now/")).toMatchObject({
+      kind: "page",
+      section: undefined,
+      previous: undefined,
+      next: undefined,
+    });
+  });
+
+  it("refuses a folder of pages at the address of a list the site makes", () => {
+    const withPost = {
+      "pages/blog/index.md": "---\ntitle: Blog\n---\n",
+      "blog/hello.md": post("2026-11-17"),
+    };
+    expect(graphProblems(withPost)).toMatchObject([
+      {
+        code: CoreCodes.reservedUrl,
+        message: '/blog/ is the list of posts, so "content/pages/blog/index.md" can\'t use it',
+      },
+    ]);
+  });
+});

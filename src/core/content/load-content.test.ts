@@ -28,6 +28,49 @@ describe("types of content", () => {
     );
   });
 
+  it.each([
+    ["pages/docs/start.md", "/docs/start/", "start"],
+    ["pages/docs/guides/search.md", "/docs/guides/search/", "search"],
+    ["pages/docs/index.md", "/docs/", "docs"],
+    ["pages/docs/guides/index.md", "/docs/guides/", "guides"],
+    ["pages/index.md", "/index/", "index"],
+  ])("puts the page %s, in folders of pages, at %s", (path, url, slug) => {
+    expect(entryOf({ [path]: minimal.page }, path)).toMatchObject({ url, slug });
+  });
+
+  it("lets a slug name a page in folders, but not move it out of them", () => {
+    const path = "pages/docs/start.md";
+    expect(entryOf({ [path]: "---\ntitle: Start\nslug: begin\n---\n" }, path).url).toBe(
+      "/docs/begin/",
+    );
+  });
+
+  it.each([
+    ["pages/User_Guide/start.md", "User_Guide", 'rename the folder "user-guide"'],
+    ["pages/docs/Über/start.md", "Über", 'rename the folder "uber"'],
+    [
+      "pages/docs/!!!/start.md",
+      "!!!",
+      'rename the folder with lowercase letters, digits and dashes, such as "guides"',
+    ],
+  ])("refuses the folder name in %s, which can't be part of a URL", (path, folder, hint) => {
+    expect(problems({ [path]: minimal.page })).toMatchObject([
+      {
+        code: CoreCodes.invalidFolder,
+        message: `the folder "${folder}" can't be part of a URL, which only allows lowercase letters, digits and single dashes`,
+        hint,
+        span: { file: `content/${path}`, start: { line: 1, column: 1 } },
+      },
+    ]);
+  });
+
+  it("takes an order for a page", () => {
+    const path = "pages/docs/start.md";
+    expect(entryOf({ [path]: "---\ntitle: Start\norder: 2\n---\n" }, path).fields).toMatchObject({
+      order: 2,
+    });
+  });
+
   it.each(["notes/a.md", "about.md", "drafts/blog/a.md"])("rejects %s", (path) => {
     expect(problems({ [path]: minimal.page })).toMatchObject([
       {
