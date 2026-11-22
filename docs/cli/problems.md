@@ -163,7 +163,8 @@ $ echo $?
 
 ### GS506
 
-A warning: a setting of `site` that looks like a misspelled known one. Other settings of `site` are fine; they are for the templates.
+A warning: a setting of `site` that looks like a misspelled known one, such as `descripton` or a profile such as `githb`. Other
+settings of `site` are fine; they are for the templates.
 
 <!-- runs -->
 ```ts gensane.config.ts
