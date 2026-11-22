@@ -387,6 +387,12 @@ describe("the parts of a page", () => {
     expect(footerOf(await build())).toContain("<p>Ada&#39;s notes · ");
   });
 
+  it("builds a site with no title, author or description without a warning", async () => {
+    const built = await build({}, false, { url: "https://example.com" });
+    expect(built.warnings).toEqual([]);
+    expect(footerOf(built)).toContain('<p> · <a href="/feed.xml">Feed</a> · Made with');
+  });
+
   it("has a search button and a switch with a sun and a moon in the header", async () => {
     const home = pageOf(await build(), "index.html");
     const header = home.slice(
