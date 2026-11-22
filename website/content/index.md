@@ -11,7 +11,7 @@ no framework, no config to study.
 npx @gensane/cli init my-site
 ```
 
-<p class="actions"><a class="button button-main" href="/example/">See the example</a> <a class="button" href="https://github.com/babaygt/gensane#readme">Read the docs</a></p>
+<p class="actions"><a class="button button-main" href="/example/">See the example</a> <a class="button" href="/docs/">Read the docs</a></p>
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="/images/palette-default-dark.png">
