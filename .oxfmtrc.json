@@ -6,6 +6,7 @@
     "pnpm-lock.yaml",
     "test/fixtures/**",
     "docs/**",
+    "skills/**",
     "themes/**/*.html",
     "website/theme/**/*.html"
   ]

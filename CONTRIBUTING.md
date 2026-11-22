@@ -27,6 +27,7 @@ pnpm test:watch    # the tests, again after every change
 pnpm coverage      # the tests, with a coverage report
 pnpm build         # writes dist/
 pnpm screenshots   # takes the screenshots of the README again, after the theme changes
+pnpm skill         # writes the agent skill's references again, after the docs they come from change
 ```
 
 The first run of the browser tests needs Chromium: `pnpm exec playwright install chromium`.
@@ -116,6 +117,13 @@ such as `node:fs`; every other module is pure and works only on what it is given
 
 `website/` is gensane.dev, built with gensane, with the example site under `/example/`. `pnpm website` builds it into `website/dist`.
 CI publishes it on Cloudflare after every merge to `main`, once every check has passed.
+
+## The agent skill
+
+`skills/gensane/` is the skill that coding agents read to work on a gensane site, in the
+[Agent Skills](https://agentskills.io/specification) format, and it ships in the package. `SKILL.md` is written by hand. The files in
+`references/` are made from the documentation by `pnpm skill`, and a test fails while they are out of date. Tests also check that the
+skill names only commands, fields, settings and problem codes that exist, and that its examples have no problems.
 
 ## Reporting a problem
 

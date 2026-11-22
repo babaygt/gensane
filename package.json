@@ -25,6 +25,7 @@
   },
   "files": [
     "dist",
+    "skills",
     "themes"
   ],
   "type": "module",
