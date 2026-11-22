@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { type BuiltSite, CoreCodes, type SiteInput, buildSite } from "../index.ts";
+import { type BuiltSite, CoreCodes, type SiteConfig, type SiteInput, buildSite } from "../index.ts";
 import { minimal, plainTheme } from "../test-helpers.ts";
 
 function built(input: Partial<SiteInput>): BuiltSite {
@@ -619,5 +619,113 @@ describe("navigation and the feed", () => {
     const config = { site: { url: "https://example.com" }, drafts: true };
     const site = built({ content: { "blog/a.md": draft }, templates, config });
     expect(fileOf(site, "index.html")).toBe("Blog /blog/; no feed");
+  });
+});
+
+/** The config with `llms` turned on. */
+const withLlms = (config: SiteConfig) => ({ ...config, llms: true });
+
+describe("llms.txt", () => {
+  const content = {
+    "index.md": "---\ntitle: Home\n---\nWelcome.\n",
+    "pages/about.md": "---\ntitle: About\ndescription: Who Ada is\n---\nI build compilers.\n",
+    "pages/docs/index.md": "---\ntitle: Docs\n---\nThe docs.\n",
+    "pages/docs/start.md": "---\ntitle: Start\norder: 1\n---\nStart here.\n",
+    "pages/docs/guides/search.md": "---\ntitle: Search\n---\nFinding things.\n",
+    "blog/2026-01-01-old.md": post("2026-01-01", "", "Old.\n"),
+    "blog/2026-02-01-new.md": post(
+      "2026-02-01",
+      "description: The newer one\n",
+      "New, with [a link](/about/).\n",
+    ),
+    "blog/2026-03-01-draft.md": post("2026-03-01", "draft: true\n", "Not yet.\n"),
+    "projects/tiny-calc.md": "---\ntitle: tiny-calc\ndescription: A calculator\n---\nIt adds.\n",
+    "talks/a.md": minimal.talk,
+  };
+  const site = { title: "Ada's notes", url: "https://ada.dev", description: "Notes on compilers" };
+
+  it("is only written when the config asks for it", () => {
+    const files = built({ content, config: { site } }).files.map(({ path }) => path);
+    expect(files.filter((path) => path.endsWith(".md") || path.endsWith(".txt"))).toEqual([]);
+  });
+
+  it("lists the pages, each section in reading order, the posts and the projects, with full addresses", () => {
+    expect(fileOf(built({ content, config: withLlms({ site }) }), "llms.txt")).toBe(
+      [
+        "# Ada's notes",
+        "",
+        "> Notes on compilers",
+        "",
+        "## Pages",
+        "",
+        "- [Home](https://ada.dev/index.md)",
+        "- [About](https://ada.dev/about/index.md): Who Ada is",
+        "",
+        "## Docs",
+        "",
+        "- [Docs](https://ada.dev/docs/index.md)",
+        "- [Start](https://ada.dev/docs/start/index.md)",
+        "- [Search](https://ada.dev/docs/guides/search/index.md)",
+        "",
+        "## Posts",
+        "",
+        "- [Post 2026-02-01](https://ada.dev/blog/new/index.md): The newer one",
+        "- [Post 2026-01-01](https://ada.dev/blog/old/index.md)",
+        "",
+        "## Projects",
+        "",
+        "- [tiny-calc](https://ada.dev/projects/tiny-calc/index.md): A calculator",
+        "",
+      ].join("\n"),
+    );
+  });
+
+  it("writes each listed page as Markdown, with its title and description, beside its HTML", () => {
+    const files = built({ content, config: withLlms({ site }) });
+    expect(fileOf(files, "blog/new/index.md")).toBe(
+      "# Post 2026-02-01\n\n> The newer one\n\nNew, with [a link](/about/).\n",
+    );
+    expect(fileOf(files, "index.md")).toBe("# Home\n\nWelcome.\n");
+    expect(files.files.map(({ path }) => path).filter((path) => path.endsWith(".md"))).toEqual([
+      "about/index.md",
+      "blog/new/index.md",
+      "blog/old/index.md",
+      "docs/guides/search/index.md",
+      "docs/index.md",
+      "docs/start/index.md",
+      "index.md",
+      "projects/tiny-calc/index.md",
+    ]);
+  });
+
+  it("leaves drafts out, even when they are shown", () => {
+    const files = built({ content, config: withLlms({ site, drafts: true }) });
+    expect(fileOf(files, "llms.txt")).not.toContain("draft");
+    expect(fileOf(files, "blog/draft/index.md")).toBeUndefined();
+  });
+
+  it("adds the site's path to the addresses of a site under a path", () => {
+    const under = { ...site, url: "https://ada.github.io/notes" };
+    expect(fileOf(built({ content, config: withLlms({ site: under }) }), "llms.txt")).toContain(
+      "- [About](https://ada.github.io/notes/about/index.md): Who Ada is",
+    );
+  });
+
+  it("uses addresses from the root without the site's address, and the host or a plain name for a title", () => {
+    const text = fileOf(
+      built({ content: { "pages/now.md": minimal.page }, config: withLlms({}) }),
+      "llms.txt",
+    );
+    expect(text).toBe("# Site\n\n## Pages\n\n- [About](/now/index.md)\n");
+    const hosted = built({ content: {}, config: withLlms({ site: { url: "https://ada.dev" } }) });
+    expect(fileOf(hosted, "llms.txt")).toBe("# ada.dev\n");
+  });
+
+  it("keeps the brackets of a title from ending its link", () => {
+    const files = built({
+      content: { "pages/now.md": "---\ntitle: Now [2026]\n---\n" },
+      config: withLlms({}),
+    });
+    expect(fileOf(files, "llms.txt")).toContain("- [Now \\[2026\\]](/now/index.md)");
   });
 });

@@ -34,6 +34,7 @@ describe("a config that is right", () => {
       perPage: 5,
       markdown: { rawHtml: "escape", headingIds: false },
       filters: { shout },
+      llms: true,
     };
     const result = checkConfig(config, FILE);
     expect(result).toEqual({ ok: true, value: { config, warnings: [] } });
@@ -98,7 +99,7 @@ describe("settings it doesn't know", () => {
         code: ConfigCodes.unknownSetting,
         severity: "error",
         message: '"colours" is not a setting',
-        hint: "the settings are site, perPage, markdown, filters and theme",
+        hint: "the settings are site, perPage, markdown, filters, theme and llms",
       },
     ]);
   });
@@ -190,6 +191,7 @@ describe("values of the wrong kind", () => {
     [{ site: { description: ["a"] } }, '"site.description" must be text, but it is a list'],
     [{ site: { title: {} } }, '"site.title" must be text, but it is a group of settings'],
     [{ site: { github: 5 } }, '"site.github" must be text, but 5 is a number'],
+    [{ llms: "yes" }, '"llms" must be true or false, but "yes" is text'],
     [{ site: { email: ["a@example.com"] } }, '"site.email" must be text, but it is a list'],
     [
       { site: { author: 5 } },

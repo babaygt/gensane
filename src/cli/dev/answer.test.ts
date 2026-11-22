@@ -128,6 +128,7 @@ describe("typeOf", () => {
   it.each([
     ["index.html", HTML],
     ["style.CSS", "text/css; charset=utf-8"],
+    ["blog/hello/index.md", "text/markdown; charset=utf-8"],
     ["photo.jpeg", "image/jpeg"],
     ["fonts/inter.woff2", "font/woff2"],
     ["CNAME", "application/octet-stream"],
