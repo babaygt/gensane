@@ -1,11 +1,13 @@
 // The default theme, checked on a site with every type of content and every Markdown feature: every
 // page must be valid HTML, accessible, and free of problems, and the theme must stay small.
+import { readFileSync } from "node:fs";
 import { mkdir, mkdtemp, readFile, rm, stat, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { gzipSync } from "node:zlib";
 import { afterAll, describe, expect, it } from "vitest";
 import { readSiteFolder, runCli } from "../../src/cli/index.ts";
+import { checkConfig } from "../../src/config/index.ts";
 import { type BuiltSite, type ThemeSettings, buildSite } from "../../src/core/index.ts";
 import {
   ManualWatcher,
@@ -495,6 +497,25 @@ describe("an ejected theme", () => {
     } finally {
       await rm(join(site, "theme"), { recursive: true, force: true });
     }
+  });
+});
+
+describe("the profiles", () => {
+  const partial = readFileSync(join(defaultTheme, "partials", "profiles.html"), "utf8");
+  const names = [
+    ...new Set([...partial.matchAll(/site\.([a-z]+)/g)].map(([, name]) => name ?? "")),
+  ];
+
+  it("are read from the partial", () => {
+    expect(names.length).toBeGreaterThan(5);
+  });
+
+  // The config checks the profiles the theme shows, so a misspelled one gets a warning instead of a missing icon.
+  it.each(names)("site.%s is a profile the config knows", (name) => {
+    const result = checkConfig({ site: { [name]: 5 } }, "gensane.config.ts");
+    expect(result.ok ? [] : result.error.map(({ message }) => message)).toEqual([
+      `"site.${name}" must be text, but 5 is a number`,
+    ]);
   });
 });
 

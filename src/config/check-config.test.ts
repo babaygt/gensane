@@ -131,6 +131,29 @@ describe("settings it doesn't know", () => {
     ]);
   });
 
+  it("warns about a misspelled profile, which the theme would not show", () => {
+    expect(problemsOf({ site: { githb: "ada" } })).toEqual([
+      {
+        code: ConfigCodes.misspelledSiteSetting,
+        severity: "warning",
+        message: '"site.githb" is not a known setting',
+        hint: 'did you mean "github"? Other settings of the site are fine, for the templates',
+      },
+    ]);
+  });
+
+  it("knows every profile, so none is mistaken for a misspelling", () => {
+    const profiles = { github: "a", gitlab: "a", codeberg: "a", mastodon: "https://m.example/@a" };
+    const more = { bluesky: "a.example.com", linkedin: "a", email: "a@example.com" };
+    expect(problemsOf({ site: { ...profiles, ...more } })).toEqual([]);
+  });
+
+  it("leaves settings of the site's own alone, even near a profile, once that profile is there", () => {
+    expect(problemsOf({ site: { github: "ada", github2: "ada-work", twitter: "ada" } })).toEqual(
+      [],
+    );
+  });
+
   it("doesn't suggest a site setting that is already there", () => {
     expect(problemsOf({ site: { title: "A", titel: "B" } })).toEqual([]);
   });
@@ -166,6 +189,8 @@ describe("values of the wrong kind", () => {
     [{ site: { url: true } }, '"site.url" must be text, but true is true or false'],
     [{ site: { description: ["a"] } }, '"site.description" must be text, but it is a list'],
     [{ site: { title: {} } }, '"site.title" must be text, but it is a group of settings'],
+    [{ site: { github: 5 } }, '"site.github" must be text, but 5 is a number'],
+    [{ site: { email: ["a@example.com"] } }, '"site.email" must be text, but it is a list'],
     [
       { site: { author: 5 } },
       '"site.author" must be text or a group of settings with a "name", but 5 is a number',
