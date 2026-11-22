@@ -16,8 +16,10 @@ when there is nothing, so `{% if previous %}` works on every page.
 | `favicon`     | Every page   | The address of the site's icon: its own `favicon.svg` or `favicon.ico` in `public/`, or else one made from the first letter of `site.title` |
 | `today`       | Every page   | The day of the build, as a date for the `date` filter, such as `{{ today \| date("yyyy") }}` |
 | `pagination`  | List pages   | `items`, `current`, `total`, `previousUrl` and `nextUrl`                           |
-| `previous`    | Posts        | The post before this one in time                                                   |
-| `next`        | Posts        | The post after this one in time                                                    |
+| `previous`    | Posts, pages in a section | The post before this one in time, or the page before this one in its [section](site.md#sections) |
+| `next`        | Posts, pages in a section | The post after this one in time, or the page after this one in its section         |
+| `section`     | Pages in a section | The section's tree: `title`, `url`, and `items`, each a page (`title`, `url`, `current`) or a folder (also `open` and `items`) |
+| `breadcrumbs` | Pages in a section | The folders above the page, each with `title` and `url` (none when the folder has no `index.md`) |
 | `tag`         | Tag pages    | `name`, `slug`, `url`, `count` and `posts`                                          |
 
 ## The page

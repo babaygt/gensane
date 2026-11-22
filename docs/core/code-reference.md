@@ -108,6 +108,16 @@ Entries to routes.
 | [`listRoutes`](../../src/core/site/site-graph.ts)      | The pages of posts, tags, projects and talks |
 | [`GENERATED_PAGES`](../../src/core/site/site-graph.ts) | URLs that a page can't take                  |
 
+### [`src/core/site/sections.ts`](../../src/core/site/sections.ts)
+
+| Name                                                  | Purpose                                                          |
+| ----------------------------------------------------- | ---------------------------------------------------------------- |
+| [`sectionsOf`](../../src/core/site/sections.ts)       | Every section of the site, from the folders of `pages/`          |
+| [`readingOrder`](../../src/core/site/sections.ts)     | A section's pages in the order a reader goes through them        |
+| [`foldersAbove`](../../src/core/site/sections.ts)     | The folders from the section down to a page, for breadcrumbs     |
+| [`foldersOf`](../../src/core/site/sections.ts)        | The folders a page is in                                         |
+| [`SectionFolder`](../../src/core/site/sections.ts)    | A folder of a section, with its own page and its items           |
+
 ### [`src/core/site/routes.ts`](../../src/core/site/routes.ts)
 
 | Name                                          | Purpose                            |

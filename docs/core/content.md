@@ -11,12 +11,15 @@ Each Markdown file in the content folder becomes an entry. Its folder decides it
 | `index.md`     | `page`       | `/`                       |
 | `blog/`        | `post`       | `/blog/<slug>/`           |
 | `projects/`    | `project`    | `/projects/<slug>/`       |
-| `pages/`       | `page`       | `/<slug>/`                |
+| `pages/`       | `page`       | `/<slug>/`, or `/<folders>/<slug>/` in folders |
 | `talks/`       | `talk`       | None, they are listed     |
 | `experience/`  | `experience` | None, they are listed     |
 | `education/`   | `education`  | None, they are listed     |
 
-Folders inside these folders are allowed, so `blog/2026/hello.md` is a post. Any other folder is a [problem](diagnostics.md), and a file
+Folders inside these folders are allowed, so `blog/2026/hello.md` is a post. Only for pages do the folders become part of the URL:
+`pages/docs/guides/search.md` is at `/docs/guides/search/`, and a folder's `index.md` is the folder's own page, so
+`pages/docs/index.md` is at `/docs/`. Such folders make a [section](site.md#sections), such as documentation. A folder's name must be
+fit for a URL, like a slug, or it is a [problem](diagnostics.md#gs418). Any other folder is a [problem](diagnostics.md), and a file
 that isn't Markdown, such as an image, is left out with a warning, because images belong in the `public` folder.
 
 ## URLs

@@ -17,6 +17,7 @@ import { type Collections, collect } from "./collections.ts";
 import { compareStrings } from "./order.ts";
 import { pageUrl, paginate } from "./pagination.ts";
 import type { Route } from "./routes.ts";
+import { foldersOf, readingOrder, sectionsOf } from "./sections.ts";
 
 export interface GraphOptions {
   /** How many posts a list shows on one page. Defaults to 10. */
@@ -103,11 +104,22 @@ export function buildSiteGraph(
 
   const taken = new Set(routes.map((route) => route.url));
   const clashes: Diagnostic[] = [];
+  const sections = sectionsOf(collections.pages);
   for (const page of collections.pages) {
     if (page === aboutPage) continue;
     const url = page.url ?? "";
     if (!taken.has(url)) {
-      routes.push({ kind: "page", url, page });
+      const section = sections.get(foldersOf(page)[0] ?? "");
+      const order = section === undefined ? [] : readingOrder(section);
+      const place = order.indexOf(page);
+      routes.push({
+        kind: "page",
+        url,
+        page,
+        section,
+        previous: place > 0 ? order[place - 1] : undefined,
+        next: place === -1 ? undefined : order[place + 1],
+      });
       continue;
     }
     clashes.push(

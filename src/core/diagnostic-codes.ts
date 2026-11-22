@@ -19,4 +19,5 @@ export const CoreCodes = {
   publicFileClash: "GS415",
   themeFileClash: "GS416",
   hiddenField: "GS417",
+  invalidFolder: "GS418",
 } as const satisfies Record<string, DiagnosticCode>;

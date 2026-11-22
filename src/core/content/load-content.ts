@@ -216,9 +216,18 @@ class ContentLoader {
       problems.push(...this.#checkDate(fromName.date, fields.date.text, data, start));
     }
 
+    // A page in a folder of `pages/` is at the folder's path; its `index.md` is the folder's own page.
+    const folders = type === "page" ? path.split("/").slice(1, -1) : [];
+    const badFolder = folders.find((folder) => !isValidSlug(folder));
+    if (badFolder !== undefined)
+      return failedWith([...problems, this.#invalidFolder(badFolder, start)]);
+    if (folders.length > 0 && name === "index.md") slug = folders.at(-1) ?? slug;
+
     let url: string | undefined;
     if (path === HOME_PAGE) url = "/";
-    else if (prefix !== undefined) url = `${prefix}${slug}/`;
+    else if (folders.length > 0) {
+      url = name === "index.md" ? `/${folders.join("/")}/` : `/${folders.join("/")}/${slug}/`;
+    } else if (prefix !== undefined) url = `${prefix}${slug}/`;
     const html = renderHtml(markdown.document);
     const details: EntryDetails = {
       file: path,
@@ -235,6 +244,18 @@ class ContentLoader {
       entry: entryOf(type, fields, details),
       problems,
     };
+  }
+
+  #invalidFolder(folder: string, span: SourceSpan): Diagnostic {
+    const suggestion = slugify(folder);
+    return problem(
+      CoreCodes.invalidFolder,
+      `the folder "${folder}" can't be part of a URL, which only allows lowercase letters, digits and single dashes`,
+      span,
+      suggestion === ""
+        ? 'rename the folder with lowercase letters, digits and dashes, such as "guides"'
+        : `rename the folder "${suggestion}"`,
+    );
   }
 
   #invalidSlug(slug: string, span: SourceSpan): Diagnostic {
