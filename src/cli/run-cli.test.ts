@@ -319,6 +319,7 @@ describe("help and version", () => {
     "  deploy  Add the files that publish the site on a host",
     "  init    Start a new site, from a few questions",
     "  new     Write a new content file, such as a post",
+    "  skill   Add the gensane skill for AI coding agents to the site",
     "  theme   Copy the default theme into theme/, to change all of it",
     "",
     "Run gensane <command> --help to see the arguments of a command.",

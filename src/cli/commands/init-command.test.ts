@@ -18,7 +18,11 @@ async function gensane(
     prompter = new ScriptedPrompter(),
   }: { files?: Record<string, string>; prompter?: ScriptedPrompter } = {},
 ) {
-  const fileSystem = new MemoryFileSystem(files);
+  const fileSystem = new MemoryFileSystem({
+    "gensane/skills/gensane/SKILL.md": "The skill.\n",
+    "gensane/skills/gensane/references/problems.md": "# Problems\n",
+    ...files,
+  });
   const terminal = new MemoryTerminal();
   const code = await runCli(args, {
     fileSystem,
@@ -46,7 +50,14 @@ describe("gensane init", () => {
   it("takes every default with --yes, and says what to do next", async () => {
     const run = await gensane(["init", "my-site", "--yes"]);
     expect(run.code).toBe(ExitCode.success);
-    expect(await run.fileSystem.listFiles("site/my-site")).toHaveLength(8);
+    const files = await run.fileSystem.listFiles("site/my-site");
+    expect(files.filter((path) => !path.includes("skills/"))).toHaveLength(8);
+    expect(files.filter((path) => path.includes("skills/"))).toEqual([
+      ".agents/skills/gensane/SKILL.md",
+      ".agents/skills/gensane/references/problems.md",
+      ".claude/skills/gensane/SKILL.md",
+      ".claude/skills/gensane/references/problems.md",
+    ]);
     expect(await run.fileSystem.readText("site/my-site/gensane.config.ts")).toContain(
       'title: "My site",',
     );
@@ -55,7 +66,8 @@ describe("gensane init", () => {
     ).toContain("date: 2026-11-20");
     expect(run.output).toBe(
       [
-        "Created a site with 8 files in my-site.",
+        "Created a site with 8 files in my-site,",
+        "and added the gensane skill for coding agents, in .agents/skills/ and .claude/skills/.",
         "",
         "Next:",
         "  cd my-site",
@@ -69,7 +81,7 @@ describe("gensane init", () => {
     const run = await gensane(["init", "--yes"]);
     expect(run.code).toBe(ExitCode.success);
     expect(await run.fileSystem.readText("site/gensane.config.ts")).toContain('title: "Site",');
-    expect(run.output).toContain("in this folder.");
+    expect(run.output).toContain("in this folder,");
     expect(run.output).not.toContain("cd ");
   });
 
@@ -90,6 +102,7 @@ describe("gensane init", () => {
       "The parts you want: blog, projects, talks, about",
       "The colors: default, paper, nord, solarized, gruvbox, midnight",
       "Where you will publish it: github, cloudflare, netlify, none",
+      "Add the gensane skill for AI coding agents? yes, no",
     ]);
     const config = await run.fileSystem.readText("site/notes/gensane.config.ts");
     expect(config).toContain('title: "Ada\'s notes",');
@@ -103,6 +116,24 @@ describe("gensane init", () => {
     ]);
   });
 
+  it("leaves the skill out when the answer is no", async () => {
+    const prompter = new ScriptedPrompter(["", "", "", "", "", "", "no"]);
+    const run = await gensane(["init", "notes"], { prompter });
+    expect(run.code).toBe(ExitCode.success);
+    expect(
+      (await run.fileSystem.listFiles("site/notes")).filter((path) => path.includes("skills/")),
+    ).toEqual([]);
+    expect(run.output.split("\n")[0]).toBe("Created a site with 8 files in notes.");
+  });
+
+  it.each(["y", "YES", "n", "No"])("takes %j as an answer about the skill", async (answer) => {
+    const prompter = new ScriptedPrompter(["", "", "", "", "", "", answer]);
+    const run = await gensane(["init", "notes"], { prompter });
+    expect(run.errors).toBe("");
+    const added = await run.fileSystem.isFile("site/notes/.claude/skills/gensane/SKILL.md");
+    expect(added).toBe(answer.toLowerCase().startsWith("y"));
+  });
+
   it("asks again after an answer that doesn't fit, and says why", async () => {
     const prompter = new ScriptedPrompter([
       "",
@@ -113,6 +144,9 @@ describe("gensane init", () => {
       "Blog",
       "nrd",
       "nord",
+      "",
+      "maybe",
+      "yes",
     ]);
     const run = await gensane(["init", "notes"], { prompter });
     expect(run.code).toBe(ExitCode.success);
@@ -120,6 +154,7 @@ describe("gensane init", () => {
       "That isn't a full address, such as https://example.com; leave it empty for now.",
       "Choose from blog, projects, talks, about.",
       "Did you mean nord?",
+      "Answer yes or no.",
     ]);
     const config = await run.fileSystem.readText("site/notes/gensane.config.ts");
     expect(config).toContain('url: "https://ada.dev",');
@@ -178,7 +213,7 @@ describe("gensane init", () => {
     expect(await run.fileSystem.readText("site/notes/.gitignore")).toBe(
       "dist/\nnode_modules/\n.cloudflare/\n.wrangler/\n",
     );
-    expect(run.output).toContain("Created a site with 9 files in notes.");
+    expect(run.output).toContain("Created a site with 9 files in notes,");
     expect(run.output.endsWith("To publish:\n  npm run build && npx wrangler deploy")).toBe(true);
   });
 
@@ -198,7 +233,8 @@ describe("gensane init", () => {
     const prompter = new ScriptedPrompter([]);
     const asked = await gensane(["init", "notes", "--deploy", "netlify"], { prompter });
     expect(await asked.fileSystem.isFile("site/notes/netlify.toml")).toBe(true);
-    expect(prompter.asked).toHaveLength(5);
+    // Every question but the host's, which --deploy answered.
+    expect(prompter.asked).toHaveLength(6);
   });
 
   it("takes the name of a host written with capitals, as people write GitHub", async () => {

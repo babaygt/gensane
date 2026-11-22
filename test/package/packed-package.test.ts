@@ -98,6 +98,9 @@ describe("the package as npm publishes it", { timeout: 120_000 }, () => {
 
     await gensane(folder, "init", "my-site", "--yes");
     const site = join(folder, "my-site");
+    // The skill is found next to the installed program, as it ships in the package.
+    const skill = await readFile(join(site, ".claude", "skills", "gensane", "SKILL.md"), "utf8");
+    expect(skill).toBe(await readFile(join(packageRoot, "skills", "gensane", "SKILL.md"), "utf8"));
     await npm(site, "install", "--save-dev", tarball);
     const build = await gensane(site, "build");
     expect(build.stdout).toMatch(/^Built \d+ pages into dist/);
