@@ -21,6 +21,20 @@ export interface SiteSettings {
   readonly url?: string;
   readonly description?: string;
   readonly author?: string | Author;
+  /** A GitHub user name, shown by the default theme as an icon link, as are the profiles below. */
+  readonly github?: string;
+  /** A GitLab user name. */
+  readonly gitlab?: string;
+  /** A Codeberg user name. */
+  readonly codeberg?: string;
+  /** The whole address of a Mastodon profile, such as `https://mastodon.social/@ada`. */
+  readonly mastodon?: string;
+  /** A Bluesky handle, such as `ada.example.com`. */
+  readonly bluesky?: string;
+  /** The name in the address of a LinkedIn profile. */
+  readonly linkedin?: string;
+  /** An email address. */
+  readonly email?: string;
   /** Any other setting, for the templates. */
   readonly [setting: string]: unknown;
 }

@@ -21,6 +21,8 @@ export interface CheckedConfig {
 
 const SETTINGS = ["site", "perPage", "markdown", "filters", "theme"];
 const SITE_SETTINGS = ["title", "url", "description", "author"];
+/** The profiles the default theme shows as icons. Known here, so a misspelled one gets a warning. */
+const PROFILES = ["github", "gitlab", "codeberg", "mastodon", "bluesky", "linkedin", "email"];
 const MARKDOWN_SETTINGS = ["rawHtml", "headingIds", "highlight"];
 const FILTER_NAME = /^[A-Za-z_]\w*$/;
 const EXPORT_HINT = "end the config with `export default defineConfig({ ... })`";
@@ -112,10 +114,11 @@ class ConfigCheck {
 
   site(value: unknown): void {
     if (!this.group("site", value)) return;
-    const unused = SITE_SETTINGS.filter((name) => !Object.hasOwn(value, name));
+    const known = [...SITE_SETTINGS, ...PROFILES];
+    const unused = known.filter((name) => !Object.hasOwn(value, name));
     for (const [name, setting] of Object.entries(value)) {
       if (name === "author") this.author(setting);
-      else if (SITE_SETTINGS.includes(name)) this.text(`site.${name}`, setting);
+      else if (known.includes(name)) this.text(`site.${name}`, setting);
       else this.siteTypo(name, unused);
     }
   }

@@ -90,8 +90,28 @@ Most profiles are a user name, and the theme makes the address. Mastodon is the 
 link has `rel="me"`, so Mastodon can show your profile as verified once your site links back. [The config](../cli/config.md#site)
 lists every profile: GitHub, GitLab, Codeberg, Mastodon, Bluesky, LinkedIn and email.
 
-If an icon doesn't appear, check the setting's name: a theme can have settings of its own, so a name gensane doesn't know, such as
-`githb`, is passed on to the templates without a warning.
+A misspelled profile gets a warning, because the theme would never see it:
+
+<!-- runs -->
+```ts gensane.config.ts
+import { defineConfig } from "@gensane/cli";
+
+export default defineConfig({
+  site: { title: "Ada's notes", url: "https://ada.dev", githb: "ada" },
+});
+```
+
+```console
+$ gensane check
+warning[GS506]: "site.githb" is not a known setting
+  ┌─ gensane.config.ts
+  │
+  = hint: did you mean "github"? Other settings of the site are fine, for the templates
+
+Checked 2 pages in 9 ms, with 1 warning.
+```
+
+A setting of your own, such as `twitter`, is passed on to the templates as it is, for a theme that shows it.
 
 ## What comes below
 

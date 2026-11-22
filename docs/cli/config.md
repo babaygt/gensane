@@ -51,7 +51,7 @@ or an object instead.
 
 ### `site`
 
-What every template sees as `site`. Four settings are known, and any other is passed on to the templates, such as links to profiles.
+What every template sees as `site`. Four settings are known, with the profiles below, and any other is passed on to the templates.
 
 | Setting       | What it is                                                                                         |
 | ------------- | -------------------------------------------------------------------------------------------------- |
@@ -60,7 +60,7 @@ What every template sees as `site`. Four settings are known, and any other is pa
 | `description` | The subtitle of the feed                                                                           |
 | `author`      | A name, or `{ name: "...", avatar: "/images/me.jpg" }`; the default theme shows the picture on the home page |
 
-The default theme also shows these, as icon links on the home page and in the footer:
+The default theme also shows these profiles, as icon links on the home page and in the footer. Each is text:
 
 | Setting    | Written as                                   | Leads to                                    |
 | ---------- | -------------------------------------------- | ------------------------------------------- |
