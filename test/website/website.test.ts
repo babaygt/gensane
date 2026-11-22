@@ -148,6 +148,9 @@ describe("gensane.dev's documentation", () => {
         pictures.push(src);
     }
     expect(pictures).toContain("/docs/images/palette-nord-light.png");
+    // Only its other files: the pages themselves are on the site as pages, not as Markdown.
+    const built = await readdir(join(folder, "website", "dist", "docs"), { recursive: true });
+    expect(built.filter((path) => path.endsWith(".md"))).toEqual([]);
     for (const src of pictures) {
       expect(src).toMatch(/^\//);
       expect(existsSync(join(folder, "website", "dist", src))).toBe(true);
