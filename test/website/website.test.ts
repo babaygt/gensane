@@ -2,6 +2,7 @@
 // folder, then the website, both with the real program. The product page must build with no warnings,
 // be valid and accessible, and show the start command with the package's real name.
 import { execFile } from "node:child_process";
+import { existsSync } from "node:fs";
 import { cp, mkdtemp, readFile, readdir, rm } from "node:fs/promises";
 import { createServer } from "node:http";
 import { tmpdir } from "node:os";
@@ -133,10 +134,24 @@ describe("gensane.dev's documentation", () => {
   it("lists what is in a folder that has no page of its own in docs/", async () => {
     const start = await page("docs/index.html");
     expect(start).toContain('<li><a href="/docs/start/">Start</a></li>');
+    expect(start).toContain('<li><a href="/docs/guides/">Guides</a></li>');
     expect(start).toContain('<li><a href="/docs/reference/">Reference</a></li>');
     expect(start).toContain('<li><a href="/docs/internals/">Internals</a></li>');
     const content = await page("docs/reference/content/index.html");
     expect(content).toContain('<li><a href="/docs/reference/content/markdown/">Markdown</a></li>');
+  });
+
+  it("shows every picture of the documentation from the site itself", async () => {
+    const pictures: string[] = [];
+    for (const docsPage of ownPages.filter((path) => path.startsWith("docs/"))) {
+      for (const [, src = ""] of (await page(docsPage)).matchAll(/<img[^>]* src="([^"]+)"/g))
+        pictures.push(src);
+    }
+    expect(pictures).toContain("/docs/images/palette-nord-light.png");
+    for (const src of pictures) {
+      expect(src).toMatch(/^\//);
+      expect(existsSync(join(folder, "website", "dist", src))).toBe(true);
+    }
   });
 
   it("leads a link between pages of the documentation to the page on the site", async () => {
