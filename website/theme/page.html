@@ -1,0 +1,33 @@
+{# gensane.dev's documentation: a page in a section gets a sidebar, breadcrumbs, its contents and the pages around it. #}
+{% extends "base.html" %}
+{% block content %}
+{% if section %}<link rel="stylesheet" href="/assets/docs.css">
+<script type="module" src="/assets/docs.js"></script>
+<div class="docs">
+{% include "partials/sidebar.html" %}
+<article class="docs-page">
+<nav class="breadcrumbs" aria-label="Breadcrumbs">
+<ol>
+{% for crumb in breadcrumbs %}<li>{% if crumb.url %}<a href="{{ crumb.url }}">{{ crumb.title }}</a>{% else %}{{ crumb.title }}{% endif %}</li>
+{% endfor %}<li aria-current="page">{{ page.title }}</li>
+</ol>
+</nav>
+<h1>{{ page.title }}{% if page.draft %} <span class="draft">Draft</span>{% endif %}</h1>
+{% if page.description %}<p class="lead">{{ page.description }}</p>
+{% endif %}{% include "partials/toc.html" %}
+<div class="content">
+{{ page.html }}
+</div>
+{% if previous or next %}<nav class="neighbours" aria-label="More pages">
+{% if previous %}<a class="neighbour" href="{{ previous.url }}" rel="prev"><span class="meta">← Previous</span>{{ previous.title }}</a>{% endif %}
+{% if next %}<a class="neighbour neighbour-next" href="{{ next.url }}" rel="next"><span class="meta">Next →</span>{{ next.title }}</a>{% endif %}
+</nav>
+{% endif %}</article>
+</div>
+{% else %}<article>
+<h1>{{ page.title }}{% if page.draft %} <span class="draft">Draft</span>{% endif %}</h1>
+<div class="content">
+{{ page.html }}
+</div>
+</article>
+{% endif %}{% endblock %}

@@ -1,0 +1,17 @@
+<details class="docs-menu" open>
+<summary>Menu</summary>
+<nav class="docs-sidebar" aria-label="{{ section.title }}">
+<p class="docs-title">{% if section.url %}<a href="{{ section.url }}"{% if section.current %} aria-current="page"{% endif %}>{{ section.title }}</a>{% else %}{{ section.title }}{% endif %}</p>
+<ul>
+{% for item in section.items %}<li>{% if item.items %}<p class="docs-group">{% if item.url %}<a href="{{ item.url }}"{% if item.current %} aria-current="page"{% endif %}>{{ item.title }}</a>{% else %}{{ item.title }}{% endif %}</p>
+<ul>
+{% for child in item.items %}<li>{% if child.items %}<p class="docs-group">{% if child.url %}<a href="{{ child.url }}"{% if child.current %} aria-current="page"{% endif %}>{{ child.title }}</a>{% else %}{{ child.title }}{% endif %}</p>
+<ul>
+{% for leaf in child.items %}<li><a href="{{ leaf.url }}"{% if leaf.current %} aria-current="page"{% endif %}>{{ leaf.title }}</a></li>
+{% endfor %}</ul>
+{% else %}<a href="{{ child.url }}"{% if child.current %} aria-current="page"{% endif %}>{{ child.title }}</a>{% endif %}</li>
+{% endfor %}</ul>
+{% else %}<a href="{{ item.url }}"{% if item.current %} aria-current="page"{% endif %}>{{ item.title }}</a>{% endif %}</li>
+{% endfor %}</ul>
+</nav>
+</details>
