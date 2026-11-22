@@ -119,6 +119,11 @@ $ gensane new post "Why I write tests first"
 Created content/blog/2026-11-20-why-i-write-tests-first.md
 ```
 
+```text files content/blog
+2026-11-20-hello-world.md
+2026-11-20-why-i-write-tests-first.md
+```
+
 ```markdown content/blog/2026-11-20-why-i-write-tests-first.md
 ---
 title: Why I write tests first

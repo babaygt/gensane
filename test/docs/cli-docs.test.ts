@@ -184,6 +184,14 @@ describe.each(pages)("docs/$name", ({ path, text }) => {
 });
 
 describe("the documentation is complete", () => {
+  it("runs the examples of every page that has them", () => {
+    const withExamples = readdirSync(join(packageRoot, "docs"), { recursive: true })
+      .map((path) => String(path).split("\\").join("/"))
+      .filter((path) => path.endsWith(".md"))
+      .filter((path) => countCliMarkers(readFileSync(join(packageRoot, "docs", path), "utf8")) > 0);
+    const run = pages.filter(({ text }) => countCliMarkers(text) > 0).map(({ name }) => name);
+    expect(withExamples.toSorted()).toEqual(run.toSorted());
+  });
 
   const examples = pages.flatMap(({ text }) => findCliExamples(text));
   const commands = examples.flatMap(({ steps }) => steps.map(({ args }) => args.join(" ")));
