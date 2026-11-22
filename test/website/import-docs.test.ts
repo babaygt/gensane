@@ -33,6 +33,7 @@ describe("rewriteLink", () => {
     ["README.md", "core/content.md", "/docs/internals/core/"],
     ["../../src/cli/run-cli.ts", "cli/README.md", `${REPOSITORY}/blob/main/src/cli/run-cli.ts`],
     ["../../src/core", "core/README.md", `${REPOSITORY}/tree/main/src/core`],
+    ["../images/palette-nord-light.png", "guides/look.md", "/docs/images/palette-nord-light.png"],
     ["https://example.com", "cli/README.md", "https://example.com"],
     ["#exit-codes", "cli/README.md", "#exit-codes"],
   ])("leads %s, written in %s, to %s", (target, from, expected) => {
