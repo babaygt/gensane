@@ -139,9 +139,9 @@ describe("a config that can't be loaded", () => {
       "gensane not installed",
       nodeError(
         "ERR_MODULE_NOT_FOUND",
-        "Cannot find package 'gensane' imported from /site/gensane.config.ts",
+        "Cannot find package '@gensane/cli' imported from /site/gensane.config.ts",
       ),
-      "install gensane in the site folder: npm install --save-dev gensane",
+      "install gensane in the site folder: npm install --save-dev @gensane/cli",
     ],
     [
       "a mistake in TypeScript",

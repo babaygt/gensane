@@ -7,6 +7,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { promisify } from "node:util";
 import { afterAll, describe, expect, it } from "vitest";
+import { PACKAGE_NAME } from "../../src/cli/package-name.ts";
 
 const run = promisify(execFile);
 const packageRoot = join(import.meta.dirname, "..", "..");
@@ -106,6 +107,10 @@ describe("the package as npm publishes it", { timeout: 120_000 }, () => {
   it("can be published: not private, with a real version, and checked and built before it goes out", async () => {
     const manifest = JSON.parse(await readFile(join(packageRoot, "package.json"), "utf8"));
     expect(manifest.private).toBeUndefined();
+    // npm refused the plain name `gensane` as too much like `gensync`, so it is in the `gensane` organization.
+    expect(manifest.name).toBe(PACKAGE_NAME);
+    // A package in an organization is private on npm unless it says otherwise.
+    expect(manifest.publishConfig).toEqual({ access: "public" });
     expect(manifest.version).toMatch(/^(?!0\.0\.0$)\d+\.\d+\.\d+$/);
     // `npm publish` (npm 11) drops a command whose path starts with `./`, though `npm pack` keeps it.
     for (const path of Object.values(manifest.bin as Record<string, string>)) {

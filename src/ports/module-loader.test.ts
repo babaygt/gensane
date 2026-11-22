@@ -73,10 +73,11 @@ describe("NodeModuleLoader", () => {
   });
 
   it("fails for a package that isn't installed, and names it", async () => {
-    const source = 'import { defineConfig } from "gensane";\nexport default defineConfig({});\n';
+    const source =
+      'import { defineConfig } from "@gensane/cli";\nexport default defineConfig({});\n';
     expect(await load("uninstalled.ts", source)).toMatchObject({
       code: "ERR_MODULE_NOT_FOUND",
-      message: expect.stringContaining("Cannot find package 'gensane'"),
+      message: expect.stringContaining("Cannot find package '@gensane/cli'"),
     });
   });
 

@@ -15,7 +15,7 @@ describe("starterSite", () => {
   it("writes the config with every answer", () => {
     expect(starterSite(answers, details)["gensane.config.ts"]).toBe(
       [
-        'import { defineConfig } from "gensane";',
+        'import { defineConfig } from "@gensane/cli";',
         "",
         "export default defineConfig({",
         "  site: {",
@@ -73,7 +73,7 @@ describe("starterSite", () => {
       private: true,
       type: "module",
       scripts: { dev: "gensane dev", build: "gensane build", check: "gensane check" },
-      devDependencies: { gensane: "^1.2.3" },
+      devDependencies: { "@gensane/cli": "^1.2.3" },
     });
   });
 

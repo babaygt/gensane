@@ -43,7 +43,7 @@ afterAll(async () => {
 
 /**
  * A site folder with the example's files. Templates the example doesn't show print the page's title.
- * `node_modules/gensane` points at the source, so a config can `import { defineConfig } from "gensane"`.
+ * `node_modules/@gensane/cli` points at the source, so a config can `import { defineConfig } from "@gensane/cli"`.
  */
 async function siteFolderOf(example: CliExample): Promise<string> {
   const site = await realpath(await mkdtemp(join(tmpdir(), "gensane-docs-")));
@@ -52,8 +52,9 @@ async function siteFolderOf(example: CliExample): Promise<string> {
     Object.values(TEMPLATES).map((name) => [`theme/${name}`, "<h1>{{ page.title }}</h1>\n"]),
   );
   const gensanePackage = {
-    "node_modules/gensane/package.json": '{ "name": "gensane", "type": "module", "exports": "./index.js" }\n',
-    "node_modules/gensane/index.js": `export * from ${JSON.stringify(pathToFileURL(join(packageRoot, "src", "index.ts")).href)};\n`,
+    "node_modules/@gensane/cli/package.json":
+      '{ "name": "@gensane/cli", "type": "module", "exports": "./index.js" }\n',
+    "node_modules/@gensane/cli/index.js": `export * from ${JSON.stringify(pathToFileURL(join(packageRoot, "src", "index.ts")).href)};\n`,
   };
   for (const [path, content] of Object.entries({ ...gensanePackage, ...theme, ...example.files })) {
     await mkdir(dirname(join(site, path)), { recursive: true });
