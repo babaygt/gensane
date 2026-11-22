@@ -82,6 +82,12 @@ const files: Record<string, string> = {
     "---\nschool: A school\ndegree: BSc\nfield: Computer science\nstart: 2020-10\nend: 2023-09\n---\n",
   "content/pages/about.md": "---\ntitle: About\n---\nHello, I am Ada.\n",
   "content/pages/now.md": "---\ntitle: Now\n---\nWriting.\n",
+  "content/pages/docs/index.md": "---\ntitle: Docs\n---\nAbout the docs.\n",
+  "content/pages/docs/start.md":
+    "---\ntitle: Start\norder: 1\n---\n## One\n\nText.\n\n## Two\n\nText.\n\n## Three\n\nText.\n",
+  "content/pages/docs/guides/index.md": "---\ntitle: Guides\norder: 2\n---\nHow to.\n",
+  "content/pages/docs/guides/search.md": "---\ntitle: Search guide\n---\nFind things.\n",
+  "content/pages/docs/reference/cli/init.md": "---\ntitle: init\n---\nThe init command.\n",
   "public/images/diagram.png": "not really a picture",
 };
 
@@ -143,6 +149,11 @@ describe("the default theme", () => {
       "blog/index.html",
       "blog/page/2/index.html",
       "blog/third/index.html",
+      "docs/guides/index.html",
+      "docs/guides/search/index.html",
+      "docs/index.html",
+      "docs/reference/cli/init/index.html",
+      "docs/start/index.html",
       "index.html",
       "now/index.html",
       "projects/gensane/index.html",
@@ -414,6 +425,28 @@ describe("the parts of a page", () => {
     const symbols = [...icons.matchAll(/<symbol id="([a-z]+)"/g)].map(([, name]) => name);
     expect(used.size).toBeGreaterThan(10);
     expect([...used].filter((name) => !symbols.includes(name))).toEqual([]);
+  });
+});
+
+describe("pages in folders", () => {
+  it("are plain pages in the default theme, which has no documentation layout", async () => {
+    const start = pageOf(await build(), "docs/start/index.html");
+    expect(start).toContain("<h1>Start</h1>");
+    expect(start).not.toContain("docs-sidebar");
+  });
+
+  it("builds with a base.html of the site's own, which has only the blocks title and content", async () => {
+    const read = await readSiteFolder(new NodeFileSystem(), site, defaultTheme);
+    const ownBase =
+      '<!DOCTYPE html>\n<html lang="en"><head><title>{% block title %}{% endblock %}</title></head><body><main>{% block content %}{% endblock %}</main></body></html>';
+    const built = buildSite({
+      config: { site: { title: "Ada's notes", url: "https://example.com" } },
+      content: read.content,
+      templates: { ...read.templates, "base.html": ownBase },
+      publicFiles: read.publicFiles,
+      themeAssets: read.themeAssets.map(({ path }) => path),
+    });
+    expect(built.ok ? [] : built.error.map(({ message }) => message)).toEqual([]);
   });
 });
 
