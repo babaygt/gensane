@@ -132,6 +132,7 @@ describe("gensane.dev's documentation", () => {
 
   it("lists what is in a folder that has no page of its own in docs/", async () => {
     const start = await page("docs/index.html");
+    expect(start).toContain('<li><a href="/docs/start/">Start</a></li>');
     expect(start).toContain('<li><a href="/docs/reference/">Reference</a></li>');
     expect(start).toContain('<li><a href="/docs/internals/">Internals</a></li>');
     const content = await page("docs/reference/content/index.html");

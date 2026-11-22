@@ -37,8 +37,19 @@ export const DOCS: DocsNode = {
   slug: "docs",
   title: "Documentation",
   description:
-    "Everything about gensane: the commands, writing content, themes, and how it works inside.",
+    "Everything about gensane: how to start, the commands, writing content, themes, and how it works inside.",
   children: [
+    {
+      slug: "start",
+      title: "Start",
+      description:
+        "What gensane is, a site running in two minutes, and a tutorial from an empty folder to a site online.",
+      children: [
+        page("what-is-gensane", "start/README.md"),
+        page("quick-start", "start/quick-start.md"),
+        page("tutorial", "start/tutorial.md"),
+      ],
+    },
     {
       slug: "reference",
       title: "Reference",

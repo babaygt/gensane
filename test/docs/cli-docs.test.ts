@@ -23,8 +23,8 @@ import { checkLinks } from "./link-checks.ts";
 
 const packageRoot = join(import.meta.dirname, "..", "..");
 const program = join(packageRoot, "src", "cli", "main.ts");
-// The pages of the commands.
-const pages = ["cli"].flatMap((folder) =>
+// The pages of the commands, and the pages for a start, whose examples run the same way.
+const pages = ["cli", "start"].flatMap((folder) =>
   readdirSync(join(packageRoot, "docs", folder)).map((name) => ({
     name: `${folder}/${name}`,
     path: join(packageRoot, "docs", folder, name),
