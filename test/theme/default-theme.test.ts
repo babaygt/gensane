@@ -81,7 +81,8 @@ const files: Record<string, string> = {
   "content/education/school.md":
     "---\nschool: A school\ndegree: BSc\nfield: Computer science\nstart: 2020-10\nend: 2023-09\n---\n",
   "content/pages/about.md": "---\ntitle: About\n---\nHello, I am Ada.\n",
-  "content/pages/now.md": "---\ntitle: Now\n---\nWriting.\n",
+  // A heading "Content" gets the id "content", which must not clash with an id of the theme.
+  "content/pages/now.md": "---\ntitle: Now\n---\nWriting.\n\n## Content\n\nWhat I write.\n",
   "content/pages/docs/index.md": "---\ntitle: Docs\n---\nAbout the docs.\n",
   "content/pages/docs/start.md":
     "---\ntitle: Start\norder: 1\n---\n## One\n\nText.\n\n## Two\n\nText.\n\n## Three\n\nText.\n",
