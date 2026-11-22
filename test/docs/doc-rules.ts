@@ -263,6 +263,8 @@ export function findCoreExamples(page: string): CoreExample[] {
 }
 
 export interface CliStep {
+  /** A folder `$ cd` moves into before the command, as the reader does; later commands run there too. */
+  readonly cd: string | undefined;
   /** The words after `gensane`, as a shell splits them. */
   readonly args: readonly string[];
   /** What the command prints: problems first, then the line at the end, as in a terminal. */
@@ -275,6 +277,8 @@ export interface CliStep {
 }
 
 export interface CliExample {
+  /** Whether it goes on in the folder the page's previous example left, as the next step of a tutorial. */
+  readonly continues: boolean;
   /** The files of the site folder before the first command, by their path in it. */
   readonly files: Readonly<Record<string, string>>;
   readonly steps: readonly CliStep[];
@@ -282,7 +286,7 @@ export interface CliExample {
 
 /** A misspelled marker is counted too, so it fails instead of leaving its example unchecked. */
 export function countCliMarkers(page: string): number {
-  return page.match(/^<!--\s*(?:runs?|ran)\b.*-->$/gm)?.length ?? 0;
+  return page.match(/^<!--\s*(?:runs?|ran|continues?)\b.*-->$/gm)?.length ?? 0;
 }
 
 const FILE_FENCE = /^\S+ (\S+)$/;
@@ -294,14 +298,16 @@ function shellWords(line: string): string[] {
 }
 
 function stepOf(fence: CodeFence): Omit<CliStep, "listings" | "files"> {
-  const [command = "", ...rest] = fence.text.split("\n");
+  const lines = fence.text.split("\n");
+  const cd = /^\$ cd (\S+)$/.exec(lines[0] ?? "")?.[1];
+  const [command = "", ...rest] = cd === undefined ? lines : lines.slice(1);
   if (!command.startsWith("$ gensane")) {
     throw new Error(`A console fence must start with "$ gensane":\n${fence.text}`);
   }
   const echo = rest.indexOf("$ echo $?");
   const output = echo === -1 ? rest : rest.slice(0, echo);
   const exitCode = echo === -1 ? 0 : Number(rest[echo + 1]);
-  return { args: shellWords(command.slice("$ gensane".length)), output: output.join("\n"), exitCode };
+  return { cd, args: shellWords(command.slice("$ gensane".length)), output: output.join("\n"), exitCode };
 }
 
 /**
@@ -309,12 +315,14 @@ function stepOf(fence: CodeFence): Omit<CliStep, "listings" | "files"> {
  * `markdown content/blog/hello.md` or `ts gensane.config.ts`. Then come `console` fences: a line
  * `$ gensane ...`, what it prints, and `$ echo $?` with the exit code when it isn't 0. After a command,
  * `text files dist` shows the exact files in a folder, and a fence named after a path shows the exact
- * content of that file.
+ * content of that file. A command may follow a line `$ cd my-site`, as the reader types it.
+ * `continues` is read like `runs`, and goes on in the folder the previous example left, for the steps
+ * of a tutorial.
  */
 export function findCliExamples(page: string): CliExample[] {
   const fences = findCodeFences(page);
   return fences.flatMap((fence, index): CliExample[] => {
-    if (fence.marker !== "runs") return [];
+    if (fence.marker !== "runs" && fence.marker !== "continues") return [];
     const files: Record<string, string> = {};
     let next = index;
     for (let input = fences[next]; input !== undefined && input.info !== "console"; input = fences[next]) {
@@ -340,7 +348,7 @@ export function findCliExamples(page: string): CliExample[] {
       steps.push({ ...stepOf(command), listings, files: shown });
     }
     if (steps.length === 0) throw new Error(`Example without a command to run:\n${fence.text}`);
-    return [{ files, steps }];
+    return [{ continues: fence.marker === "continues", files, steps }];
   });
 }
 
