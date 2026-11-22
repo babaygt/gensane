@@ -45,6 +45,7 @@ gensane is installed in the site, so run it with `npx gensane` (or the scripts i
 | `npx gensane new <type> "Title"` | Starts a content file with the fields it needs: `post`, `project`, `page`, `talk`, `experience`, `education` |
 | `npx gensane deploy init <host>` | Adds the file that publishes the site: `github`, `cloudflare` or `netlify`    |
 | `npx gensane theme eject`        | Copies the whole default theme into `theme/`                                  |
+| `npx gensane skill add`          | Updates this skill to the installed gensane's, after an update                |
 
 Exit codes: 0 when it worked (warnings don't change this), 1 when the site has errors, 2 when the command was written wrong.
 `gensane dev` keeps running until stopped, so don't use it to check your work; use `check`.

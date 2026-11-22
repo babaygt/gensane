@@ -60,6 +60,7 @@ export const DOCS: DocsNode = {
         page("projects-and-talks", "guides/projects-and-talks.md"),
         page("look", "guides/look.md"),
         page("change-the-theme", "guides/change-the-theme.md"),
+        page("coding-agents", "guides/coding-agents.md"),
       ],
     },
     {
@@ -77,6 +78,7 @@ export const DOCS: DocsNode = {
             page("dev", "cli/dev.md", "dev"),
             page("build-and-check", "cli/build-and-check.md", "build and check"),
             page("deploy", "cli/deploy.md", "deploy"),
+            page("skill", "cli/skill.md", "skill"),
             page("site-folder", "cli/folders.md"),
             page("config", "cli/config.md"),
             page("problems", "cli/problems.md", "Problems of the config"),

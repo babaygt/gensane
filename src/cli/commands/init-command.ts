@@ -11,6 +11,7 @@ import {
   isDeployTarget,
   publishSteps,
 } from "../init/deploy-files.ts";
+import { addSkill } from "../init/agent-skill.ts";
 import { type Answers, SECTIONS, type Section, starterSite } from "../init/starter-site.ts";
 import { Command, type OptionValues } from "./command.ts";
 
@@ -40,6 +41,14 @@ function sectionsOf(text: string): Section[] | undefined {
 }
 
 type Reading<T> = { readonly value: T } | { readonly problem: string };
+
+/** "y", "Yes", "n" and "No" are answers too. */
+function yesOrNo(answer: string): Reading<boolean> {
+  const word = answer.trim().toLowerCase();
+  if (word === "yes" || word === "y") return { value: true };
+  if (word === "no" || word === "n") return { value: false };
+  return { problem: "Answer yes or no." };
+}
 
 /** Asks until the answer fits, and tells why it didn't. */
 async function askUntil<T>(
@@ -77,7 +86,7 @@ export class InitCommand extends Command {
     environment: Environment,
     positionals: readonly string[],
   ): Promise<number> {
-    const { fileSystem, terminal, prompter, siteFolder, clock, version } = environment;
+    const { fileSystem, terminal, prompter, siteFolder, clock, version, skill } = environment;
     const [folder = ".", ...rest] = positionals;
     if (rest.length > 0) {
       printUsageError(terminal, "gensane init takes one folder", "such as: gensane init my-site");
@@ -128,9 +137,18 @@ export class InitCommand extends Command {
       deploy: typeof deployOption === "string" ? deployOption : "none",
     };
     let answers = defaults;
+    // The agent skill is a default too (D126): a site made now is likely to be changed by an agent.
+    let withSkill = true;
     if (!takeDefaults) {
       try {
         answers = await this.#ask(prompter, terminal, defaults);
+        withSkill = await askUntil(
+          prompter,
+          terminal,
+          "Add the gensane skill for AI coding agents? yes, no",
+          "yes",
+          yesOrNo,
+        );
       } catch (error) {
         if (!(error instanceof AskingStopped)) throw error;
         terminal.writeError("Stopped, so nothing was written.");
@@ -142,9 +160,17 @@ export class InitCommand extends Command {
       await fileSystem.writeText(join(target, path), content);
     }
 
-    terminal.write(
-      `Created a site with ${Object.keys(files).length} files in ${shown === "." ? "this folder" : shown}.`,
-    );
+    if (withSkill) await addSkill(fileSystem, skill, target);
+
+    const created = `Created a site with ${Object.keys(files).length} files in ${shown === "." ? "this folder" : shown}`;
+    if (withSkill) {
+      terminal.write(`${created},`);
+      terminal.write(
+        "and added the gensane skill for coding agents, in .agents/skills/ and .claude/skills/.",
+      );
+    } else {
+      terminal.write(`${created}.`);
+    }
     terminal.write("");
     terminal.write("Next:");
     if (shown !== ".") terminal.write(`  cd ${shown}`);
