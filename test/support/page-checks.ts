@@ -56,7 +56,9 @@ export function accessibilityProblems(html: string): string[] {
       problems.push("a link without text");
     }
   }
-  if (!html.includes('href="#content"') || !html.includes('id="content"'))
+  const skipTo = /<a class="skip" href="#([^"]+)"/.exec(html)?.[1];
+  if (skipTo === undefined || !html.includes(`id="${skipTo}"`)) {
     problems.push("no skip link to the content");
+  }
   return problems;
 }
