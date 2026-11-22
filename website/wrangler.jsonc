@@ -1,5 +1,5 @@
-// gensane.dev, written by `gensane deploy init cloudflare`, with its name and domain. Publish with: pnpm website, then
-// npx wrangler deploy from this folder.
+// gensane.dev, written by `gensane deploy init cloudflare`, with its name and domain. CI publishes it after every merge to
+// main; by hand: pnpm website, then npx wrangler deploy from this folder.
 {
   "name": "gensane-dev",
   "compatibility_date": "2026-11-01",
