@@ -37,6 +37,8 @@ Then write Markdown: posts in `content/blog/`, projects, talks, experience and e
 - **Search** that finds as you type, with no server, and a table of contents on long posts.
 - **An Atom feed, a sitemap and tags**, and [broken links that stop the build](docs/core/links.md), with the line they are on.
 - **Publishing on GitHub Pages, Cloudflare or Netlify** with one file, which [`gensane deploy init`](docs/cli/deploy.md) writes.
+- **A skill for coding agents** such as Claude Code and Codex, so they know how a gensane site works and check their work
+  ([Working with coding agents](docs/guides/coding-agents.md)).
 - **Every problem printed with its file, line and column**, and a hint how to fix it. Small, fast pages: valid HTML, accessible, and
   less than 3 KB of CSS and two small scripts as readers download them.
 

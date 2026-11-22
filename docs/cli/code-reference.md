@@ -27,7 +27,7 @@ Reads the arguments, picks the command, and turns every way it can end into an e
 
 | Name                                          | Purpose                                                                          |
 | --------------------------------------------- | -------------------------------------------------------------------------------- |
-| [`Environment`](../../src/cli/environment.ts) | The disk, config loader, clock, terminal, watcher, prompter and stop signal a command gets |
+| [`Environment`](../../src/cli/environment.ts) | The disk, config loader, clock, terminal, watcher, prompter and stop signal a command gets, and where the theme and the skill are |
 | [`ExitCode`](../../src/cli/environment.ts)    | 0, 1 and 2                                                                       |
 
 ## Commands
@@ -86,6 +86,13 @@ Reads the arguments, picks the command, and turns every way it can end into an e
 | [`DEPLOY_TARGETS`](../../src/cli/init/deploy-files.ts) | GitHub Pages, Cloudflare and Netlify                          |
 | [`isDeployTarget`](../../src/cli/init/deploy-files.ts) | Whether a name is one of them                                 |
 
+### [`src/cli/init/agent-skill.ts`](../../src/cli/init/agent-skill.ts)
+
+| Name                                                  | Purpose                                                          |
+| ----------------------------------------------------- | ---------------------------------------------------------------- |
+| [`addSkill`](../../src/cli/init/agent-skill.ts)        | Copies the skill into a site, in place of the one there          |
+| [`SKILL_FOLDERS`](../../src/cli/init/agent-skill.ts)   | `.agents/skills/gensane` and `.claude/skills/gensane`, and who reads each |
+
 ### [`src/cli/init/starter-site.ts`](../../src/cli/init/starter-site.ts)
 
 | Name                                                  | Purpose                                                    |
@@ -119,6 +126,12 @@ Reads the arguments, picks the command, and turns every way it can end into an e
 | Name                                                        | Purpose                                                        |
 | ----------------------------------------------------------- | -------------------------------------------------------------- |
 | [`ThemeCommand`](../../src/cli/commands/theme-command.ts)   | `theme eject`: copies the default theme, never replacing a file |
+
+### [`src/cli/commands/skill-command.ts`](../../src/cli/commands/skill-command.ts)
+
+| Name                                                        | Purpose                                                      |
+| ----------------------------------------------------------- | ------------------------------------------------------------ |
+| [`SkillCommand`](../../src/cli/commands/skill-command.ts)   | `skill add`: puts this version's skill where agents read it  |
 
 ## Reading, building and printing
 

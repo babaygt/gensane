@@ -7,6 +7,7 @@ import { DeployCommand } from "./commands/deploy-command.ts";
 import { DevCommand } from "./commands/dev-command.ts";
 import { InitCommand } from "./commands/init-command.ts";
 import { NewCommand } from "./commands/new-command.ts";
+import { SkillCommand } from "./commands/skill-command.ts";
 import { ThemeCommand } from "./commands/theme-command.ts";
 import type { Command, OptionValues } from "./commands/command.ts";
 import { type Environment, ExitCode } from "./environment.ts";
@@ -19,6 +20,7 @@ const COMMANDS: readonly Command[] = [
   new DeployCommand(),
   new InitCommand(),
   new NewCommand(),
+  new SkillCommand(),
   new ThemeCommand(),
 ];
 const ISSUES = "https://github.com/babaygt/gensane/issues";

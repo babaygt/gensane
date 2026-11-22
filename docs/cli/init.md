@@ -16,11 +16,14 @@ The address of the site, if you know it: https://ada.dev
 The parts you want: blog, projects, talks, about (blog, projects, talks, about): blog, about
 The colors: default, paper, nord, solarized, gruvbox, midnight (default): nord
 Where you will publish it: github, cloudflare, netlify, none (none): github
+Add the gensane skill for AI coding agents? yes, no (yes): yes
 ```
 
 An answer that doesn't fit is asked again, with the reason: an address must be a full one, such as `https://example.com`, and a
 misspelled palette or host gets the closest name. The host adds the file that publishes the site there, as
-[`gensane deploy init`](deploy.md) does later. Ctrl+C stops at any question, and nothing is written.
+[`gensane deploy init`](deploy.md) does later. The [agent skill](skill.md) teaches coding agents how a gensane site works; it is two
+small folders, `.agents/skills/` and `.claude/skills/`, which can be deleted if you don't use agents. Ctrl+C stops at any question,
+and nothing is written.
 
 ## Every default at once
 
@@ -29,7 +32,8 @@ misspelled palette or host gets the closest name. The host adds the file that pu
 <!-- runs -->
 ```console
 $ gensane init my-site --yes
-Created a site with 8 files in my-site.
+Created a site with 8 files in my-site,
+and added the gensane skill for coding agents, in .agents/skills/ and .claude/skills/.
 
 Next:
   cd my-site
@@ -38,6 +42,16 @@ Next:
 ```
 
 ```text files my-site
+.agents/skills/gensane/SKILL.md
+.agents/skills/gensane/references/config.md
+.agents/skills/gensane/references/content-types.md
+.agents/skills/gensane/references/problems.md
+.agents/skills/gensane/references/templates.md
+.claude/skills/gensane/SKILL.md
+.claude/skills/gensane/references/config.md
+.claude/skills/gensane/references/content-types.md
+.claude/skills/gensane/references/problems.md
+.claude/skills/gensane/references/templates.md
 .gitignore
 content/blog/2026-11-20-hello-world.md
 content/index.md
@@ -91,7 +105,8 @@ works.
 <!-- runs -->
 ```console
 $ gensane init my-site --yes --deploy cloudflare
-Created a site with 9 files in my-site.
+Created a site with 9 files in my-site,
+and added the gensane skill for coding agents, in .agents/skills/ and .claude/skills/.
 
 Next:
   cd my-site

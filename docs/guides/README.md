@@ -8,5 +8,6 @@ made by `gensane init`, with gensane installed.
 - [Projects and talks](projects-and-talks.md): cards with links, and talks with their slides and videos.
 - [Colors, fonts and layout](look.md): the palettes, an accent color of your own, and the blog as cards.
 - [Changing one part of the theme](change-the-theme.md): a file of your own instead of one of the theme's.
+- [Working with coding agents](coding-agents.md): the skill that teaches agents how a site works, and the docs as plain text.
 
 Every example in them is run by gensane's tests.

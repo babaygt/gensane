@@ -17,7 +17,8 @@ the times differ: yours are today's.
 <!-- runs -->
 ```console
 $ gensane init my-site --yes
-Created a site with 8 files in my-site.
+Created a site with 8 files in my-site,
+and added the gensane skill for coding agents, in .agents/skills/ and .claude/skills/.
 
 Next:
   cd my-site
@@ -26,6 +27,16 @@ Next:
 ```
 
 ```text files my-site
+.agents/skills/gensane/SKILL.md
+.agents/skills/gensane/references/config.md
+.agents/skills/gensane/references/content-types.md
+.agents/skills/gensane/references/problems.md
+.agents/skills/gensane/references/templates.md
+.claude/skills/gensane/SKILL.md
+.claude/skills/gensane/references/config.md
+.claude/skills/gensane/references/content-types.md
+.claude/skills/gensane/references/problems.md
+.claude/skills/gensane/references/templates.md
 .gitignore
 content/blog/2026-11-20-hello-world.md
 content/index.md
@@ -36,7 +47,8 @@ gensane.config.ts
 package.json
 ```
 
-Each file in `content/` is a first example of its kind, to change or to delete. Then install gensane in the site:
+Each file in `content/` is a first example of its kind, to change or to delete. The two folders at the top are the
+[agent skill](../cli/skill.md), which teaches coding agents such as Claude Code or Codex how a gensane site works. Then install gensane in the site:
 
 ```sh
 cd my-site
