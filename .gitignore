@@ -6,5 +6,6 @@ reports/
 *.log
 .DS_Store
 website/public/example/
+website/public/docs/
 .wrangler/
 website/content/pages/docs/

@@ -1,8 +1,9 @@
 // Turns the repository's `docs/` into gensane.dev's documentation pages, by the structure in
 // `website/docs-structure.ts`. The pages in `docs/` stay as they are, so they keep being tested and read
 // on GitHub; here each one gets a title and an order, links between pages become their addresses on
-// the site, links to the code lead to it on GitHub, and each page knows where it is edited.
-import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
+// the site, other files of `docs/`, such as pictures, are copied into the site, links to the code lead
+// to it on GitHub, and each page knows where it is edited.
+import { cp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { dirname, join, posix } from "node:path";
 import { DOCS, type DocsNode } from "../website/docs-structure.ts";
 
@@ -58,6 +59,8 @@ export function rewriteLink(
       throw new Error(`${from} links to ${target}, which isn't in the documentation's structure`);
     return `${address}${hash}`;
   }
+  // Pictures and other files of the documentation are copied into the site, at the same path.
+  if (inRepository.startsWith("docs/")) return `/${inRepository}${hash}`;
   const kind = /\.[a-z0-9]+$/i.test(inRepository) ? "blob" : "tree";
   return `${REPOSITORY}/${kind}/main/${inRepository}${hash}`;
 }
@@ -122,11 +125,20 @@ function frontmatterOf(fields: Readonly<Record<string, string | number>>): strin
   return `---\n${lines.join("\n")}\n---\n\n`;
 }
 
-/** Writes the documentation into the website's content folder, replacing what an earlier import wrote. */
+/**
+ * Writes the documentation into the website's content folder, and its other files into the website's
+ * public folder, replacing what an earlier import wrote.
+ */
 export async function importDocs(repository: string, content: string): Promise<number> {
   const placed = placesOf();
   const addresses = addressesOf(placed);
   await rm(join(content, "pages", "docs"), { recursive: true, force: true });
+  const files = join(content, "..", "public", "docs");
+  await rm(files, { recursive: true, force: true });
+  await cp(join(repository, "docs"), files, {
+    recursive: true,
+    filter: (source) => !source.endsWith(".md"),
+  });
   for (const { node, file, order } of placed) {
     let page: string;
     if (node.from === undefined) {
