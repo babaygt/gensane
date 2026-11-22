@@ -40,7 +40,10 @@ const npm = (folder: string, ...args: string[]) =>
 /** Builds into a copy of the package's files, so the repository's own `dist/` is left alone. */
 async function packedPackage(): Promise<{ tarball: string; files: string[] }> {
   const copy = await newFolder("package");
-  for (const file of ["package.json", "README.md", "LICENSE", "themes"]) {
+  // What package.json lists in `files`, except dist/, which is built here.
+  const manifest = JSON.parse(await readFile(join(packageRoot, "package.json"), "utf8"));
+  const listed = (manifest.files as string[]).filter((file) => file !== "dist");
+  for (const file of ["package.json", "README.md", "LICENSE", ...listed]) {
     await cp(join(packageRoot, file), join(copy, file), { recursive: true });
   }
   await run(process.execPath, [
@@ -64,11 +67,13 @@ const gensane = (folder: string, ...args: string[]) =>
 describe("the package as npm publishes it", { timeout: 120_000 }, () => {
   const packed = packedPackage();
 
-  it("holds the program, its types and the default theme, and no tests, maps or sources", async () => {
+  it("holds the program, its types, the default theme and the agent skill, and no tests, maps or sources", async () => {
     const { files } = await packed;
     expect(files).toContain("dist/cli/main.js");
     expect(files).toContain("dist/index.d.ts");
     expect(files).toContain("themes/default/base.html");
+    expect(files).toContain("skills/gensane/SKILL.md");
+    expect(files).toContain("skills/gensane/references/problems.md");
     expect(files).toContain("LICENSE");
     expect(files.filter((file) => /\.test\.|\.map$|^src\/|^test\//.test(file))).toEqual([]);
   });
