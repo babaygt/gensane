@@ -23,13 +23,15 @@ import { checkLinks } from "./link-checks.ts";
 
 const packageRoot = join(import.meta.dirname, "..", "..");
 const program = join(packageRoot, "src", "cli", "main.ts");
-const docsFolder = join(packageRoot, "docs", "cli");
-const pages = readdirSync(docsFolder).map((name) => ({
-  name,
-  path: join(docsFolder, name),
-  text: readFileSync(join(docsFolder, name), "utf8"),
-}));
-const docsPage = (name: string): string => pages.find((page) => page.name === name)?.text ?? "";
+// The pages of the commands.
+const pages = ["cli"].flatMap((folder) =>
+  readdirSync(join(packageRoot, "docs", folder)).map((name) => ({
+    name: `${folder}/${name}`,
+    path: join(packageRoot, "docs", folder, name),
+    text: readFileSync(join(packageRoot, "docs", folder, name), "utf8"),
+  })),
+);
+const docsPage = (name: string): string => pages.find((page) => page.name === `cli/${name}`)?.text ?? "";
 
 /** The day the examples are written on. The real day in the output is shown as this one. */
 const DOCS_TODAY = "2026-11-20";
@@ -41,9 +43,27 @@ afterAll(async () => {
   await Promise.all(folders.map((folder) => rm(folder, { recursive: true, force: true })));
 });
 
+const today = () => new Date().toISOString().slice(0, 10);
+
+/** Writes files into a folder. A date of the examples, in a path or in the text, becomes today's. */
+async function writeFiles(folder: string, files: Readonly<Record<string, string>>): Promise<void> {
+  for (const [path, content] of Object.entries(files)) {
+    const target = join(folder, path.replaceAll(DOCS_TODAY, today()));
+    await mkdir(dirname(target), { recursive: true });
+    await writeFile(target, content.replaceAll(DOCS_TODAY, today()));
+  }
+}
+
+/** Where an example runs: its site folder, and the folder the reader is in, such as `my-site` after `$ cd my-site`. */
+interface Place {
+  readonly site: string;
+  folder: string;
+}
+
 /**
  * A site folder with the example's files. Templates the example doesn't show print the page's title.
  * `node_modules/@gensane/cli` points at the source, so a config can `import { defineConfig } from "@gensane/cli"`.
+ * A site that `gensane init` makes in a folder of it has no such templates, so it gets the default theme.
  */
 async function siteFolderOf(example: CliExample): Promise<string> {
   const site = await realpath(await mkdtemp(join(tmpdir(), "gensane-docs-")));
@@ -56,10 +76,7 @@ async function siteFolderOf(example: CliExample): Promise<string> {
       '{ "name": "@gensane/cli", "type": "module", "exports": "./index.js" }\n',
     "node_modules/@gensane/cli/index.js": `export * from ${JSON.stringify(pathToFileURL(join(packageRoot, "src", "index.ts")).href)};\n`,
   };
-  for (const [path, content] of Object.entries({ ...gensanePackage, ...theme, ...example.files })) {
-    await mkdir(dirname(join(site, path)), { recursive: true });
-    await writeFile(join(site, path), content);
-  }
+  await writeFiles(site, { ...gensanePackage, ...theme, ...example.files });
   return site;
 }
 
@@ -93,11 +110,10 @@ function gensane(site: string, args: readonly string[]): Promise<Run> {
 
 /** What differs from run to run: the folder, the day, the time a build takes, and a free port. */
 function normalized(text: string, site: string): string {
-  const today = new Date().toISOString().slice(0, 10);
   return text
     .replaceAll(site, DOCS_FOLDER)
-    .replaceAll(today, DOCS_TODAY)
-    .replaceAll(today.slice(0, 7), DOCS_TODAY.slice(0, 7))
+    .replaceAll(today(), DOCS_TODAY)
+    .replaceAll(today().slice(0, 7), DOCS_TODAY.slice(0, 7))
     .replaceAll(/\b\d+ ms\b/g, "N ms")
     .replaceAll(/localhost:\d+/g, "localhost:4000")
     .trimEnd();
@@ -111,16 +127,19 @@ async function filesIn(folder: string): Promise<string[]> {
     .toSorted();
 }
 
-async function check(site: string, step: CliStep): Promise<void> {
-  const run = await gensane(site, step.args);
+async function check(place: Place, step: CliStep): Promise<void> {
+  const { site } = place;
+  if (step.cd !== undefined) place.folder = join(place.folder, step.cd);
+  const here = join(site, place.folder);
+  const run = await gensane(here, step.args);
   const listings: Record<string, string[]> = {};
   for (const folder of Object.keys(step.listings)) {
-    listings[folder] = (await filesIn(join(site, folder))).map((path) => normalized(path, site));
+    listings[folder] = (await filesIn(join(here, folder))).map((path) => normalized(path, site));
   }
   const files: Record<string, string> = {};
   for (const path of Object.keys(step.files)) {
     files[normalized(path, site)] = normalized(
-      await readFile(join(site, path.replace(DOCS_TODAY, new Date().toISOString().slice(0, 10))), "utf8"),
+      await readFile(join(here, path.replace(DOCS_TODAY, today())), "utf8"),
       site,
     );
   }
@@ -134,7 +153,7 @@ async function check(site: string, step: CliStep): Promise<void> {
   });
 }
 
-describe.each(pages)("docs/cli/$name", ({ path, text }) => {
+describe.each(pages)("docs/$name", ({ path, text }) => {
   checkLinks(path, text);
 
   it("checks every marked example", () => {
@@ -147,14 +166,25 @@ describe.each(pages)("docs/cli/$name", ({ path, text }) => {
     expect(steps).toBe(consoles);
   });
 
+  // The examples of a page run in order, so one that continues finds the folder the one before it left.
+  let previous: Place | undefined;
   it.each(findCliExamples(text))("runs gensane $steps.0.args as documented", async (example) => {
     expect.hasAssertions();
-    const site = await siteFolderOf(example);
-    for (const step of example.steps) await check(site, step);
+    let place: Place;
+    if (example.continues) {
+      if (previous === undefined) throw new Error("The first example of a page can't continue another");
+      place = previous;
+      await writeFiles(join(place.site, place.folder), example.files);
+    } else {
+      place = { site: await siteFolderOf(example), folder: "" };
+    }
+    previous = place;
+    for (const step of example.steps) await check(place, step);
   });
 });
 
 describe("the documentation is complete", () => {
+
   const examples = pages.flatMap(({ text }) => findCliExamples(text));
   const commands = examples.flatMap(({ steps }) => steps.map(({ args }) => args.join(" ")));
 
