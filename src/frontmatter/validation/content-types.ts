@@ -64,6 +64,8 @@ const page = object({
   slug: optional(text()),
   description: optional(text()),
   draft: withDefault(boolean(), false),
+  /** Where the page comes in its section: lower first, then by title. */
+  order: optional(integer()),
 });
 
 const project = object({

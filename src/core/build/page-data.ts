@@ -4,6 +4,7 @@ import type { ContentEntry } from "../content/entries.ts";
 import type { Collections } from "../site/collections.ts";
 import type { Theme } from "../theme/theme-settings.ts";
 import type { Pagination, Route, RouteKind, Tag } from "../site/routes.ts";
+import { type SectionFolder, type SectionItem, foldersAbove } from "../site/sections.ts";
 
 export type TemplateData = Readonly<Record<string, unknown>>;
 
@@ -91,9 +92,24 @@ export class TemplateVariables {
       collections: this.#collections,
       page: this.#pageOf(route),
       pagination: "pagination" in route ? this.#pagination(route.pagination) : undefined,
-      previous: route.kind === "post" ? this.#optionalPage(route.previous) : undefined,
-      next: route.kind === "post" ? this.#optionalPage(route.next) : undefined,
+      previous:
+        route.kind === "post" || route.kind === "page"
+          ? this.#optionalPage(route.previous)
+          : undefined,
+      next:
+        route.kind === "post" || route.kind === "page" ? this.#optionalPage(route.next) : undefined,
       tag: route.kind === "tag" ? this.#tag(route.tag) : undefined,
+      section:
+        route.kind === "page" && route.section !== undefined
+          ? this.#section(route.section, route.page)
+          : undefined,
+      breadcrumbs:
+        route.kind === "page" && route.section !== undefined
+          ? foldersAbove(route.section, route.page).map((folder) => ({
+              title: folder.title,
+              url: folder.page?.url,
+            }))
+          : undefined,
     };
   }
 
@@ -101,6 +117,30 @@ export class TemplateVariables {
     if ("page" in route && route.page !== undefined) return this.#page(route.page);
     const title = route.kind === "tag" ? route.tag.name : DEFAULT_TITLES[route.kind];
     return { title, url: route.url };
+  }
+
+  /** The tree a sidebar shows: every folder and page, with the current page and the folders it is in marked. */
+  #section(folder: SectionFolder, current: ContentEntry): TemplateData {
+    const item = (entry: SectionItem): TemplateData => {
+      if (entry.kind === "page") {
+        return {
+          title: entry.page.fields.title,
+          url: entry.page.url,
+          current: entry.page === current,
+        };
+      }
+      const inner = entry.items.map(item);
+      return {
+        title: entry.title,
+        url: entry.page?.url,
+        current: entry.page === current,
+        open:
+          entry.page === current ||
+          inner.some((child) => child["current"] === true || child["open"] === true),
+        items: inner,
+      };
+    };
+    return item(folder);
   }
 
   #optionalPage(entry: ContentEntry | undefined): TemplateData | undefined {

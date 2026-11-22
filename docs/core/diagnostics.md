@@ -412,3 +412,20 @@ content/talks/compilers.md, line 5, column 1: templates see "url" as the address
 hint: give the field another name
 ```
 
+### GS418
+
+A folder in `pages/` has a name that can't be part of a URL, which only allows lowercase letters, digits and single dashes. Pages in
+folders are at the folders' path, so rename the folder.
+
+<!-- reports GS418 -->
+
+```markdown pages/User_Guide/start.md
+---
+title: Start
+---
+```
+
+```text
+content/pages/User_Guide/start.md, line 1, column 1: the folder "User_Guide" can't be part of a URL, which only allows lowercase letters, digits and single dashes
+hint: rename the folder "user-guide"
+```

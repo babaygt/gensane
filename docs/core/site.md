@@ -133,7 +133,67 @@ and a warning names the other spelling. A tag with nothing to use in a URL, such
 ## Previous and next
 
 Each post knows the post before it in time, `previous`, and the one after it, `next`. The oldest post has no `previous` and the newest
-has no `next`.
+has no `next`. A page in a [section](site.md#sections) knows the pages before and after it in the section.
+
+## Sections
+
+Pages in a folder of `pages/` make a section, such as documentation: `pages/docs/` is the section `docs`, its subfolders are its parts,
+and each folder's `index.md` is the folder's own page. Its pages are in the order of their [`order`](../frontmatter/content-types.md#page)
+field, lower first, and then by title; a folder takes its place and its title from its `index.md`, or else its name.
+[`sectionsOf`](../../src/core/site/sections.ts) works out each section's tree.
+
+A page in a section gets three more [template variables](templates.md): `section`, the tree a sidebar shows, with the current page and
+the folders it is in marked; `breadcrumbs`, the folders above it; and `previous` and `next`, the pages before and after it as a reader
+goes through the section, each folder's own page first.
+
+<!-- builds -->
+```markdown pages/docs/index.md
+---
+title: Docs
+---
+```
+
+```markdown pages/docs/start.md
+---
+title: Start
+order: 1
+---
+```
+
+```markdown pages/docs/guides/index.md
+---
+title: Guides
+order: 2
+---
+```
+
+```markdown pages/docs/guides/search.md
+---
+title: Search
+---
+```
+
+```jinja page.html
+{% for crumb in breadcrumbs %}{{ crumb.title }} / {% endfor %}{{ page.title }}
+{% for item in section.items %}{% if item.current %}[{{ item.title }}]{% else %}{{ item.title }}{% endif %}{% if item.open %} (open){% endif %} {% endfor %}
+{% if previous %}← {{ previous.title }}{% endif %}{% if next %} | {{ next.title }} →{% endif %}
+```
+
+```html docs/guides/search/index.html
+Docs / Guides / Search
+Start Guides (open) 
+← Guides
+```
+
+```html docs/start/index.html
+Docs / Start
+[Start] Guides 
+← Docs | Guides →
+```
+
+The default theme is made for blogs and portfolios, so it shows the pages of a section as plain pages. A layout for documentation is a
+few templates of a site's own: gensane.dev's documentation, in the repository's `website/theme/`, is one, with a sidebar, breadcrumbs
+and the previous and next page.
 
 ## Sites under a path
 

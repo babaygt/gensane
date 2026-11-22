@@ -1,4 +1,5 @@
 import type { EntryOf } from "../content/entries.ts";
+import type { SectionFolder } from "./sections.ts";
 
 type Post = EntryOf<"post">;
 
@@ -44,7 +45,16 @@ export type Route =
   | { readonly kind: "talks"; readonly url: string }
   | { readonly kind: "search"; readonly url: string }
   | { readonly kind: "about"; readonly url: string; readonly page: EntryOf<"page"> | undefined }
-  | { readonly kind: "page"; readonly url: string; readonly page: EntryOf<"page"> }
+  | {
+      readonly kind: "page";
+      readonly url: string;
+      readonly page: EntryOf<"page">;
+      /** The section the page is in, when it is in a folder of `pages/`. */
+      readonly section: SectionFolder | undefined;
+      /** The pages before and after it in its section's reading order. */
+      readonly previous: EntryOf<"page"> | undefined;
+      readonly next: EntryOf<"page"> | undefined;
+    }
   | { readonly kind: "not-found"; readonly url: string };
 
 export type RouteKind = Route["kind"];

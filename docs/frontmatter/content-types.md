@@ -55,6 +55,9 @@ description: Who I am and what I build
 | `slug`        | No       | Text          | File name     |
 | `description` | No       | Text          | Empty         |
 | `draft`       | No       | True or false | `false`       |
+| `order`       | No       | Whole number  | After the pages that have one, by title |
+
+`order` places a page in its [section](../core/site.md#sections), such as a page of documentation; lower comes first.
 
 ## `project`
 
