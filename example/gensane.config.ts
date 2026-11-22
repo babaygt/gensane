@@ -1,4 +1,4 @@
-import { defineConfig } from "gensane";
+import { defineConfig } from "@gensane/cli";
 
 export default defineConfig({
   site: {

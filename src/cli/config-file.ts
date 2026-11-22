@@ -3,6 +3,7 @@ import { join } from "node:path";
 import { type CheckedConfig, ConfigCodes, checkConfig, configProblem } from "../config/index.ts";
 import { type Diagnostic, type Result, err, ok } from "../diagnostics/index.ts";
 import type { FileSystem, ModuleLoader } from "../ports/index.ts";
+import { PACKAGE_NAME } from "./package-name.ts";
 
 export const CONFIG_FILES = ["gensane.config.ts", "gensane.config.js", "gensane.config.mjs"];
 
@@ -23,8 +24,8 @@ function hintFor(error: unknown): string {
     return "Node runs the config by removing its types, so it can't use TypeScript that needs compiling, such as an enum; use a union of strings or an object instead";
   }
   if (code === "ERR_MODULE_NOT_FOUND") {
-    return firstLineOf(error).includes("'gensane'")
-      ? "install gensane in the site folder: npm install --save-dev gensane"
+    return firstLineOf(error).includes(`'${PACKAGE_NAME}'`)
+      ? `install gensane in the site folder: npm install --save-dev ${PACKAGE_NAME}`
       : "install the package the config imports, or correct its name";
   }
   return "fix the mistake in the config; running it with node shows where it is";

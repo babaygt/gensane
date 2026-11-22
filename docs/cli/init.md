@@ -4,7 +4,7 @@
 `.gitignore`, and a first file of each kind of content. The quickest way, without installing anything first:
 
 ```text
-npx gensane init my-site
+npx @gensane/cli init my-site
 ```
 
 Each question has a default, shown in brackets, which an empty answer takes:
@@ -49,7 +49,7 @@ package.json
 ```
 
 ```ts my-site/gensane.config.ts
-import { defineConfig } from "gensane";
+import { defineConfig } from "@gensane/cli";
 
 export default defineConfig({
   site: {
@@ -73,7 +73,7 @@ export default defineConfig({
     "check": "gensane check"
   },
   "devDependencies": {
-    "gensane": "^0.1.0"
+    "@gensane/cli": "^0.1.0"
   }
 }
 ```

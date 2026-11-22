@@ -1,5 +1,6 @@
 /** The files of a new site, made from the answers to `gensane init`'s questions. */
 
+import { PACKAGE_NAME } from "../package-name.ts";
 import { type DeployTarget, deployFiles } from "./deploy-files.ts";
 
 export const SECTIONS = ["blog", "projects", "talks", "about"] as const;
@@ -47,7 +48,7 @@ function packageJson({ version, folderName }: Details): string {
     private: true,
     type: "module",
     scripts: { dev: "gensane dev", build: "gensane build", check: "gensane check" },
-    devDependencies: { gensane: `^${version}` },
+    devDependencies: { [PACKAGE_NAME]: `^${version}` },
   };
   return `${JSON.stringify(json, null, 2)}\n`;
 }
@@ -61,7 +62,7 @@ function config({ title, author, url, palette }: Answers): string {
     ...(author === "" ? [] : [`    author: ${quoted(author)},`]),
   ];
   return [
-    'import { defineConfig } from "gensane";',
+    `import { defineConfig } from "${PACKAGE_NAME}";`,
     "",
     "export default defineConfig({",
     "  site: {",

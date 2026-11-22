@@ -4,7 +4,7 @@ The settings of a site are in `gensane.config.ts` in the site folder. Every sett
 all. `defineConfig` only gives the editor the types of the settings, so it can complete them and show mistakes while you type.
 
 ```ts
-import { defineConfig } from "gensane";
+import { defineConfig } from "@gensane/cli";
 
 export default defineConfig({
   site: { title: "Ada's notes", url: "https://example.com", author: "Ada" },
@@ -74,7 +74,7 @@ The default theme also shows these, as icon links on the home page and in the fo
 
 <!-- runs -->
 ```ts gensane.config.ts
-import { defineConfig } from "gensane";
+import { defineConfig } from "@gensane/cli";
 
 export default defineConfig({
   site: { title: "Ada's notes", url: "https://example.com", github: "ada" },
@@ -209,7 +209,7 @@ to leave the block as it is. A highlighter such as [Shiki](https://shiki.style) 
 
 <!-- runs -->
 ```ts gensane.config.ts
-import { defineConfig } from "gensane";
+import { defineConfig } from "@gensane/cli";
 
 export default defineConfig({
   site: { url: "https://example.com" },
@@ -226,7 +226,7 @@ title: About
 ---
 ```sh
 # install
-npm install gensane
+npm install --save-dev @gensane/cli
 ```
 ````
 
@@ -241,7 +241,7 @@ Built 4 pages into dist in 8 ms, with no warnings.
 
 ```html dist/about/index.html
 <pre><code class="language-sh"><span class="comment"># install</span>
-npm install gensane
+npm install --save-dev @gensane/cli
 </code></pre>
 ```
 
@@ -254,7 +254,7 @@ This is why the config is code, not a data file.
 
 <!-- runs -->
 ```ts gensane.config.ts
-import { defineConfig } from "gensane";
+import { defineConfig } from "@gensane/cli";
 
 export default defineConfig({
   site: { url: "https://example.com" },
@@ -296,7 +296,7 @@ which the theme's stylesheet uses; templates see every setting, with its default
 
 <!-- runs -->
 ```ts gensane.config.ts
-import { defineConfig } from "gensane";
+import { defineConfig } from "@gensane/cli";
 
 export default defineConfig({
   site: { url: "https://example.com" },

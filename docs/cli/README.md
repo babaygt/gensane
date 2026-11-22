@@ -12,7 +12,7 @@ Notes on testing and compilers.
 ```
 
 ```ts gensane.config.ts
-import { defineConfig } from "gensane";
+import { defineConfig } from "@gensane/cli";
 
 export default defineConfig({
   site: { title: "Ada's notes", url: "https://example.com" },
