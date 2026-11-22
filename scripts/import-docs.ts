@@ -37,7 +37,7 @@ export function placesOf(root: DocsNode = DOCS): readonly Placed[] {
 }
 
 /** The address of each page of `docs/`, by its file. */
-function addressesOf(placed: readonly Placed[]): ReadonlyMap<string, string> {
+export function addressesOf(placed: readonly Placed[] = placesOf()): ReadonlyMap<string, string> {
   return new Map(
     placed.flatMap(({ node, url }) => (node.from === undefined ? [] : [[node.from, url]])),
   );
@@ -95,6 +95,19 @@ export function outsideCode(line: string, change: (text: string) => string): str
   return result + change(text);
 }
 
+/** A line of a page in `docs/` with its links rewritten, except in inline code. */
+export function withLinksRewritten(
+  line: string,
+  from: string,
+  addresses: ReadonlyMap<string, string>,
+): string {
+  return outsideCode(line, (text) =>
+    text.replaceAll(/\]\(([^)\s]+)((?:\s+"[^"]*")?)\)/g, (_, link: string, title: string) => {
+      return `](${rewriteLink(link, from, addresses)}${title})`;
+    }),
+  );
+}
+
 /** The page without its first heading, which becomes its title, and with its links rewritten; code is left alone. */
 function contentOf(markdown: string, from: string, addresses: ReadonlyMap<string, string>) {
   const lines = markdown.split("\n");
@@ -110,12 +123,7 @@ function contentOf(markdown: string, from: string, addresses: ReadonlyMap<string
       if (line.startsWith(fence)) fence = undefined;
       return line;
     }
-    // Inline code is left as it is; links outside it are rewritten.
-    return outsideCode(line, (text) =>
-      text.replaceAll(/\]\(([^)\s]+)((?:\s+"[^"]*")?)\)/g, (_, link: string, title: string) => {
-        return `](${rewriteLink(link, from, addresses)}${title})`;
-      }),
-    );
+    return withLinksRewritten(line, from, addresses);
   });
   return { heading, body: body.join("\n").replace(/^\n+/, "") };
 }
