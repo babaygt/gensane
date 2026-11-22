@@ -112,6 +112,11 @@ such as `node:fs`; every other module is pure and works only on what it is given
 2. Build first, so npm finds the program when it starts: `pnpm build`.
 3. `npm publish`. Before anything is uploaded, it runs `pnpm check` and builds again, so a release always passes every test.
 
+## gensane.dev
+
+`website/` is gensane.dev, built with gensane, with the example site under `/example/`. `pnpm website` builds it into `website/dist`.
+CI publishes it on Cloudflare after every merge to `main`, once every check has passed.
+
 ## Reporting a problem
 
 Open an [issue](https://github.com/babaygt/gensane/issues) with what you ran, what gensane printed, and what you expected. A small site
