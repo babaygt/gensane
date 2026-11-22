@@ -14,7 +14,8 @@
 {% endif %}<script type="module" src="/assets/theme.js"></script>
 </head>
 <body class="font-{{ theme.font }}">
-<a class="skip" href="#content">Skip to content</a>
+{# A capital letter, so no heading of the page can have the same id: their ids are lowercase. #}
+<a class="skip" href="#Main">Skip to content</a>
 <header class="site-header">
 <a class="site-title" href="/">{{ site.title | default("Home") }}</a>
 {% if navigation %}<nav class="site-menu" aria-label="Main">
@@ -30,7 +31,7 @@
 {% endif %}{% if theme.colorScheme == "auto" %}<button class="icon-button scheme-switch" type="button" aria-label="Switch between light and dark" hidden><svg class="icon icon-moon" aria-hidden="true"><use href="/assets/icons.svg#moon"></use></svg><svg class="icon icon-sun" aria-hidden="true"><use href="/assets/icons.svg#sun"></use></svg></button>
 {% endif %}</div>
 </header>
-<main id="content">
+<main id="Main">
 {% block content %}{% endblock %}
 </main>
 <footer class="site-footer">
