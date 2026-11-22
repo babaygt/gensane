@@ -420,9 +420,11 @@ describe("findCliExamples", () => {
   it("reads the files of the site folder, each command, and what it shows afterwards", () => {
     expect(findCliExamples(session)).toEqual([
       {
+        continues: false,
         files: { "content/blog/hello.md": "---\ntitle: Hello\n---\n", "gensane.config.ts": "export default {};\n" },
         steps: [
           {
+            cd: undefined,
             args: ["new", "post", "Hello World", "--slug", "hi"],
             output: "Created content/blog/2026-11-20-hi.md",
             exitCode: 0,
@@ -430,6 +432,7 @@ describe("findCliExamples", () => {
             files: { "content/blog/2026-11-20-hi.md": "---\ntitle: Hello World" },
           },
           {
+            cd: undefined,
             args: ["check"],
             output: "error: no\n\nFound 1 error.",
             exitCode: 1,
@@ -444,7 +447,11 @@ describe("findCliExamples", () => {
   it("reads a command that needs no files", () => {
     const help = ["<!-- runs -->", "```console", "$ gensane --version", "1.0.0", "```"].join("\n");
     expect(findCliExamples(help)).toEqual([
-      { files: {}, steps: [{ args: ["--version"], output: "1.0.0", exitCode: 0, listings: {}, files: {} }] },
+      {
+        continues: false,
+        files: {},
+        steps: [{ cd: undefined, args: ["--version"], output: "1.0.0", exitCode: 0, listings: {}, files: {} }],
+      },
     ]);
   });
 
@@ -454,6 +461,31 @@ describe("findCliExamples", () => {
       [["a"]],
       [["b"]],
     ]);
+  });
+
+  it("reads an example that continues the one before it, with its own files", () => {
+    const tutorial = [
+      "<!-- runs -->",
+      "```console",
+      "$ gensane init my-site --yes",
+      "```",
+      "<!-- continues -->",
+      "```markdown my-site/content/pages/now.md",
+      "Now",
+      "```",
+      "```console",
+      "$ gensane check",
+      "```",
+    ].join("\n");
+    expect(findCliExamples(tutorial)).toMatchObject([
+      { continues: false, files: {} },
+      { continues: true, files: { "my-site/content/pages/now.md": "Now\n" } },
+    ]);
+  });
+
+  it("reads the folder a command runs in after `cd`", () => {
+    const step = findCliExamples("<!-- runs -->\n```console\n$ cd my-site\n$ gensane build\nBuilt.\n```")[0]?.steps[0];
+    expect(step).toMatchObject({ cd: "my-site", args: ["build"], output: "Built." });
   });
 
   it("ignores fences without the marker", () => {
@@ -476,6 +508,7 @@ describe("findCliExamples", () => {
 describe("countCliMarkers", () => {
   it("counts misspelled markers too, so they fail instead of leaving an example unchecked", () => {
     expect(countCliMarkers("<!-- runs -->\n<!-- run -->\n<!-- ran -->\n<!-- runs:x -->\n<!-- running -->")).toBe(4);
+    expect(countCliMarkers("<!-- continues -->\n<!-- continue -->")).toBe(2);
   });
 });
 
