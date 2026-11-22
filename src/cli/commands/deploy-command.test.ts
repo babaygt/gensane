@@ -20,6 +20,7 @@ async function gensane(args: readonly string[], files: Readonly<Record<string, s
     prompter: new ScriptedPrompter(),
     stopped: new AbortController().signal,
     defaultTheme: "gensane/themes/default",
+    skill: "gensane/skills/gensane",
     siteFolder: "/home/ada/My Notes",
     version: "1.2.3",
   });

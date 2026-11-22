@@ -58,6 +58,7 @@ async function startDev(
     prompter: new ScriptedPrompter(),
     stopped: stop.signal,
     defaultTheme: "gensane/themes/default",
+    skill: "gensane/skills/gensane",
     siteFolder: "site",
     version: "1.2.3",
   });
@@ -350,6 +351,7 @@ it("stops at once when it is asked to stop before it has started, such as by Ctr
     prompter: new ScriptedPrompter(),
     stopped: stop.signal,
     defaultTheme: "gensane/themes/default",
+    skill: "gensane/skills/gensane",
     siteFolder: "site",
     version: "1.2.3",
   });
@@ -373,6 +375,7 @@ describe("mistakes", () => {
       prompter: new ScriptedPrompter(),
       stopped: new AbortController().signal,
       defaultTheme: "gensane/themes/default",
+      skill: "gensane/skills/gensane",
       siteFolder: "site",
       version: "1.2.3",
     });
@@ -394,6 +397,7 @@ describe("mistakes", () => {
       prompter: new ScriptedPrompter(),
       stopped: new AbortController().signal,
       defaultTheme: "gensane/themes/default",
+      skill: "gensane/skills/gensane",
       siteFolder: "site",
       version: "1.2.3",
     });

@@ -132,6 +132,7 @@ it("makes a site that builds from any answers", { timeout: 240_000 }, async () =
         prompter,
         stopped: new AbortController().signal,
         defaultTheme: "gensane/themes/default",
+        skill: "gensane/skills/gensane",
         siteFolder: "/",
         version: "1.2.3",
       });

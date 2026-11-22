@@ -57,6 +57,7 @@ async function gensane(args: readonly string[], setup: Setup = {}): Promise<Run>
     prompter: new ScriptedPrompter(),
     stopped: new AbortController().signal,
     defaultTheme: "gensane/themes/default",
+    skill: "gensane/skills/gensane",
     siteFolder: "site",
     version: "1.2.3",
   });

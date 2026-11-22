@@ -465,6 +465,7 @@ describe("an ejected theme", () => {
       prompter: new ScriptedPrompter(),
       stopped: new AbortController().signal,
       defaultTheme,
+      skill: join(import.meta.dirname, "..", "..", "skills", "gensane"),
       siteFolder: site,
       version: "1.2.3",
     });
