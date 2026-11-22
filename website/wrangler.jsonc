@@ -1,0 +1,16 @@
+// gensane.dev, written by `gensane deploy init cloudflare`, with its name and domain. Publish with: pnpm website, then
+// npx wrangler deploy from this folder.
+{
+  "name": "gensane-dev",
+  "compatibility_date": "2026-11-01",
+  "assets": {
+    "directory": "./dist",
+    "not_found_handling": "404-page",
+  },
+  "routes": [
+    {
+      "pattern": "gensane.dev",
+      "custom_domain": true,
+    },
+  ],
+}
