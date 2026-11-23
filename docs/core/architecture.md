@@ -6,15 +6,15 @@ never has to deal with broken input, and the warnings of every step are kept.
 ```mermaid
 flowchart TD
     content["Content files, as text"] --> load["Read the entries<br/><code>loadContent</code>"]
-    load --> graph["Work out every page<br/><code>buildSiteGraph</code>"]
+    load --> siteGraph["Work out every page<br/><code>buildSiteGraph</code>"]
     templates["Templates, as text"] --> compile["Compile the templates<br/><code>compileTemplates</code>"]
-    graph --> render["Render each page<br/><code>renderTemplate</code>"]
+    siteGraph --> render["Render each page<br/><code>renderTemplate</code>"]
     compile --> render
     render --> feeds["Feed and sitemap<br/><code>feedFiles</code>"]
     feeds --> links["Check links<br/><code>checkLinks</code>"]
     links --> files["Files to write"]
     load -. "problems" .-> report["Diagnostics"]
-    graph -. "problems" .-> report
+    siteGraph -. "problems" .-> report
     compile -. "problems" .-> report
     render -. "problems" .-> report
     feeds -. "problems" .-> report
