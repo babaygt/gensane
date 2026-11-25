@@ -80,6 +80,7 @@ The settings of the default theme. Every one has a default, and changes somethin
 | `font`          | `sans`, `serif`, `mono`, all from the reader's system           | `sans`    |
 | `width`         | `narrow`, `normal`, `wide`                                     | `normal`  |
 | `blog.layout`   | `list`, `grid`                                                 | `list`    |
+| `blog.cover`    | `true` shows a post's cover at the top of its page too; `false` only on its card | `true` |
 | `home.sections` | `intro`, `recent-posts`, `featured-projects`, `talks`, in the order you list them | all four |
 | `toc`           | `true` for a table of contents on posts with at least 3 headings, or `false` | `true` |
 

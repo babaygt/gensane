@@ -58,6 +58,8 @@ const post = object({
   tags: tags(),
   draft: withDefault(boolean(), false),
   cover: optional(text()),
+  /** What the cover shows, for screen readers. Without it, the cover is only decoration. */
+  coverAlt: optional(text()),
 });
 
 const page = object({
@@ -82,6 +84,8 @@ const project = object({
   featured: withDefault(boolean(), false),
   draft: withDefault(boolean(), false),
   cover: optional(text()),
+  /** What the cover shows, for screen readers. Without it, the cover is only decoration. */
+  coverAlt: optional(text()),
   order: optional(integer()),
 });
 

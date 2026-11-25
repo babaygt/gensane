@@ -1,8 +1,10 @@
 /** Turns entries and routes into the variables that templates see. */
 import { SafeHtml } from "../../template/index.ts";
+import type { ContentDate } from "../../frontmatter/index.ts";
 import type { ContentEntry } from "../content/entries.ts";
 import type { Collections } from "../site/collections.ts";
 import type { Theme } from "../theme/theme-settings.ts";
+import { compareDates } from "../site/order.ts";
 import type { Pagination, Route, RouteKind, Tag } from "../site/routes.ts";
 import { type SectionFolder, type SectionItem, foldersAbove } from "../site/sections.ts";
 
@@ -40,8 +42,8 @@ export interface VariableSources {
  * Converts each entry once, so the same post is the same value in `collections.posts`,
  * in `pagination.items` and as `page`.
  */
-/** `2026-11-21` as templates see a date from frontmatter, so the `date` filter can write it. */
-function dateOf(day: string): TemplateData {
+/** `2026-11-21` as a date from frontmatter, so the `date` filter can write it and talks can be compared with it. */
+function dateOf(day: string): ContentDate {
   const [year = 0, month = 1, date = 1] = day.split("-").map(Number);
   return { text: day, year, month, day: date };
 }
@@ -53,7 +55,7 @@ export class TemplateVariables {
   readonly #feed: string | undefined;
   readonly #search: string | undefined;
   readonly #favicon: string | undefined;
-  readonly #today: TemplateData | undefined;
+  readonly #today: ContentDate | undefined;
   readonly #pages = new Map<ContentEntry, TemplateData>();
   readonly #collections: TemplateData;
 
@@ -161,6 +163,12 @@ export class TemplateVariables {
       excerpt: new SafeHtml(entry.excerpt),
       toc: entry.tableOfContents,
       readingTime: entry.readingTime,
+      // A talk after the day of the build hasn't happened yet. Without a day, none is.
+      ...(entry.type === "talk"
+        ? {
+            upcoming: this.#today !== undefined && compareDates(entry.fields.date, this.#today) > 0,
+          }
+        : {}),
     };
     this.#pages.set(entry, page);
     return page;

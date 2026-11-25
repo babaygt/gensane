@@ -139,7 +139,7 @@ export default defineConfig({
 - `site.url` is the full address; the feed and the sitemap need it (otherwise warning GS411).
 - Profiles shown as icons: `github`, `gitlab`, `codeberg`, `mastodon` (the whole address), `bluesky`, `linkedin`, `email`.
 - `theme`: `palette` (`default`, `paper`, `nord`, `solarized`, `gruvbox`, `midnight`), `colorScheme`, `accent`, `font`, `width`,
-  `blog.layout` (`list` or `grid`), `home.sections`, `toc`.
+  `blog.layout` (`list` or `grid`), `blog.cover`, `home.sections`, `toc`.
 - Other settings: `perPage`, `markdown`, `filters`, and `llms` (writes `llms.txt`).
 
 [references/config.md](references/config.md) has every setting and its values.

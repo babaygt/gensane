@@ -29,6 +29,7 @@ Each type of content has its own fields, defined in [`content-types.ts`](https:/
 | `tags`        | No       | List of text  | No tags       |
 | `draft`       | No       | True or false | `false`       |
 | `cover`       | No       | Text          | Empty         |
+| `coverAlt`    | No       | Text          | Empty         |
 
 ## `page`
 
@@ -57,6 +58,7 @@ Each type of content has its own fields, defined in [`content-types.ts`](https:/
 | `featured`    | No       | True or false                            | `false`       |
 | `draft`       | No       | True or false                            | `false`       |
 | `cover`       | No       | Text                                     | Empty         |
+| `coverAlt`    | No       | Text                                     | Empty         |
 | `order`       | No       | Whole number                             | Empty         |
 
 ## `talk`

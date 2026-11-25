@@ -250,6 +250,10 @@ class ConfigCheck {
       blog: (setting) =>
         this.themeGroup("theme.blog", setting, {
           layout: (layout) => this.choice("theme.blog.layout", layout, THEME_CHOICES.blogLayout),
+          cover: (cover) => {
+            if (typeof cover !== "boolean")
+              this.wrongValue("theme.blog.cover", "true or false", cover, "write true or false");
+          },
         }),
       home: (setting) =>
         this.themeGroup("theme.home", setting, { sections: (sections) => this.sections(sections) }),

@@ -27,8 +27,10 @@
 {% endif %}{% elif section == "talks" %}{% if collections.talks %}<section>
 <h2 class="section-title">Talks</h2>
 <ul class="talks">
-{% for talk in collections.talks | take(2) %}{% include "partials/talk.html" %}
-{% endfor %}</ul>
+{% if collections.talks | where("upcoming", true) %}{% for talk in collections.talks | where("upcoming", true) | reverse | take(1) %}{% include "partials/talk.html" %}
+{% endfor %}{% for talk in collections.talks | where("upcoming", false) | take(1) %}{% include "partials/talk.html" %}
+{% endfor %}{% else %}{% for talk in collections.talks | take(2) %}{% include "partials/talk.html" %}
+{% endfor %}{% endif %}</ul>
 {% for item in navigation | where("title", "Talks") %}<p class="more"><a href="{{ item.url }}">All talks →</a></p>
 {% endfor %}</section>
 {% endif %}{% endif %}{% endfor %}

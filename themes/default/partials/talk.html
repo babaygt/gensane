@@ -1,7 +1,7 @@
 <li class="talk">
 <time class="talk-date" datetime="{{ talk.date }}">{{ talk.date | date("MMM yyyy") }}</time>
 <div>
-<h2 class="talk-title">{{ talk.title }}</h2>
+<h2 class="talk-title">{{ talk.title }}{% if talk.upcoming %} <span class="status status-upcoming">Upcoming</span>{% endif %}</h2>
 <p class="meta">{{ talk.event }}{% if talk.location %} · {{ talk.location }}{% endif %}</p>
 {% if talk.description %}<p>{{ talk.description }}</p>
 {% endif %}{% if talk.slides or talk.video %}<p class="buttons">{% if talk.slides %}<a class="button" href="{{ talk.slides }}">Slides</a>{% endif %}{% if talk.video %}<a class="button" href="{{ talk.video }}">Video</a>{% endif %}</p>

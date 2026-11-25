@@ -41,7 +41,7 @@ export interface Theme {
   readonly colorScheme: Choice<"colorScheme">;
   readonly font: Choice<"font">;
   readonly width: Choice<"width">;
-  readonly blog: { readonly layout: Choice<"blogLayout"> };
+  readonly blog: { readonly layout: Choice<"blogLayout">; readonly cover: boolean };
   readonly home: { readonly sections: readonly Choice<"homeSections">[] };
   readonly toc: boolean;
   readonly colors: { readonly light: Colors; readonly dark: Colors };
@@ -56,7 +56,7 @@ export function themeOf(settings: ThemeSettings = {}): Theme {
     colorScheme: settings.colorScheme ?? "auto",
     font: settings.font ?? "sans",
     width: settings.width ?? "normal",
-    blog: { layout: settings.blog?.layout ?? "list" },
+    blog: { layout: settings.blog?.layout ?? "list", cover: settings.blog?.cover ?? true },
     home: { sections: settings.home?.sections ?? THEME_CHOICES.homeSections },
     toc: settings.toc ?? true,
     colors: {

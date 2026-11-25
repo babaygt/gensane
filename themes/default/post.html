@@ -6,6 +6,8 @@
 <p class="meta"><time datetime="{{ page.date }}">{{ page.date | date("MMM d, yyyy") }}</time> · {{ page.readingTime }} min read</p>
 {% include "partials/tags.html" %}
 </header>
+{% if page.cover and theme.blog.cover %}<img class="cover cover-page" src="{{ page.cover }}" alt="{{ page.coverAlt }}">
+{% endif %}
 {% include "partials/toc.html" %}
 <div class="content">
 {{ page.html }}

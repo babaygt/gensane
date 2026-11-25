@@ -11,6 +11,8 @@
 {% endif %}{% for link in page.links %}<li><a href="{{ link.url }}">{{ link.name }}</a></li>
 {% endfor %}</ul>
 {% endif %}</header>
+{% if page.cover %}<img class="cover cover-page" src="{{ page.cover }}" alt="{{ page.coverAlt }}">
+{% endif %}
 <div class="content">
 {{ page.html }}
 </div>

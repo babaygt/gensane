@@ -114,7 +114,8 @@ Checked 2 pages in 9 ms, with no warnings.
 
 ## The blog as cards
 
-`blog.layout: "grid"` shows posts as cards, each with its cover picture when it has one. The cards of a row are as tall as each
+`blog.layout: "grid"` shows posts as cards, each with its cover picture when it has one. A post's cover is also at the top of its
+own page; `blog: { cover: false }` keeps it on the card only. The cards of a row are as tall as each
 other, and each shows at most 4 lines of text. In both layouts, a post shows its `description`, or its
 [excerpt](../core/content.md) when it has none:
 
