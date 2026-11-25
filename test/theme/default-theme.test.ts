@@ -458,6 +458,21 @@ describe("the parts of a page", () => {
     );
   });
 
+  it("describes a cover on the cards with coverAlt too", async () => {
+    const built = await build({ blog: { layout: "grid" } }, false, SITE, undefined, {
+      "projects/lamp.md":
+        "---\ntitle: Lamp\ncover: /images/diagram.png\ncoverAlt: A lamp on a desk\n---\n",
+      "blog/2026-11-20-cat.md":
+        "---\ntitle: Cat\ndate: 2026-11-20\ncover: /images/diagram.png\ncoverAlt: A sleeping cat\n---\n",
+    });
+    expect(pageOf(built, "projects/index.html")).toContain(
+      '<img class="cover" src="/images/diagram.png" alt="A lamp on a desk" loading="lazy">',
+    );
+    expect(pageOf(built, "blog/index.html")).toContain(
+      '<img class="cover" src="/images/diagram.png" alt="A sleeping cat" loading="lazy">',
+    );
+  });
+
   it("shows a post's cover on its page, unless the settings keep covers on the cards", async () => {
     const shown = pageOf(await build(), "blog/hello/index.html");
     expect(shown).toContain('<img class="cover cover-page" src="/images/diagram.png" alt="">');
