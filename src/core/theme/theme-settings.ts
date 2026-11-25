@@ -24,7 +24,11 @@ export interface ThemeSettings {
   readonly font?: Choice<"font">;
   /** How wide the text is. Defaults to `normal`. */
   readonly width?: Choice<"width">;
-  readonly blog?: { readonly layout?: Choice<"blogLayout"> };
+  readonly blog?: {
+    readonly layout?: Choice<"blogLayout">;
+    /** A post's cover at the top of its page, not only on its card. Defaults to `true`. */
+    readonly cover?: boolean;
+  };
   /** The parts of the home page, in this order. */
   readonly home?: { readonly sections?: readonly Choice<"homeSections">[] };
   /** A table of contents on posts with at least 3 headings. Defaults to `true`. */
