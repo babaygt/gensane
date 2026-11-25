@@ -390,6 +390,23 @@ describe("the parts of a page", () => {
     expect(card).toContain('<a href="https://gensane.dev" aria-label="Website of Gensane">');
   });
 
+  it("shows a year alone as the year, and a note after the dates and the place", async () => {
+    const built = await build({}, false, SITE, undefined, {
+      "education/old.md":
+        "---\nschool: Old school\ndegree: BSc\nstart: 2018\nend: 2020\nlocation: Istanbul\nnote: Incomplete\n---\n",
+      "experience/shop.md":
+        "---\ncompany: Shop\nrole: Helper\nstart: 2016-06\nend: 2017\nnote: Part-time\n---\n",
+    });
+    const about = pageOf(built, "about/index.html");
+    expect(about).toContain(
+      '<p class="meta"><time datetime="2018">2018</time> – <time datetime="2020">2020</time>\n · Istanbul · Incomplete</p>',
+    );
+    expect(about).toContain(
+      '<p class="meta"><time datetime="2016-06">Jun 2016</time> – <time datetime="2017">2017</time>\n · Part-time</p>',
+    );
+    expect(await htmlProblems(about)).toEqual([]);
+  });
+
   it("shows each talk with its date beside it, and buttons for its slides and video", async () => {
     const talks = pageOf(await build(), "talks/index.html");
     expect(talks).toContain('<time class="talk-date" datetime="2026-10-01">Oct 2026</time>');

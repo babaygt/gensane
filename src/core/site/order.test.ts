@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { compareDates, compareOrder, compareStrings, compareText } from "./order.ts";
 
-const date = (year: number, month: number, day?: number, time?: string) => ({
+const date = (year: number, month?: number, day?: number, time?: string) => ({
   text: "",
   year,
-  month,
+  ...(month === undefined ? {} : { month }),
   ...(day === undefined ? {} : { day }),
   ...(time === undefined ? {} : { time }),
 });
@@ -24,6 +24,8 @@ describe("orders", () => {
 
   it.each([
     [date(2025, 12, 31), date(2026, 1, 1)],
+    [date(2025), date(2026)],
+    [date(2026), date(2026, 1)],
     [date(2026, 1), date(2026, 2)],
     [date(2026, 1), date(2026, 1, 1)],
     [date(2026, 1, 1), date(2026, 1, 2)],

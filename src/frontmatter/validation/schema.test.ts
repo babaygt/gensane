@@ -153,6 +153,39 @@ describe("dates", () => {
     );
   });
 
+  it.each(["2018", '"2018"'])(
+    "accepts a year alone, written as %s, for a month or a date",
+    (year) => {
+      expect(check(monthOrDate(), `field: ${year}`)).toEqual({
+        ok: true,
+        value: { value: { field: { text: "2018", year: 2018 } }, extra: {}, warnings: [] },
+      });
+      expect(check(dateOrPresent(), `field: ${year}`)).toMatchObject({
+        ok: true,
+        value: { value: { field: { text: "2018", year: 2018 } } },
+      });
+    },
+  );
+
+  it.each(["18", "20180", "2018.5", "-2018"])("does not take %s as a year", (written) => {
+    const error = firstError(monthOrDate(), `field: ${written}`);
+    expect(error?.code).toBe(FrontmatterCodes.wrongType);
+    expect(error?.message).toBe(
+      `"field" must be a year, a month or a date, but ${written} is a number`,
+    );
+    expect(error?.hint).toBe("write it as 2018, 2018-09 or 2018-09-01");
+  });
+
+  it("lists the forms an end can take, and present", () => {
+    expect(firstError(dateOrPresent(), "field: 18")?.hint).toBe(
+      "write it as 2018, 2018-09, 2018-09-01 or present",
+    );
+  });
+
+  it("still needs a day in a full date, not a year alone", () => {
+    expect(firstError(fullDate(), "field: 2018")?.code).toBe(FrontmatterCodes.wrongType);
+  });
+
   it("accepts the word present for something that is still going on", () => {
     expect(check(dateOrPresent(), "field: present")).toMatchObject({
       ok: true,
