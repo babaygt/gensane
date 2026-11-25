@@ -337,7 +337,7 @@ describe("the theme", () => {
       colorScheme: "light",
       font: "serif",
       width: "wide",
-      blog: { layout: "grid" },
+      blog: { layout: "grid", cover: false },
       home: { sections: ["recent-posts", "intro"] },
       toc: false,
     };
@@ -371,6 +371,11 @@ describe("the theme", () => {
       'write "list" or "grid"',
     ],
     [{ toc: "yes" }, '"theme.toc" must be true or false, but "yes" is text', "write true or false"],
+    [
+      { blog: { cover: "yes" } },
+      '"theme.blog.cover" must be true or false, but "yes" is text',
+      "write true or false",
+    ],
     [
       { accent: "purple" },
       '"theme.accent" must be a color such as "#6d5dfc", but "purple" is text',
@@ -415,7 +420,7 @@ describe("the theme", () => {
     [
       { blog: { columns: 2 } },
       '"theme.blog.columns" is not a setting',
-      "the settings of theme.blog are layout",
+      "the settings of theme.blog are layout and cover",
     ],
     [{ fonts: "serif" }, '"theme.fonts" is not a setting', 'did you mean "font"?'],
   ])("reports a setting of the theme it doesn't know: %j", (theme, message, hint) => {

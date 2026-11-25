@@ -10,7 +10,7 @@ describe("themeOf", () => {
       colorScheme: "auto",
       font: "sans",
       width: "normal",
-      blog: { layout: "list" },
+      blog: { layout: "list", cover: true },
       home: { sections: ["intro", "recent-posts", "featured-projects", "talks"] },
       toc: true,
       colors: PALETTES.default,

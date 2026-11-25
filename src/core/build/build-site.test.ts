@@ -31,6 +31,9 @@ function problemsOf(input: Partial<SiteInput>) {
   return result.ok ? result.value.warnings : result.error;
 }
 
+const talk = (title: string, date: string) =>
+  `---\ntitle: ${title}\nevent: A meetup\ndate: ${date}\n---\n`;
+
 const post = (date: string, extra = "", body = "") =>
   `---\ntitle: Post ${date}\ndate: ${date}\n${extra}---\n${body}`;
 
@@ -124,6 +127,21 @@ describe("the page variable", () => {
       { "blog/hello.md": post("2026-01-01", "", "Intro\n\n## First part\n\n## Second\n") },
     );
     expect(html).toBe("<p>Intro</p>\n|1|first-part:First part second:Second ");
+  });
+
+  it.each([
+    ["2026-11-25", "Later=true;Today=false;Earlier=false;"],
+    [undefined, "Later=false;Today=false;Earlier=false;"],
+  ])("marks the talks after the day of the build, %s, as upcoming", (today, shown) => {
+    const content = {
+      "talks/earlier.md": talk("Earlier", "2026-06-12"),
+      "talks/today.md": talk("Today", "2026-11-25"),
+      "talks/later.md": talk("Later", "2026-11-26"),
+    };
+    const template =
+      "{% for talk in collections.talks %}{{ talk.title }}={{ talk.upcoming }};{% endfor %}";
+    const config = today === undefined ? {} : { today };
+    expect(render("talks/index.html", "talks.html", template, content, config)).toBe(shown);
   });
 
   it("is the same value as the post in a list, so a list can mark the current page", () => {
