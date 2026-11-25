@@ -45,6 +45,12 @@ describe("starterSite", () => {
     expect(config).toContain('title: "The \\"best\\" \\\\ site",');
   });
 
+  it("gives the first post a description, which lists of posts show instead of its first paragraph", () => {
+    expect(starterSite(answers, details)["content/blog/2026-11-20-hello-world.md"]).toContain(
+      "\ndescription: The first post, and how to write the next one\n",
+    );
+  });
+
   it("writes a file for each part chosen, and only for those", () => {
     expect(Object.keys(starterSite(answers, details)).toSorted()).toEqual([
       ".gitignore",

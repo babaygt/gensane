@@ -8,22 +8,31 @@ function html(source: string): string {
 
 const box = '<input disabled="" type="checkbox" />';
 const checkedBox = '<input checked="" disabled="" type="checkbox" />';
+// The classes GitHub writes, so a theme can put the checkbox where the bullet was.
+const ul = '<ul class="contains-task-list">';
+const ol = '<ol class="contains-task-list">';
+const li = '<li class="task-list-item">';
 
 describe("task lists", () => {
   it.each([
-    ["- [ ] foo", `<ul>\n<li>${box} foo</li>\n</ul>\n`],
-    ["- [x] foo", `<ul>\n<li>${checkedBox} foo</li>\n</ul>\n`],
-    ["- [X] foo", `<ul>\n<li>${checkedBox} foo</li>\n</ul>\n`],
-    ["1. [ ] foo", `<ol>\n<li>${box} foo</li>\n</ol>\n`],
-    ["- [ ] *foo*", `<ul>\n<li>${box} <em>foo</em></li>\n</ul>\n`],
+    ["- [ ] foo", `${ul}\n${li}${box} foo</li>\n</ul>\n`],
+    ["- [x] foo", `${ul}\n${li}${checkedBox} foo</li>\n</ul>\n`],
+    ["- [X] foo", `${ul}\n${li}${checkedBox} foo</li>\n</ul>\n`],
+    ["1. [ ] foo", `${ol}\n${li}${box} foo</li>\n</ol>\n`],
+    ["3. [ ] foo", `<ol start="3" class="contains-task-list">\n${li}${box} foo</li>\n</ol>\n`],
+    ["- [ ] *foo*", `${ul}\n${li}${box} <em>foo</em></li>\n</ul>\n`],
     [
       "- [x] foo\n\n- [ ] bar",
-      `<ul>\n<li>\n<p>${checkedBox} foo</p>\n</li>\n<li>\n<p>${box} bar</p>\n</li>\n</ul>\n`,
+      `${ul}\n${li}\n<p>${checkedBox} foo</p>\n</li>\n${li}\n<p>${box} bar</p>\n</li>\n</ul>\n`,
     ],
     [
       "- [x] foo\n  - [ ] bar",
-      `<ul>\n<li>${checkedBox} foo\n<ul>\n<li>${box} bar</li>\n</ul>\n</li>\n</ul>\n`,
+      `${ul}\n${li}${checkedBox} foo\n${ul}\n${li}${box} bar</li>\n</ul>\n</li>\n</ul>\n`,
     ],
+    // Only the items that are tasks lose their bullet; the list says it has some.
+    ["- [x] foo\n- bar", `${ul}\n${li}${checkedBox} foo</li>\n<li>bar</li>\n</ul>\n`],
+    // A task inside an item doesn't make the outer list a task list.
+    ["- foo\n  - [ ] bar", `<ul>\n<li>foo\n${ul}\n${li}${box} bar</li>\n</ul>\n</li>\n</ul>\n`],
   ])("%j", (source, expected) => {
     expect(html(source)).toBe(expected);
   });
@@ -44,7 +53,7 @@ describe("task lists", () => {
 
   it("shows the checkbox only once in an item with several paragraphs", () => {
     expect(html("- [x] a\n\n  b")).toBe(
-      `<ul>\n<li>\n<p>${checkedBox} a</p>\n<p>b</p>\n</li>\n</ul>\n`,
+      `${ul}\n${li}\n<p>${checkedBox} a</p>\n<p>b</p>\n</li>\n</ul>\n`,
     );
   });
 
