@@ -2,5 +2,5 @@
 {% if theme.blog.layout == "grid" and post.cover %}<img class="cover" src="{{ post.cover }}" alt="" loading="lazy">
 {% endif %}<h2><a href="{{ post.url }}">{{ post.title }}</a>{% if post.draft %} <span class="draft">Draft</span>{% endif %}</h2>
 <p class="meta"><time datetime="{{ post.date }}">{{ post.date | date("MMM d, yyyy") }}</time> · {{ post.readingTime }} min read</p>
-<div class="excerpt">{{ post.excerpt }}</div>
+<div class="excerpt">{% if post.description %}<p>{{ post.description }}</p>{% else %}{{ post.excerpt }}{% endif %}</div>
 </li>
