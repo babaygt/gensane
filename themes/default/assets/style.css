@@ -559,7 +559,8 @@ pre {
   padding: 0 0.5rem;
 }
 
-.status-active {
+.status-active,
+.status-upcoming {
   color: var(--accent);
   border-color: currentColor;
 }
@@ -577,6 +578,11 @@ pre {
   object-fit: cover;
   border-radius: 8px;
   margin-bottom: 1rem;
+}
+
+/* On its own page, the whole picture. */
+.cover-page {
+  aspect-ratio: auto;
 }
 
 .timeline li,

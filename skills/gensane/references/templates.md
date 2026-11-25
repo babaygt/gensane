@@ -39,6 +39,7 @@ and what was worked out from its body:
 | `excerpt`     | The [excerpt](https://gensane.dev/docs/reference/site/content/) as HTML, printed without escaping        |
 | `toc`         | The table of contents: each heading's `id`, `text`, `level` and `children` |
 | `readingTime` | In minutes                                                         |
+| `upcoming`    | Talks only: `true` when the talk's date is after the day of the build, `false` otherwise, and when the day isn't known |
 
 `html` and `excerpt` come from the Markdown compiler, not from text someone typed, so `{{ page.html }}` prints them as HTML without
 `| raw`. Every other value is escaped as usual.

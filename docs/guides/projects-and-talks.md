@@ -57,7 +57,8 @@ project's own page, at `/projects/tiny-calc/`, shows the same with the text belo
 | `website`  | A link to the project's site                                                                      |
 | `links`    | More links on the project's page, each with a `name` and a `url`, such as a paper or a demo       |
 | `featured` | `true` shows it on the home page too, up to three                                                 |
-| `cover`    | A picture from `public/`, at the top of the card                                                  |
+| `cover`    | A picture from `public/`, at the top of the card and of the project's page                        |
+| `coverAlt` | What the picture shows, for screen readers. Without it, the picture is only decoration            |
 
 ## The order of projects
 
@@ -107,7 +108,9 @@ $ gensane check
 Checked 7 pages in 9 ms, with no warnings.
 ```
 
-Talks are newest first, and the home page shows the two newest. A talk has no page of its own: its slides and its video are what
+Talks are newest first. A talk after the day of the build is labelled "Upcoming", so a talk you announce early isn't mistaken for
+one you gave. The home page shows the next upcoming talk, if there is one, and then the newest past one; with none upcoming, the two
+newest. A talk has no page of its own: its slides and its video are what
 readers want, so its entry in the list leads to them.
 
 [Content types](../frontmatter/content-types.md#project) lists every field of projects and talks.

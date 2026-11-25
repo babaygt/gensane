@@ -38,6 +38,7 @@ cover: /images/compiler.png
 | `tags`        | No       | List of text  | No tags       |
 | `draft`       | No       | True or false | `false`       |
 | `cover`       | No       | Text          | Empty         |
+| `coverAlt`    | No       | Text          | Empty         |
 
 ## `page`
 
@@ -92,6 +93,7 @@ order: 1
 | `featured`    | No       | True or false                            | `false`       |
 | `draft`       | No       | True or false                            | `false`       |
 | `cover`       | No       | Text                                     | Empty         |
+| `coverAlt`    | No       | Text                                     | Empty         |
 | `order`       | No       | Whole number                             | Empty         |
 
 ## `talk`

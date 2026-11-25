@@ -1,5 +1,5 @@
 <li class="card">
-{% if project.cover %}<img class="cover" src="{{ project.cover }}" alt="" loading="lazy">
+{% if project.cover %}<img class="cover" src="{{ project.cover }}" alt="{{ project.coverAlt }}" loading="lazy">
 {% endif %}<h2><a href="{{ project.url }}">{{ project.title }}</a>{% if project.draft %} <span class="draft">Draft</span>{% endif %}</h2>
 {% if project.description %}<p>{{ project.description }}</p>
 {% endif %}<div class="card-footer">
