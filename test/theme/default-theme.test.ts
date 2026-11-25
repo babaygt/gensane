@@ -414,6 +414,59 @@ describe("the parts of a page", () => {
     expect(talks).toContain('<a class="button" href="https://example.com/video">Video</a>');
   });
 
+  const talks = {
+    "talks/far.md": "---\ntitle: Far ahead\nevent: A conference\ndate: 2027-06-01\n---\n",
+    "talks/soon.md": "---\ntitle: Soon\nevent: A meetup\ndate: 2027-01-15\n---\n",
+    "talks/old.md": "---\ntitle: Long ago\nevent: A meetup\ndate: 2025-05-01\n---\n",
+  };
+
+  it("labels the talks after the day of the build as upcoming", async () => {
+    const page = pageOf(await build({}, false, SITE, "2026-11-25", talks), "talks/index.html");
+    expect(page.split('<span class="status status-upcoming">Upcoming</span>')).toHaveLength(3);
+    expect(page).toContain(
+      '<h2 class="talk-title">Soon <span class="status status-upcoming">Upcoming</span></h2>',
+    );
+    expect(page).toContain('<h2 class="talk-title">Compilers</h2>');
+    expect(await htmlProblems(page)).toEqual([]);
+  });
+
+  it("shows the next upcoming talk on the home page, then the newest past one", async () => {
+    const home = pageOf(await build({}, false, SITE, "2026-11-25", talks), "index.html");
+    const section = home.slice(home.indexOf('<h2 class="section-title">Talks</h2>'));
+    const shown = [...section.matchAll(/<h2 class="talk-title">([^<]+)/g)].map(([, title]) =>
+      title?.trim(),
+    );
+    expect(shown).toEqual(["Soon", "Compilers"]);
+  });
+
+  it("shows the two newest talks on the home page when none is upcoming", async () => {
+    const home = pageOf(await build({}, false, SITE, "2027-12-01", talks), "index.html");
+    const section = home.slice(home.indexOf('<h2 class="section-title">Talks</h2>'));
+    const shown = [...section.matchAll(/<h2 class="talk-title">([^<]+)/g)].map(([, title]) =>
+      title?.trim(),
+    );
+    expect(shown).toEqual(["Far ahead", "Soon"]);
+  });
+
+  it("shows a project's cover on its page, described by coverAlt", async () => {
+    const built = await build({}, false, SITE, undefined, {
+      "projects/lamp.md":
+        "---\ntitle: Lamp\ncover: /images/diagram.png\ncoverAlt: A lamp on a desk\n---\nText.\n",
+    });
+    expect(pageOf(built, "projects/lamp/index.html")).toContain(
+      '<img class="cover cover-page" src="/images/diagram.png" alt="A lamp on a desk">',
+    );
+  });
+
+  it("shows a post's cover on its page, unless the settings keep covers on the cards", async () => {
+    const shown = pageOf(await build(), "blog/hello/index.html");
+    expect(shown).toContain('<img class="cover cover-page" src="/images/diagram.png" alt="">');
+    expect(await htmlProblems(shown)).toEqual([]);
+    expect(accessibilityProblems(shown)).toEqual([]);
+    const hidden = pageOf(await build({ blog: { cover: false } }), "blog/hello/index.html");
+    expect(hidden).not.toContain("cover-page");
+  });
+
   it("ends a post with its tags, and the older and newer posts", async () => {
     const again = pageOf(await build(), "blog/again/index.html");
     const end = again.slice(again.indexOf('<footer class="post-footer">'));

@@ -32,6 +32,15 @@ describe("post", () => {
     });
   });
 
+  it("reads the text that describes the cover, for screen readers", () => {
+    expect(
+      validated("post", "title: A\ndate: 2026-11-18\ncover: /c.png\ncoverAlt: A cat"),
+    ).toMatchObject({
+      ok: true,
+      value: { value: { cover: "/c.png", coverAlt: "A cat" } },
+    });
+  });
+
   it("requires a title and a date", () => {
     expect(codes("post", "draft: true")).toEqual([
       FrontmatterCodes.missingField,
@@ -78,6 +87,13 @@ describe("project", () => {
           links: [{ name: "Docs", url: "/docs" }],
         },
       },
+    });
+  });
+
+  it("reads a cover and the text that describes it", () => {
+    expect(validated("project", "title: A\ncover: /c.png\ncoverAlt: The home page")).toMatchObject({
+      ok: true,
+      value: { value: { cover: "/c.png", coverAlt: "The home page" } },
     });
   });
 
