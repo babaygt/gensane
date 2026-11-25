@@ -257,24 +257,38 @@ describe("in a real browser", { timeout: 30_000 }, () => {
   it.each([
     ["/projects/", ".card p"],
     ["/blog/", ".excerpt"],
-  ])("cuts a long text in a card on %s after 4 lines", async (path, selector) => {
-    const page = await open(path);
-    const texts = await page.evaluate<{ shown: number; whole: number; line: number }[]>(
-      `[...document.querySelectorAll("${selector}")]
+  ])(
+    "cuts a long text in a card on %s after 4 lines, and hides the rest",
+    async (path, selector) => {
+      const page = await open(path);
+      const texts = await page.evaluate<
+        { shown: number; whole: number; line: number; below: boolean }[]
+      >(
+        `[...document.querySelectorAll("${selector}")]
         .filter((text) => text.textContent.includes("A long description"))
         .map((text) => ({
           shown: text.clientHeight,
           whole: text.scrollHeight,
           line: parseFloat(getComputedStyle(text).lineHeight),
+          // Whether the text still shows just below its 4th line.
+          below: text.contains(
+            document.elementFromPoint(
+              text.getBoundingClientRect().left + 4,
+              text.getBoundingClientRect().bottom + 4,
+            ),
+          ),
         }))`,
-    );
-    expect(texts).toHaveLength(1);
-    const [{ shown, whole, line }] = texts as [(typeof texts)[number]];
-    expect(whole).toBeGreaterThan(shown);
-    expect(shown).toBeGreaterThan(3 * line);
-    expect(shown).toBeLessThanOrEqual(4 * line + 1);
-    await page.context().close();
-  });
+      );
+      expect(texts).toHaveLength(1);
+      const [{ shown, whole, line, below }] = texts as [(typeof texts)[number]];
+      expect(whole).toBeGreaterThan(shown);
+      // Heights are rounded to whole pixels, so 3 lines can be a little more than 3 line heights.
+      expect(shown).toBeGreaterThan(3.5 * line);
+      expect(shown).toBeLessThanOrEqual(4 * line + 1);
+      expect(below).toBe(false);
+      await page.context().close();
+    },
+  );
 
   it("puts a task's checkbox where the bullet would be, with no bullet", async () => {
     const page = await open("/tasks/");
