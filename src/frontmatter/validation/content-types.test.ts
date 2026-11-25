@@ -168,6 +168,32 @@ describe("experience", () => {
     const yaml = "company: A\nrole: B\nstart: 2024-06\nend: 2023-12";
     expect(codes("experience", yaml)).toEqual([FrontmatterCodes.invalidDateRange]);
   });
+
+  it("reads years alone, as on a CV that only has years", () => {
+    expect(validated("experience", "company: A\nrole: B\nstart: 2018\nend: 2020")).toMatchObject({
+      ok: true,
+      value: { value: { start: { text: "2018", year: 2018 }, end: { text: "2020", year: 2020 } } },
+    });
+  });
+
+  it("rejects an end year before the start year", () => {
+    const yaml = "company: A\nrole: B\nstart: 2018\nend: 2017-12";
+    expect(codes("experience", yaml)).toEqual([FrontmatterCodes.invalidDateRange]);
+  });
+
+  it.each([
+    ["2018", "2018-03"],
+    ["2018-09", "2018"],
+  ])("does not compare months when one date is only a year: %s to %s", (start, end) => {
+    expect(codes("experience", `company: A\nrole: B\nstart: ${start}\nend: ${end}`)).toEqual([]);
+  });
+
+  it("reads a note, such as part-time", () => {
+    expect(validated("experience", `${job}\nnote: Part-time`)).toMatchObject({
+      ok: true,
+      value: { value: { note: "Part-time" } },
+    });
+  });
 });
 
 describe("education", () => {
@@ -186,6 +212,14 @@ describe("education", () => {
 
   it("requires a school, a degree and a start", () => {
     expect(codes("education", "field: x")).toHaveLength(3);
+  });
+
+  it("reads a note, such as a degree that wasn't finished", () => {
+    const yaml = "school: A\ndegree: B\nstart: 2018\nend: 2020\nnote: Incomplete";
+    expect(validated("education", yaml)).toMatchObject({
+      ok: true,
+      value: { value: { note: "Incomplete", start: { year: 2018 } } },
+    });
   });
 });
 

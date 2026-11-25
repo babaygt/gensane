@@ -4,6 +4,7 @@ import { compileCodes, renderProblems, value } from "../test-helpers.ts";
 
 const day = { text: "2026-03-07", year: 2026, month: 3, day: 7 };
 const month = { text: "2024-06", year: 2024, month: 6 };
+const year = { text: "2018", year: 2018 };
 const withTime = {
   text: "2026-11-18T10:30:00Z",
   year: 2026,
@@ -49,6 +50,10 @@ describe("formatting dates", () => {
     expect(formatted("MMMM yyyy", month)).toBe("June 2024");
   });
 
+  it("formats a year alone", () => {
+    expect(formatted("yyyy", year)).toBe("2018");
+  });
+
   it("formats only the day of a date with a time", () => {
     expect(formatted("MMM d, yyyy", withTime)).toBe("Nov 18, 2026");
   });
@@ -75,6 +80,22 @@ describe("mistakes with dates", () => {
         hint: 'use a format without the day, such as "MMMM yyyy"',
       },
     ]);
+  });
+
+  it.each(["M", "MM", "MMM", "MMMM"])("explains that a year has no month for %s", (letters) => {
+    expect(problem(`${letters} yyyy`, year)).toMatchObject([
+      {
+        code: TemplateCodes.filterFailed,
+        message: `this date is only a year, so it has no month for "${letters}"`,
+        hint: 'use "yyyy" alone, or check the date\'s `month` first',
+      },
+    ]);
+  });
+
+  it("explains that a year has no day either", () => {
+    expect(problem("d yyyy", year)[0]?.message).toBe(
+      'this date is only a year, so it has no day for "d"',
+    );
   });
 
   it.each(["yy", "MMMMM", "ddd", "D", "EEE", "h:mm"])("rejects the letters in %s", (format) => {
@@ -123,6 +144,7 @@ describe("values that only look like dates", () => {
     ["a day that is not a whole number", { text: "", year: 2026, month: 1, day: 1.5 }],
     ["a year that is not a whole number", { text: "", year: 2026.5, month: 1 }],
     ["no text", { year: 2026, month: 1, day: 1 }],
+    ["a day without a month", { text: "", year: 2026, day: 1 }],
     ["a time that is not text", { text: "", year: 2026, month: 1, day: 1, time: 10 }],
   ])("does not treat %s as a date", (_, date) => {
     expect(problem("yyyy", date)[0]?.message).toBe(
