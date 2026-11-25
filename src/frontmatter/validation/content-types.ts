@@ -27,9 +27,10 @@ import type { MapValue } from "../values.ts";
 
 const tags = () => withDefault(listOf(text()), []);
 
-/** Whether `end` is earlier. Days only count when both dates have one. */
+/** Whether `end` is earlier. Months and days only count when both dates have them. */
 function isBefore(end: ContentDate, start: ContentDate): boolean {
   if (end.year !== start.year) return end.year < start.year;
+  if (end.month === undefined || start.month === undefined) return false;
   if (end.month !== start.month) return end.month < start.month;
   return end.day !== undefined && start.day !== undefined && end.day < start.day;
 }

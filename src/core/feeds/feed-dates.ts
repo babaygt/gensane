@@ -6,7 +6,8 @@ function twoDigits(number: number): string {
   return String(number).padStart(2, "0");
 }
 
-function day({ year, month, day: dayOfMonth = 1 }: ContentDate): string {
+/** Posts always have a day; the defaults only keep the type honest. */
+function day({ year, month = 1, day: dayOfMonth = 1 }: ContentDate): string {
   return `${year}-${twoDigits(month)}-${twoDigits(dayOfMonth)}`;
 }
 
