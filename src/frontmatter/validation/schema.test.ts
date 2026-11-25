@@ -176,6 +176,13 @@ describe("dates", () => {
     expect(error?.hint).toBe("write it as 2018, 2018-09 or 2018-09-01");
   });
 
+  it.each([
+    ["Sept 2018", "write it as 2018, 2018-09 or 2018-09-01"],
+    ["18-11-2026", "write it as 2026-11-18"],
+  ])("explains the forms a start can take when it is the text %s", (written, hint) => {
+    expect(firstError(monthOrDate(), `field: ${written}`)?.hint).toBe(hint);
+  });
+
   it("lists the forms an end can take, and present", () => {
     expect(firstError(dateOrPresent(), "field: 18")?.hint).toBe(
       "write it as 2018, 2018-09, 2018-09-01 or present",

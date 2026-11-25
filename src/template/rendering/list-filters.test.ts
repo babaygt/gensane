@@ -125,6 +125,15 @@ describe("sort and reverse", () => {
     expect(titles('posts | sort("date")')).toBe("apple,Cherry,Banana,date");
   });
 
+  it("sorts a year alone before the months in it", () => {
+    const list = [
+      { title: "january", start: { text: "2018-01", year: 2018, month: 1 } },
+      { title: "the year", start: { text: "2018", year: 2018 } },
+      { title: "before", start: { text: "2017-12", year: 2017, month: 12 } },
+    ];
+    expect(titles('posts | sort("start")', { posts: list })).toBe("before,the year,january");
+  });
+
   it("sorts dates on the same day by their time", () => {
     const list = [
       { title: "late", date: onNewYear("18:00:00Z") },
