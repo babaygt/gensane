@@ -1,1 +1,1 @@
-<time datetime="{{ item.start }}">{{ item.start | date("MMM yyyy") }}</time> – {% if item.end == "present" %}present{% else %}<time datetime="{{ item.end }}">{{ item.end | date("MMM yyyy") }}</time>{% endif %}
+<time datetime="{{ item.start }}">{% if item.start.month %}{{ item.start | date("MMM yyyy") }}{% else %}{{ item.start.year }}{% endif %}</time> – {% if item.end == "present" %}present{% else %}<time datetime="{{ item.end }}">{% if item.end.month %}{{ item.end | date("MMM yyyy") }}{% else %}{{ item.end.year }}{% endif %}</time>{% endif %}

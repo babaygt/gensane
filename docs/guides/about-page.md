@@ -69,6 +69,7 @@ role: Software engineer
 start: 2023-01
 end: 2025-02
 location: Berlin
+note: Part-time
 ---
 ```
 
@@ -77,8 +78,10 @@ $ gensane check
 Checked 4 pages in 9 ms, with no warnings.
 ```
 
-A job without `end` is the one you have now, shown as "present". `start` and `end` can be a month, such as `2025-03`, or a whole
-date. The timeline is newest first; `order: 1` on a file puts it first anyway.
+A job without `end` is the one you have now, shown as "present". `start` and `end` can be a year, such as `2018`, a month, such as
+`2025-03`, or a whole date; the theme shows a year as it is, and a month as "Mar 2025". `note` adds one line after the dates and the
+place: the second job shows as "Jan 2023 – Feb 2025 · Berlin · Part-time". The timeline is newest first; `order: 1` on a file puts it
+first anyway.
 
 ## Education
 
@@ -88,9 +91,10 @@ date. The timeline is newest first; `order: 1` on a file puts it first anyway.
 school: University of Somewhere
 degree: BSc
 field: Mathematics
-start: 2019-10
-end: 2022-07
+start: 2019
+end: 2022
 location: Berlin
+note: With a year abroad
 ---
 ```
 
@@ -99,7 +103,8 @@ $ gensane check
 Checked 4 pages in 9 ms, with no warnings.
 ```
 
-The theme shows it as "BSc in Mathematics, University of Somewhere". Experience and education have no pages of their own, so the
+The theme shows it as "BSc in Mathematics, University of Somewhere", and below it "2019 – 2022 · Berlin · With a year abroad".
+Experience and education have no pages of their own, so the
 number of pages stays the same.
 
 ## Mistakes

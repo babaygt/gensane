@@ -6,7 +6,7 @@
 <ul class="timeline">
 {% for item in collections.experience %}<li>
 <h3>{{ item.role }}, {{ item.company }}</h3>
-<p class="meta">{% include "partials/period.html" %}{% if item.location %} · {{ item.location }}{% endif %}</p>
+<p class="meta">{% include "partials/period.html" %}{% if item.location %} · {{ item.location }}{% endif %}{% if item.note %} · {{ item.note }}{% endif %}</p>
 {% if item.stack %}<p class="meta">{{ item.stack | join(" · ") }}</p>
 {% endif %}</li>
 {% endfor %}</ul>
@@ -14,7 +14,7 @@
 <ul class="timeline">
 {% for item in collections.education %}<li>
 <h3>{{ item.degree }}{% if item.field %} in {{ item.field }}{% endif %}, {{ item.school }}</h3>
-<p class="meta">{% include "partials/period.html" %}{% if item.location %} · {{ item.location }}{% endif %}</p>
+<p class="meta">{% include "partials/period.html" %}{% if item.location %} · {{ item.location }}{% endif %}{% if item.note %} · {{ item.note }}{% endif %}</p>
 </li>
 {% endfor %}</ul>
 {% endif %}{% endblock %}

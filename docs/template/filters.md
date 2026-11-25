@@ -314,7 +314,8 @@ Mar 7, 2026 / 07.03.2026 / June 2024
 ```
 
 Any other letter is a mistake, so `Today` can't silently turn into `To7ay`. Month names are in English. A date that is only a month, such
-as the start of a job, has no day, so `d` and `dd` are a mistake there. A missing date gives nothing.
+as the start of a job, has no day, so `d` and `dd` are a mistake there. A year alone, such as `start: 2018`, has no month either, so
+only `yyyy` works for it; `{% if job.start.month %}` tells the two apart. A missing date gives nothing.
 
 A date printed without the filter appears as it was written: `{{ page.date }}` gives `2026-03-07`.
 
