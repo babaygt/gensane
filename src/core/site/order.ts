@@ -11,11 +11,11 @@ export function compareText(first: string, second: string): number {
   return compareStrings(first.toLowerCase(), second.toLowerCase()) || compareStrings(first, second);
 }
 
-/** A month comes before the days in it, because it has no day. */
+/** A year comes before the months in it, and a month before the days in it. */
 export function compareDates(first: ContentDate, second: ContentDate): number {
   return (
     first.year - second.year ||
-    first.month - second.month ||
+    (first.month ?? 0) - (second.month ?? 0) ||
     (first.day ?? 0) - (second.day ?? 0) ||
     compareStrings(first.time ?? "", second.time ?? "")
   );

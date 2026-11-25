@@ -40,11 +40,11 @@ export interface ObjectSchema<T> extends Schema<T> {
 /** The type of the data that a schema accepts. */
 export type Infer<S> = S extends Schema<infer T> ? T : never;
 
-/** A date without its position in the file. */
+/** A date without its position in the file. A start or end can be a year alone, with no month. */
 export interface ContentDate {
   readonly text: string;
   readonly year: number;
-  readonly month: number;
+  readonly month?: number;
   readonly day?: number;
   readonly time?: string;
 }
