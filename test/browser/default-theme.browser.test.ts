@@ -20,18 +20,26 @@ import {
 } from "../../src/ports/index.ts";
 
 const defaultTheme = join(import.meta.dirname, "..", "..", "themes", "default");
-const post = (title: string, date: string, body: string) =>
-  `---\ntitle: ${title}\ndate: ${date}\ndescription: About ${title.toLowerCase()}\ntags: [testing]\n---\n${body}`;
+const post = (
+  title: string,
+  date: string,
+  body: string,
+  description = `About ${title.toLowerCase()}`,
+) =>
+  `---\ntitle: ${title}\ndate: ${date}\ndescription: ${description}\ntags: [testing]\n---\n${body}`;
+
+/** A description long enough to need more than 4 lines in a card. */
+const LONG = "A long description with many words in it, ".repeat(8).trim();
 
 const files: Record<string, string> = {
   "gensane.config.mjs":
-    'export default { site: { title: "Ada Lovelace\'s notes", url: "https://example.com" } };\n',
+    'export default { site: { title: "Ada Lovelace\'s notes", url: "https://example.com" }, theme: { blog: { layout: "grid" } } };\n',
   "content/blog/2026-11-17-compilers.md": post(
     "Compilers",
     "2026-11-17",
     '```ts\nconst answer = 42; // the answer\nconst name = "Ada";\n```\n\n| Tool | Year | Since |\n| --- | :-: | --: |\n| pnpm | 2021 | 5 |\n',
   ),
-  "content/blog/2026-11-18-parsers.md": post("Parsers", "2026-11-18", "A note on parsing.\n"),
+  "content/blog/2026-11-18-parsers.md": post("Parsers", "2026-11-18", "A note on parsing.\n", LONG),
   "content/pages/about.md": "---\ntitle: About\n---\nHello.\n",
   "content/pages/callouts.md": `---\ntitle: Callouts\n---\n${[
     "NOTE",
@@ -42,9 +50,10 @@ const files: Record<string, string> = {
   ]
     .map((kind) => `> [!${kind}]\n> A ${kind.toLowerCase()}.\n`)
     .join("\n")}`,
-  "content/projects/lamp.md": "---\ntitle: Lamp\ndescription: A small lamp\n---\n",
+  "content/projects/lamp.md": `---\ntitle: Lamp\ndescription: ${LONG}\nstack: [Wood]\n---\n`,
   "content/projects/kettle.md":
-    "---\ntitle: Kettle\ndescription: A kettle with a picture\ncover: /cover.svg\n---\n",
+    "---\ntitle: Kettle\ndescription: A kettle with a picture\ncover: /cover.svg\nstack: [Steel]\n---\n",
+  "content/pages/tasks.md": "---\ntitle: Tasks\n---\n- [x] Done\n- [ ] Next\n",
   "public/cover.svg":
     '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 9"><rect width="16" height="9"/></svg>\n',
   "content/talks/meetup.md": "---\ntitle: A meetup talk\nevent: Meetup\ndate: 2026-10-01\n---\n",
@@ -108,6 +117,13 @@ async function open(path: string): Promise<Page> {
   });
   await page.goto(`${address}${path}`);
   return page;
+}
+
+/** Where the elements are on the page, in order. */
+async function boxesOf(page: Page, selector: string) {
+  return Promise.all(
+    (await page.locator(selector).all()).map(async (element) => await element.boundingBox()),
+  );
 }
 
 /** Where the parts of the header are, at a width of the window. */
@@ -215,15 +231,66 @@ describe("in a real browser", { timeout: 30_000 }, () => {
     expect(phone.searchBox).toBe(false);
   });
 
-  it("makes each card as tall as its own content, so one without a cover isn't stretched", async () => {
+  it.each(["/projects/", "/blog/"])(
+    "makes the cards of a row on %s as tall as each other",
+    async (path) => {
+      const page = await open(path);
+      const cards = await boxesOf(page, ".card, .posts-grid .post-item");
+      expect(cards).toHaveLength(2);
+      expect(cards[0]?.y).toBe(cards[1]?.y);
+      expect(cards[0]?.height).toBe(cards[1]?.height);
+      await page.context().close();
+    },
+  );
+
+  it("ends the stack and links of every project card in a row at the same height", async () => {
     const page = await open("/projects/");
-    const heights = await Promise.all(
-      (await page.locator(".card").all()).map(
-        async (card) => (await card.boundingBox())?.height ?? 0,
-      ),
+    // A footer can have one line or two, so their bottoms line up, not their tops.
+    const bottoms = (await boxesOf(page, ".card-footer")).map(
+      (box) => (box?.y ?? 0) + (box?.height ?? 0),
     );
-    expect(heights).toHaveLength(2);
-    expect(Math.abs((heights[0] ?? 0) - (heights[1] ?? 0))).toBeGreaterThan(50);
+    expect(bottoms).toHaveLength(2);
+    expect(bottoms[0]).toBe(bottoms[1]);
+    await page.context().close();
+  });
+
+  it.each([
+    ["/projects/", ".card p"],
+    ["/blog/", ".excerpt"],
+  ])("cuts a long text in a card on %s after 4 lines", async (path, selector) => {
+    const page = await open(path);
+    const texts = await page.evaluate<{ shown: number; whole: number; line: number }[]>(
+      `[...document.querySelectorAll("${selector}")]
+        .filter((text) => text.textContent.includes("A long description"))
+        .map((text) => ({
+          shown: text.clientHeight,
+          whole: text.scrollHeight,
+          line: parseFloat(getComputedStyle(text).lineHeight),
+        }))`,
+    );
+    expect(texts).toHaveLength(1);
+    const [{ shown, whole, line }] = texts as [(typeof texts)[number]];
+    expect(whole).toBeGreaterThan(shown);
+    expect(shown).toBeGreaterThan(3 * line);
+    expect(shown).toBeLessThanOrEqual(4 * line + 1);
+    await page.context().close();
+  });
+
+  it("puts a task's checkbox where the bullet would be, with no bullet", async () => {
+    const page = await open("/tasks/");
+    const task = await page.evaluate<{ bullet: string; item: number; box: number } | null>(
+      `(() => {
+        const item = document.querySelector("li.task-list-item");
+        if (item === null) return null;
+        return {
+          bullet: getComputedStyle(item).listStyleType,
+          item: item.getBoundingClientRect().left,
+          box: item.querySelector("input").getBoundingClientRect().left,
+        };
+      })()`,
+    );
+    expect(task?.bullet).toBe("none");
+    expect(task?.box).toBeLessThan(task?.item ?? 0);
     await page.context().close();
   });
 

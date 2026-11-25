@@ -111,6 +111,7 @@ async function build(
   drafts = false,
   siteSettings: Record<string, unknown> = SITE,
   today?: string,
+  moreContent: Record<string, string> = {},
 ): Promise<BuiltSite> {
   const read = await readSiteFolder(new NodeFileSystem(), site, defaultTheme);
   const built = buildSite({
@@ -121,7 +122,7 @@ async function build(
       drafts,
       ...(today === undefined ? {} : { today }),
     },
-    content: read.content,
+    content: { ...read.content, ...moreContent },
     templates: read.templates,
     publicFiles: read.publicFiles,
     themeAssets: read.themeAssets.map(({ path }) => path),
@@ -311,6 +312,20 @@ describe("the theme settings", () => {
     expect(searchPage).toContain('<form class="search-form" action="/search/" role="search">');
     expect(searchPage).toContain('<script type="module" src="/assets/search.js"></script>');
   });
+
+  it.each(["list", "grid"] as const)(
+    "shows a post's description in the %s of posts, or its first paragraph when it has none",
+    async (layout) => {
+      const built = await build({ blog: { layout } }, false, SITE, undefined, {
+        "blog/2026-11-20-plain.md": "---\ntitle: Plain\ndate: 2026-11-20\n---\nFirst.\n\nSecond.\n",
+      });
+      const list = pageOf(built, "blog/index.html");
+      expect(list).toContain('<div class="excerpt"><p>First.</p>');
+      expect(list).not.toContain("Second.");
+      expect(list).toContain('<div class="excerpt"><p>About Third</p></div>');
+      expect(list).not.toContain("<p>Third.</p>");
+    },
+  );
 
   it("marks the page the menu is on", async () => {
     expect(pageOf(await build(), "talks/index.html")).toContain(
