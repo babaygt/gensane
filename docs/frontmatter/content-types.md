@@ -2,16 +2,16 @@
 
 Each type of content has its own fields, defined in [`content-types.ts`](../../src/frontmatter/validation/content-types.ts).
 
-| Kind of value     | What to write                                                 |
-| ----------------- | ------------------------------------------------------------- |
-| Text              | Any text that isn't empty. A number needs quotes: `"1984"`    |
-| Date              | `2026-11-18`                                                  |
-| Month or date     | `2024-06` or `2024-06-15`                                     |
-| Date or `present` | A month, a date, or the word `present`                        |
-| Web address       | `https://example.com`, or `/about` for a page on this site    |
-| True or false     | `true` or `false`                                             |
-| Whole number      | `3`                                                           |
-| List of text      | `[TypeScript, Node]`                                          |
+| Kind of value       | What to write                                              |
+| ------------------- | ---------------------------------------------------------- |
+| Text                | Any text that isn't empty. A number needs quotes: `"1984"` |
+| Date                | `2026-11-18`                                               |
+| Year, month or date | `2018`, `2024-06` or `2024-06-15`                          |
+| Date or `present`   | A year, a month, a date, or the word `present`             |
+| Web address         | `https://example.com`, or `/about` for a page on this site |
+| True or false       | `true` or `false`                                          |
+| Whole number        | `3`                                                        |
+| List of text        | `[TypeScript, Node]`                                       |
 
 ## `post`
 
@@ -129,20 +129,22 @@ role: Software Engineer
 start: 2024-06
 end: present
 location: Berlin
+note: Part-time
 stack: [Go, PostgreSQL]
 order: 1
 ---
 ```
 
-| Field      | Required | Kind of value     | When left out |
-| ---------- | -------- | ----------------- | ------------- |
-| `company`  | Yes      | Text              |               |
-| `role`     | Yes      | Text              |               |
-| `start`    | Yes      | Month or date     |               |
-| `end`      | No       | Date or `present` | `present`     |
-| `location` | No       | Text              | Empty         |
-| `stack`    | No       | List of text      | Empty list    |
-| `order`    | No       | Whole number      | Empty         |
+| Field      | Required | Kind of value       | When left out |
+| ---------- | -------- | ------------------- | ------------- |
+| `company`  | Yes      | Text                |               |
+| `role`     | Yes      | Text                |               |
+| `start`    | Yes      | Year, month or date |               |
+| `end`      | No       | Date or `present`   | `present`     |
+| `location` | No       | Text                | Empty         |
+| `note`     | No       | Text                | Empty         |
+| `stack`    | No       | List of text        | Empty list    |
+| `order`    | No       | Whole number        | Empty         |
 
 ## `education`
 
@@ -159,15 +161,16 @@ order: 1
 ---
 ```
 
-| Field      | Required | Kind of value     | When left out |
-| ---------- | -------- | ----------------- | ------------- |
-| `school`   | Yes      | Text              |               |
-| `degree`   | Yes      | Text              |               |
-| `field`    | No       | Text              | Empty         |
-| `start`    | Yes      | Month or date     |               |
-| `end`      | No       | Date or `present` | `present`     |
-| `location` | No       | Text              | Empty         |
-| `order`    | No       | Whole number      | Empty         |
+| Field      | Required | Kind of value       | When left out |
+| ---------- | -------- | ------------------- | ------------- |
+| `school`   | Yes      | Text                |               |
+| `degree`   | Yes      | Text                |               |
+| `field`    | No       | Text                | Empty         |
+| `start`    | Yes      | Year, month or date |               |
+| `end`      | No       | Date or `present`   | `present`     |
+| `location` | No       | Text                | Empty         |
+| `note`     | No       | Text                | Empty         |
+| `order`    | No       | Whole number        | Empty         |
 
 ## Rules that apply to every type
 
@@ -175,7 +178,8 @@ order: 1
 
 **Text must be text.** `title: 1984` is an error rather than a quiet conversion, and the hint shows the quotes to add.
 
-**An end can't come before the start.** Days are only compared when both dates have one, so a job from `2024-06-15` to `2024-06` is allowed.
+**An end can't come before the start.** Months and days are only compared when both dates have them, so a job from `2024-06-15` to
+`2024-06`, or from `2018-09` to `2018`, is allowed.
 
 **`slug` sets the URL.** Posts, pages and projects get their URL from the file name, and `slug: my-post` replaces it. A slug can only
 use lowercase letters, digits and single dashes.

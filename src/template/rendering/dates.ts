@@ -24,25 +24,36 @@ function twoDigits(number: number): string {
   return String(number).padStart(2, "0");
 }
 
+/** A year alone has no month; a template shows it with "yyyy". */
+function monthOf(date: TemplateDate, letters: string): number {
+  if (date.month === undefined) {
+    throw new FilterError(
+      `this date is only a year, so it has no month for "${letters}"`,
+      'use "yyyy" alone, or check the date\'s `month` first',
+    );
+  }
+  return date.month;
+}
+
 /** Every other letter is a mistake rather than text, so that `Today` never becomes `To18ay`. */
 function datePart(date: TemplateDate, letters: string): string {
-  const monthName = MONTHS[date.month - 1] ?? "";
   switch (letters) {
     case "yyyy":
       return String(date.year).padStart(4, "0");
     case "M":
-      return String(date.month);
+      return String(monthOf(date, letters));
     case "MM":
-      return twoDigits(date.month);
+      return twoDigits(monthOf(date, letters));
     case "MMM":
-      return monthName.slice(0, 3);
+      return (MONTHS[monthOf(date, letters) - 1] ?? "").slice(0, 3);
     case "MMMM":
-      return monthName;
+      return MONTHS[monthOf(date, letters) - 1] ?? "";
     case "d":
     case "dd":
       if (date.day === undefined) {
+        const only = date.month === undefined ? "a year" : "a month";
         throw new FilterError(
-          `this date is only a month, so it has no day for "${letters}"`,
+          `this date is only ${only}, so it has no day for "${letters}"`,
           'use a format without the day, such as "MMMM yyyy"',
         );
       }

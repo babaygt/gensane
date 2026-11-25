@@ -30,11 +30,11 @@ export function ownField(object: unknown, key: string | number): unknown {
   return Object.hasOwn(object, key) ? Reflect.get(object, key) : undefined;
 }
 
-/** A date from frontmatter: the text as it was written, and its parts. */
+/** A date from frontmatter: the text as it was written, and its parts. A year alone has no month. */
 export interface TemplateDate {
   readonly text: string;
   readonly year: number;
-  readonly month: number;
+  readonly month?: number;
   readonly day?: number;
   readonly time?: string;
 }
@@ -49,26 +49,24 @@ export function asDate(value: unknown): TemplateDate | undefined {
   const isDate =
     typeof text === "string" &&
     isWholeNumber(year) &&
-    isWholeNumber(month) &&
-    month >= 1 &&
-    month <= 12 &&
-    (day === undefined || isWholeNumber(day)) &&
+    (month === undefined || (isWholeNumber(month) && month >= 1 && month <= 12)) &&
+    (day === undefined || (month !== undefined && isWholeNumber(day))) &&
     (time === undefined || typeof time === "string");
   if (!isDate) return undefined;
   return {
     text,
     year,
-    month,
+    ...(month === undefined ? {} : { month }),
     ...(day === undefined ? {} : { day }),
     ...(time === undefined ? {} : { time }),
   };
 }
 
-/** A month comes before the days in it, because it has no day. */
+/** A year comes before the months in it, and a month before the days in it. */
 export function compareDates(first: TemplateDate, second: TemplateDate): number {
   const parts = [
     first.year - second.year,
-    first.month - second.month,
+    (first.month ?? 0) - (second.month ?? 0),
     (first.day ?? 0) - (second.day ?? 0),
   ];
   const difference = parts.find((part) => part !== 0);

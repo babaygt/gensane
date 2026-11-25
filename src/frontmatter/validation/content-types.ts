@@ -102,6 +102,8 @@ const experience = withRule(
     start: monthOrDate(),
     end: withDefault(dateOrPresent(), "present"),
     location: optional(text()),
+    /** One line after the dates and the place, such as "Part-time". */
+    note: optional(text()),
     stack: tags(),
     order: optional(integer()),
   }),
@@ -116,6 +118,8 @@ const education = withRule(
     start: monthOrDate(),
     end: withDefault(dateOrPresent(), "present"),
     location: optional(text()),
+    /** One line after the dates and the place, such as "Incomplete". */
+    note: optional(text()),
     order: optional(integer()),
   }),
   endsAfterStart,

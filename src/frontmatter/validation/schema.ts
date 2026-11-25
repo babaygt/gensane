@@ -152,8 +152,10 @@ function toContentDate({ text: dateText, year, month, day, time }: DateValue): C
 const NUMERIC_DATE = /^(\d{1,2})[-/.](\d{1,2})[-/.](\d{4})$/;
 
 /** Only suggests a date that exists, when it is clear which number is the day. */
-function dateHint(written: string): string {
-  const fallback = "write the date as YYYY-MM-DD, with the year first";
+function dateHint(
+  written: string,
+  fallback = "write the date as YYYY-MM-DD, with the year first",
+): string {
   const match = NUMERIC_DATE.exec(written);
   if (match === null) return fallback;
   const first = Number(match[1]);
@@ -189,22 +191,62 @@ export function fullDate(): Schema<ContentDate> {
   };
 }
 
-/** A date or just a month, as used for the start and end of a job. */
+const YEAR = /^\d{4}$/;
+
+/** `2018`, which YAML reads as a number, or `"2018"` in quotes. */
+function yearOf(value: FrontmatterValue): ContentDate | undefined {
+  const written =
+    value.kind === "number" ? String(value.value) : value.kind === "string" ? value.value : "";
+  return YEAR.test(written) ? { text: written, year: Number(written) } : undefined;
+}
+
+/** For a start or an end: lists the forms it takes, unless the text is clearly a date in another order. */
+function notAYearOrDate(
+  value: FrontmatterValue,
+  path: string,
+  expected: string,
+  forms: string,
+): Checked<never> {
+  const hint = `write it as ${forms}`;
+  return wrongType(
+    value,
+    path,
+    expected,
+    value.kind === "string" ? dateHint(value.value, hint) : hint,
+  );
+}
+
+/** A date, a month or a year alone, as used for the start and end of a job. */
 export function monthOrDate(): Schema<ContentDate> {
   return {
     check(value, path) {
-      return value.kind === "date" ? pass(toContentDate(value)) : notADate(value, path, "a date");
+      if (value.kind === "date") return pass(toContentDate(value));
+      const year = yearOf(value);
+      if (year !== undefined) return pass(year);
+      return notAYearOrDate(
+        value,
+        path,
+        "a year, a month or a date",
+        "2018, 2018-09 or 2018-09-01",
+      );
     },
   };
 }
 
-/** A date or month, or the word `present` for something that is still going on. */
+/** A date, a month or a year, or the word `present` for something that is still going on. */
 export function dateOrPresent(): Schema<ContentDate | "present"> {
   return {
     check(value, path) {
       if (value.kind === "date") return pass(toContentDate(value));
       if (value.kind === "string" && value.value === "present") return pass("present");
-      return notADate(value, path, 'a date or "present"');
+      const year = yearOf(value);
+      if (year !== undefined) return pass(year);
+      return notAYearOrDate(
+        value,
+        path,
+        'a year, a month, a date or "present"',
+        "2018, 2018-09, 2018-09-01 or present",
+      );
     },
   };
 }
