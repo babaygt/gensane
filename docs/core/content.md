@@ -77,7 +77,8 @@ Two files that end up at the same URL are an error, reported at the second one i
 The body is compiled by the [Markdown compiler](../markdown-compiler/README.md), with the Markdown settings of the config. Warnings
 about it point at the right line of the file, below the frontmatter.
 
-**Excerpt.** Everything before a `<!-- more -->` line, or else the first paragraph. List pages often show it.
+**Excerpt.** Everything before a `<!-- more -->` line, or else the first paragraph. The default theme shows it in lists of posts
+when a post has no `description`.
 
 **Reading time.** The words of the text divided by 200, rounded up, and at least 1 minute. Tags and attributes aren't counted.
 

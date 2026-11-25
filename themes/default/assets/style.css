@@ -324,6 +324,16 @@ td {
   text-align: right;
 }
 
+/* A task's checkbox takes the place of the bullet. */
+.task-list-item {
+  list-style: none;
+}
+
+.task-list-item input {
+  margin: 0 0.4em 0 -1.4em;
+  accent-color: var(--accent);
+}
+
 /* Code */
 
 code,
@@ -492,8 +502,12 @@ pre {
   margin: 0.25rem 0;
 }
 
-.excerpt > :first-child {
+.excerpt {
   margin-top: 0.5rem;
+}
+
+.excerpt > :first-child {
+  margin-top: 0;
 }
 
 .excerpt > :last-child {
@@ -504,12 +518,14 @@ pre {
 .cards {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
-  align-items: start;
   gap: 1rem;
 }
 
+/* The cards of a row are as tall as the tallest, and what ends a card sits at its bottom. */
 .posts-grid .post-item,
 .card {
+  display: flex;
+  flex-direction: column;
   padding: 1.25rem;
   border: 1px solid var(--border);
   border-radius: 12px;
@@ -521,7 +537,17 @@ pre {
   flex-wrap: wrap;
   align-items: center;
   gap: 0.5rem 0.75rem;
-  margin-top: 0.75rem;
+  margin-top: auto;
+  padding-top: 0.75rem;
+}
+
+/* A card shows at most 4 lines of its text. */
+.posts-grid .excerpt,
+.card > p {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 4;
+  overflow: hidden;
 }
 
 .status {

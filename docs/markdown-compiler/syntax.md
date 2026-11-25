@@ -88,9 +88,9 @@ const answer = 42;
 ```
 
 ```html
-<ul>
-<li><input checked="" disabled="" type="checkbox" /> Written</li>
-<li><input disabled="" type="checkbox" /> Published</li>
+<ul class="contains-task-list">
+<li class="task-list-item"><input checked="" disabled="" type="checkbox" /> Written</li>
+<li class="task-list-item"><input disabled="" type="checkbox" /> Published</li>
 </ul>
 ```
 

@@ -50,8 +50,12 @@ function renderBlock(block: Block): string {
     case "list": {
       const tag = block.ordered ? "ol" : "ul";
       const start = block.ordered && block.start !== 1 ? ` start="${block.start}"` : "";
+      // GitHub's classes for task lists, so a theme can put the checkbox where the bullet was.
+      const tasks = block.items.some((item) => item.checked !== undefined)
+        ? ' class="contains-task-list"'
+        : "";
       const items = block.items.map((item) => renderListItem(item, block.tight)).join("");
-      return `<${tag}${start}>\n${items}</${tag}>\n`;
+      return `<${tag}${start}${tasks}>\n${items}</${tag}>\n`;
     }
     case "table":
       return renderTable(block);
@@ -86,7 +90,7 @@ function renderCheckbox(checked: boolean): string {
 function renderListItem(item: ListItem, tight: boolean): string {
   // A task's checkbox goes in front of the text of its first paragraph.
   let checkbox = item.checked === undefined ? "" : renderCheckbox(item.checked);
-  let html = "<li>";
+  let html = item.checked === undefined ? "<li>" : '<li class="task-list-item">';
   for (const child of item.children) {
     if (child.kind === "paragraph") {
       const content = `${checkbox}${renderText(child)}`;
