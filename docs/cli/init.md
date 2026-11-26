@@ -73,6 +73,14 @@ export default defineConfig({
   theme: {
     palette: "default",
   },
+  // The menu, in this order. Without nav, it has the blog, projects, talks and about pages the site has.
+  // nav: [
+  //   { title: "Blog", url: "/blog/" },
+  //   { title: "Projects", url: "/projects/" },
+  //   { title: "Talks", url: "/talks/" },
+  //   { title: "About", url: "/about/" },
+  //   { title: "GitHub", url: "https://github.com/" },
+  // ],
 });
 ```
 

@@ -2,6 +2,7 @@
 import { SafeHtml } from "../../template/index.ts";
 import type { ContentDate } from "../../frontmatter/index.ts";
 import type { ContentEntry } from "../content/entries.ts";
+import type { NavItem } from "./build-site.ts";
 import type { Collections } from "../site/collections.ts";
 import type { Theme } from "../theme/theme-settings.ts";
 import { compareDates } from "../site/order.ts";
@@ -36,6 +37,25 @@ export interface VariableSources {
   readonly favicon: string | undefined;
   /** The day of the build, as `YYYY-MM-DD`, when it is known. */
   readonly today: string | undefined;
+  /** The menu from the config, if it has one. */
+  readonly nav: readonly NavItem[] | undefined;
+}
+
+/** `/uses` → `/uses/`, as the page's own address is written. A file, such as `/cv.pdf`, stays as it is. */
+function pageAddress(url: string): string {
+  if (!url.startsWith("/") || url.startsWith("//") || /[?#]/.test(url)) return url;
+  const last = url.slice(url.lastIndexOf("/") + 1);
+  return last === "" || last.includes(".") ? url : `${url}/`;
+}
+
+/**
+ * `"page"` on the item's own page, `"true"` on the pages below it, as `aria-current` says it.
+ * The home page is above every page, so only its own page marks it. An address on another site is
+ * never a page's address, nor the start of one, so it is never marked.
+ */
+function currentOf(item: string, page: string): "page" | "true" | false {
+  if (item === page) return "page";
+  return item !== "/" && page.startsWith(item) ? "true" : false;
 }
 
 /**
@@ -51,7 +71,10 @@ function dateOf(day: string): ContentDate {
 export class TemplateVariables {
   readonly #site: TemplateData;
   readonly #theme: TemplateData;
-  readonly #navigation: readonly TemplateData[];
+  readonly #navigation: readonly NavItem[];
+  /** The addresses of the menu, which the build checks like links, for the ones a config writes. */
+  readonly menuUrls: readonly string[];
+  readonly #lists: TemplateData;
   readonly #feed: string | undefined;
   readonly #search: string | undefined;
   readonly #favicon: string | undefined;
@@ -59,17 +82,22 @@ export class TemplateVariables {
   readonly #pages = new Map<ContentEntry, TemplateData>();
   readonly #collections: TemplateData;
 
-  constructor({ site, theme, collections, routes, feed, favicon, today }: VariableSources) {
+  constructor({ site, theme, collections, routes, feed, favicon, today, nav }: VariableSources) {
     this.#favicon = favicon;
     this.#today = today === undefined ? undefined : dateOf(today);
     this.#search = routes.find((route) => route.kind === "search")?.url;
     this.#site = site;
     this.#theme = { ...theme };
     this.#feed = feed;
-    this.#navigation = NAVIGATION.flatMap((kind) => {
-      const route = routes.find((found) => found.kind === kind);
-      return route === undefined ? [] : [{ title: DEFAULT_TITLES[kind], url: route.url }];
-    });
+    const urlOf = (kind: RouteKind) => routes.find((found) => found.kind === kind)?.url;
+    this.#navigation =
+      nav?.map(({ title, url }) => ({ title, url: pageAddress(url) })) ??
+      NAVIGATION.flatMap((kind) => {
+        const url = urlOf(kind);
+        return url === undefined ? [] : [{ title: DEFAULT_TITLES[kind] ?? kind, url }];
+      });
+    this.menuUrls = this.#navigation.map(({ url }) => url);
+    this.#lists = { blog: urlOf("blog"), projects: urlOf("projects"), talks: urlOf("talks") };
     this.#collections = {
       posts: collections.posts.map((entry) => this.#page(entry)),
       projects: collections.projects.map((entry) => this.#page(entry)),
@@ -86,7 +114,11 @@ export class TemplateVariables {
     return {
       site: this.#site,
       theme: this.#theme,
-      navigation: this.#navigation,
+      navigation: this.#navigation.map((item) => ({
+        ...item,
+        current: currentOf(item.url, route.url),
+      })),
+      lists: this.#lists,
       feed: this.#feed,
       search: this.#search,
       favicon: this.#favicon,

@@ -14,7 +14,8 @@ when there is nothing, so `{% if previous %}` works on every page.
 | `page`        | Every page   | The page itself                                                                    |
 | `collections` | Every page   | `posts`, `projects`, `talks`, `experience`, `education`, `pages` and `tags`        |
 | `theme`       | Every page   | The [theme settings](https://gensane.dev/docs/reference/commands/config/#theme), with every default filled in           |
-| `navigation`  | Every page   | The blog, projects, talks and about pages the site has, each with `title` and `url` |
+| `navigation`  | Every page   | The menu: [`nav`](https://gensane.dev/docs/reference/commands/config/#nav) from the config, or else the blog, projects, talks and about pages the site has. Each item has `title`, `url`, and `current`: `"page"` on its own page, `"true"` on the pages below it, else `false` |
+| `lists`       | Every page   | The addresses of the lists the site has, whatever the menu is: `blog`, `projects` and `talks`           |
 | `feed`        | Every page   | The address of the feed, `/feed.xml`, when the site has one                        |
 | `search`      | Every page   | The address of the search page, `/search/`, when the site has one                  |
 | `favicon`     | Every page   | The address of the site's icon: its own `favicon.svg` or `favicon.ico` in `public/`, or else one made from the first letter of `site.title` |

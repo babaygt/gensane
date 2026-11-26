@@ -153,7 +153,7 @@ hr {
   color: var(--text);
 }
 
-.site-menu a[aria-current="page"] {
+.site-menu a[aria-current] {
   color: var(--accent);
   border-bottom-color: var(--accent);
 }

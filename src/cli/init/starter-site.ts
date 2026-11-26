@@ -53,7 +53,15 @@ function packageJson({ version, folderName }: Details): string {
   return `${JSON.stringify(json, null, 2)}\n`;
 }
 
-function config({ title, author, url, palette }: Answers): string {
+/** The menu `init` would make, as a comment to start from. */
+const MENU_EXAMPLE: Readonly<Record<Section, string>> = {
+  blog: '{ title: "Blog", url: "/blog/" }',
+  projects: '{ title: "Projects", url: "/projects/" }',
+  talks: '{ title: "Talks", url: "/talks/" }',
+  about: '{ title: "About", url: "/about/" }',
+};
+
+function config({ title, author, url, palette, sections }: Answers): string {
   const site = [
     `    title: ${quoted(title)},`,
     url === ""
@@ -71,6 +79,13 @@ function config({ title, author, url, palette }: Answers): string {
     "  theme: {",
     `    palette: ${quoted(palette)},`,
     "  },",
+    "  // The menu, in this order. Without nav, it has the blog, projects, talks and about pages the site has.",
+    "  // nav: [",
+    ...SECTIONS.filter((section) => sections.includes(section)).map(
+      (section) => `  //   ${MENU_EXAMPLE[section]},`,
+    ),
+    '  //   { title: "GitHub", url: "https://github.com/" },',
+    "  // ],",
     "});",
     "",
   ].join("\n");

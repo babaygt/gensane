@@ -19,7 +19,10 @@ export interface CheckedConfig {
   readonly warnings: readonly Diagnostic[];
 }
 
-const SETTINGS = ["site", "perPage", "markdown", "filters", "theme", "llms"];
+const SETTINGS = ["site", "perPage", "markdown", "filters", "theme", "llms", "nav"];
+const NAV_ITEM_SETTINGS = ["title", "url"];
+/** A page of the site, or an address on another site; a relative address has no page to start from. */
+const NAV_URL = /^(?:\/|https:\/\/|http:\/\/|mailto:)/;
 const SITE_SETTINGS = ["title", "url", "description", "author"];
 /** The profiles the default theme shows as icons. Known here, so a misspelled one gets a warning. */
 const PROFILES = ["github", "gitlab", "codeberg", "mastodon", "bluesky", "linkedin", "email"];
@@ -289,6 +292,44 @@ class ConfigCheck {
     }
   }
 
+  /** The menu: whether each page of the site is there is checked by the build, which knows the pages. */
+  nav(value: unknown): void {
+    if (!Array.isArray(value)) {
+      const hint = 'write a list, such as [{ title: "Uses", url: "/uses/" }]';
+      this.wrongValue("nav", "a list", value, hint);
+      return;
+    }
+    value.forEach((item: unknown, index) => {
+      const path = `nav[${index}]`;
+      if (!isGroup(item)) {
+        this.wrongValue(
+          path,
+          "a group of settings",
+          item,
+          'write { title: "Uses", url: "/uses/" }',
+        );
+        return;
+      }
+      this.text(`${path}.title`, item["title"]);
+      const url = item["url"];
+      if (typeof url !== "string" || !NAV_URL.test(url)) {
+        this.wrongValue(
+          `${path}.url`,
+          'an address that starts with "/", "https://", "http://" or "mailto:"',
+          url,
+          'start it with "/" for a page of this site, such as "/uses/"',
+        );
+      }
+      for (const name of Object.keys(item).filter((key) => !NAV_ITEM_SETTINGS.includes(key)))
+        this.unknownSetting(
+          `${path}.${name}`,
+          name,
+          NAV_ITEM_SETTINGS,
+          `the settings of an item of nav are ${listed(NAV_ITEM_SETTINGS)}`,
+        );
+    });
+  }
+
   filters(value: unknown): void {
     if (!this.group("filters", value)) return;
     for (const [name, filter] of Object.entries(value)) {
@@ -330,6 +371,7 @@ export function checkConfig(
     else if (name === "filters") check.filters(setting);
     else if (name === "theme") check.theme(setting);
     else if (name === "llms") check.trueOrFalse("llms", setting);
+    else if (name === "nav") check.nav(setting);
     else check.unknownSetting(name, name, SETTINGS, `the settings are ${listed(SETTINGS)}`);
   }
   if (hasErrors(check.problems)) return err(check.problems);
