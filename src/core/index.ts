@@ -24,6 +24,7 @@ export {
 } from "./site/site-graph.ts";
 export {
   type BuiltSite,
+  type NavItem,
   type OutputFile,
   type SiteConfig,
   type SiteInput,

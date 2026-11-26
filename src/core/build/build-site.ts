@@ -50,6 +50,14 @@ export interface SiteConfig {
   readonly configFile?: string;
   /** The day of the build, as `YYYY-MM-DD`, which templates see as `today`. */
   readonly today?: string;
+  /** The menu, in this order, instead of the one made from the pages the site has. */
+  readonly nav?: readonly NavItem[];
+}
+
+/** One item of the menu: a page of the site, such as `/uses/`, or an address on another site. */
+export interface NavItem {
+  readonly title: string;
+  readonly url: string;
 }
 
 export interface SiteInput {

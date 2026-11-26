@@ -1,4 +1,4 @@
-import type { ThemeSettings } from "../core/index.ts";
+import type { NavItem, ThemeSettings } from "../core/index.ts";
 import type { MarkdownOptions } from "../markdown/index.ts";
 import type { TemplateFilter } from "../template/index.ts";
 
@@ -15,6 +15,11 @@ export interface GensaneConfig {
   readonly theme?: ThemeSettings;
   /** Write `llms.txt` and a Markdown copy of each page, for AI tools. Defaults to `false`. */
   readonly llms?: boolean;
+  /**
+   * The menu, in this order. An address on the site starts with `/`, such as `/uses/`; another site's
+   * with `https://`. Without it, the menu has the blog, projects, talks and about pages the site has.
+   */
+  readonly nav?: readonly NavItem[];
 }
 
 export interface SiteSettings {
