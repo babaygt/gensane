@@ -446,6 +446,12 @@ describe("code gensane doesn't color", () => {
     const draft = { "blog/a.md": post("2026-01-01", "draft: true\n", fence("zig")) };
     expect(checkWarningsOf({ content: draft }).checkWarnings).toEqual([]);
   });
+
+  it("counts drafts when they are built, with --drafts", () => {
+    const draft = { "blog/a.md": post("2026-01-01", "draft: true\n", fence("zig")) };
+    const config = { drafts: true };
+    expect(checkWarningsOf({ content: draft, config }).checkWarnings).toHaveLength(1);
+  });
 });
 
 describe("problems", () => {
