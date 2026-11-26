@@ -619,6 +619,86 @@ describe("navigation and the feed", () => {
     );
   });
 
+  it("uses the menu of the config instead, in its order, with /uses read as /uses/", () => {
+    const content = {
+      "blog/a.md": minimal.post,
+      "talks/a.md": minimal.talk,
+      "pages/uses.md": "---\ntitle: Uses\n---\n",
+    };
+    const nav = [
+      { title: "Uses", url: "/uses" },
+      { title: "Writing", url: "/blog/" },
+      { title: "CV", url: "https://example.com/cv.pdf" },
+    ];
+    expect(fileOf(built({ content, templates, config: { nav } }), "index.html")).toBe(
+      "Uses /uses/;Writing /blog/;CV https://example.com/cv.pdf; no feed",
+    );
+  });
+
+  it("marks the item of the page, and of the pages below it, but never another site", () => {
+    const current = "{% for item in navigation %}{{ item.title }}:{{ item.current }};{% endfor %}";
+    const nav = [
+      { title: "Home", url: "/" },
+      { title: "Writing", url: "/blog/" },
+      { title: "CV", url: "https://example.com/blog/" },
+    ];
+    const site = built({
+      content: { "blog/a.md": minimal.post },
+      templates: {
+        ...plainTheme,
+        "home.html": current,
+        "blog.html": current,
+        "post.html": current,
+      },
+      config: { nav },
+    });
+    expect(fileOf(site, "index.html")).toBe("Home:page;Writing:false;CV:false;");
+    expect(fileOf(site, "blog/index.html")).toBe("Home:false;Writing:page;CV:false;");
+    expect(fileOf(site, "blog/a/index.html")).toBe("Home:false;Writing:true;CV:false;");
+  });
+
+  it("marks the blog of the menu made from the site on a post too", () => {
+    const current = "{% for item in navigation %}{{ item.title }}:{{ item.current }};{% endfor %}";
+    const site = built({
+      content: { "blog/a.md": minimal.post },
+      templates: { ...plainTheme, "post.html": current },
+    });
+    expect(fileOf(site, "blog/a/index.html")).toBe("Blog:true;");
+  });
+
+  it("gives the addresses of the lists the site has, whatever the menu is", () => {
+    const content = { "blog/a.md": minimal.post, "talks/a.md": minimal.talk };
+    const lists = "{{ lists.blog }}|{{ lists.projects }}|{{ lists.talks }}";
+    const site = built({
+      content,
+      templates: { ...plainTheme, "home.html": lists },
+      config: { nav: [{ title: "Talks", url: "/talks/" }] },
+    });
+    expect(fileOf(site, "index.html")).toBe("/blog/||/talks/");
+  });
+
+  it("checks that each page of the menu is there, and points at the config", () => {
+    const result = buildSite({
+      content: { "pages/uses.md": "---\ntitle: Uses\n---\n" },
+      templates: plainTheme,
+      config: {
+        site: { url: "https://example.com" },
+        nav: [
+          { title: "Uses", url: "/usses/" },
+          { title: "Elsewhere", url: "https://example.com/nowhere/" },
+        ],
+      },
+    });
+    expect(result.ok ? [] : result.error).toMatchObject([
+      {
+        code: CoreCodes.brokenLink,
+        message: '"/usses/" doesn\'t lead to a page or a file of the site',
+        hint: 'did you mean "/uses/"?',
+        span: { file: "gensane.config.ts" },
+      },
+    ]);
+  });
+
   it("lists nothing for a site with nothing to list", () => {
     expect(fileOf(built({ content: {}, templates }), "index.html")).toBe(" no feed");
   });

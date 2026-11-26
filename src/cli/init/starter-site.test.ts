@@ -26,10 +26,26 @@ describe("starterSite", () => {
         "  theme: {",
         '    palette: "nord",',
         "  },",
+        "  // The menu, in this order. Without nav, it has the blog, projects, talks and about pages the site has.",
+        "  // nav: [",
+        '  //   { title: "Blog", url: "/blog/" },',
+        '  //   { title: "Projects", url: "/projects/" },',
+        '  //   { title: "Talks", url: "/talks/" },',
+        '  //   { title: "About", url: "/about/" },',
+        '  //   { title: "GitHub", url: "https://github.com/" },',
+        "  // ],",
         "});",
         "",
       ].join("\n"),
     );
+  });
+
+  it("shows an example of the menu with only the parts chosen", () => {
+    const config = starterSite({ ...answers, sections: ["talks"] }, details)["gensane.config.ts"];
+    expect(config).toContain(
+      '  //   { title: "Talks", url: "/talks/" },\n  //   { title: "GitHub"',
+    );
+    expect(config).not.toContain("/blog/");
   });
 
   it("leaves out the author, and shows where the address goes, when they aren't known", () => {
