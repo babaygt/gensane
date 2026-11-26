@@ -97,6 +97,10 @@ misspelled field of its type gets a warning.
 
 [references/content-types.md](references/content-types.md) has every field, its kind of value and its default.
 
+A folder in `pages/`, such as `pages/notes/`, is a section: in the default theme, its `index.md` lists the folder's pages, and
+each page links back to the folder and to the previous and next page. `toc: false` in a post or a page leaves out its table of
+contents.
+
 A post:
 
 ```markdown

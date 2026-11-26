@@ -191,9 +191,34 @@ Docs / Start
 ← Docs | Guides →
 ```
 
-The default theme is made for blogs and portfolios, so it shows the pages of a section as plain pages. A layout for documentation is a
-few templates of a site's own: gensane.dev's documentation, in the repository's `website/theme/`, is one, with a sidebar, breadcrumbs
-and the previous and next page.
+A folder's own page also gets `folder`, the folder as in `section`, so it can list what is in it:
+
+<!-- builds -->
+```markdown pages/notes/index.md
+---
+title: Notes
+---
+```
+
+```markdown pages/notes/reading.md
+---
+title: Reading list
+description: Books I liked
+---
+```
+
+```jinja page.html
+{% for item in folder.items %}{{ item.title }}: {{ item.description }}{% endfor %}
+```
+
+```html notes/index.html
+Reading list: Books I liked
+```
+
+The default theme shows the folder a page is in above its title, as a link back, and the previous and next page at the end; a
+folder's own page lists what is in it after its text. It has no sidebar, since it is made for blogs and portfolios. A layout for
+documentation is a few templates of a site's own: gensane.dev's documentation, in the repository's `website/theme/`, is one, with a
+sidebar, breadcrumbs and the previous and next page.
 
 ## Sites under a path
 

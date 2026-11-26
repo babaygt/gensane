@@ -1,9 +1,24 @@
 {% extends "base.html" %}
 {% block content %}
 <article>
-<h1>{{ page.title }}{% if page.draft %} <span class="draft">Draft</span>{% endif %}</h1>
+{% for crumb in breadcrumbs %}{% if loop.last %}<p class="meta">{% if crumb.url %}<a href="{{ crumb.url }}">{{ crumb.title }}</a>{% else %}{{ crumb.title }}{% endif %}</p>
+{% endif %}{% endfor %}<h1>{{ page.title }}{% if page.draft %} <span class="draft">Draft</span>{% endif %}</h1>
+{% include "partials/toc.html" %}
 <div class="content">
 {{ page.html }}
 </div>
-</article>
+{% if folder.items %}<ul class="posts">
+{% for item in folder.items %}<li class="post-item">
+<h2>{% if item.url %}<a href="{{ item.url }}">{{ item.title }}</a>{% else %}{{ item.title }}{% endif %}</h2>
+{% if item.description %}<p class="meta">{{ item.description }}</p>
+{% endif %}{% if item.items and not item.url %}<ul>
+{% for inner in item.items %}<li>{% if inner.url %}<a href="{{ inner.url }}">{{ inner.title }}</a>{% else %}{{ inner.title }}{% endif %}</li>
+{% endfor %}</ul>
+{% endif %}</li>
+{% endfor %}</ul>
+{% endif %}{% if previous or next %}<nav class="neighbours" aria-label="More pages">
+{% if previous %}<a class="neighbour" href="{{ previous.url }}" rel="prev"><span class="meta">← Previous</span>{{ previous.title }}</a>{% endif %}
+{% if next %}<a class="neighbour neighbour-next" href="{{ next.url }}" rel="next"><span class="meta">Next →</span>{{ next.title }}</a>{% endif %}
+</nav>
+{% endif %}</article>
 {% endblock %}

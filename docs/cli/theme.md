@@ -13,6 +13,8 @@ changed with the [`theme` settings](config.md#theme), and any part of it can be 
 - **The home page:** the author's name, picture (`site.author.avatar`) and profile links, then the parts of the settings.
 - **Posts:** the date, the reading time, the tags, a table of contents when the post has at least 3 headings, and at the end the
   tags again with the older and the newer post. Code blocks get their language as a label and a copy button.
+- **Pages:** a table of contents, as on posts. A page in a [section](../core/site.md#sections) shows its folder above the title,
+  as a link back, and the previous and next page at the end; a folder's own page lists what is in it.
 - **Lists:** posts as a list or as cards with their cover image; projects as cards with their status and links; talks with their
   date beside them and buttons for slides and video; experience as a timeline.
 - **Drafts:** a "Draft" label, which only [`gensane dev`](dev.md) shows.
@@ -102,7 +104,7 @@ Arguments:
 | `partials/talk.html`            | One talk, with buttons for its slides and video                            |
 | `partials/profiles.html`        | Icon links to the profiles in `site`, on the home page and in the footer   |
 | `partials/tags.html`            | The tags of a post                                                         |
-| `partials/toc.html`             | The table of contents of a post                                            |
+| `partials/toc.html`             | The table of contents of a post or a page                                  |
 | `partials/period.html`          | When a job or a study started and ended                                    |
 | `assets/style.css`              | The styles, which use the custom properties of `assets/settings.css`      |
 | `assets/theme.js`               | The switch between light and dark, and the label and copy button of code   |

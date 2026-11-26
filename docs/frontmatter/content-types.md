@@ -39,6 +39,9 @@ cover: /images/compiler.png
 | `draft`       | No       | True or false | `false`       |
 | `cover`       | No       | Text          | Empty         |
 | `coverAlt`    | No       | Text          | Empty         |
+| `toc`         | No       | True or false | `true`        |
+
+`toc: false` leaves the post without a table of contents, even when [`theme.toc`](../cli/config.md#theme) shows one on the others.
 
 ## `page`
 
@@ -56,9 +59,11 @@ description: Who I am and what I build
 | `slug`        | No       | Text          | File name     |
 | `description` | No       | Text          | Empty         |
 | `draft`       | No       | True or false | `false`       |
+| `toc`         | No       | True or false | `true`        |
 | `order`       | No       | Whole number  | After the pages that have one, by title |
 
-`order` places a page in its [section](../core/site.md#sections), such as a page of documentation; lower comes first.
+`order` places a page in its [section](../core/site.md#sections), such as a page of documentation; lower comes first. `toc: false`
+leaves the page without a table of contents, as for a post.
 
 ## `project`
 

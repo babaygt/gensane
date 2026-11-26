@@ -23,8 +23,9 @@ when there is nothing, so `{% if previous %}` works on every page.
 | `pagination`  | List pages   | `items`, `current`, `total`, `previousUrl` and `nextUrl`                           |
 | `previous`    | Posts, pages in a section | The post before this one in time, or the page before this one in its [section](https://gensane.dev/docs/reference/site/pages/#sections) |
 | `next`        | Posts, pages in a section | The post after this one in time, or the page after this one in its section         |
-| `section`     | Pages in a section | The section's tree: `title`, `url`, and `items`, each a page (`title`, `url`, `current`) or a folder (also `open` and `items`) |
+| `section`     | Pages in a section | The section's tree: `title`, `url`, and `items`, each a page (`title`, `url`, `description`, `current`) or a folder (also `open` and `items`) |
 | `breadcrumbs` | Pages in a section | The folders above the page, each with `title` and `url` (none when the folder has no `index.md`) |
+| `folder`      | A folder's `index.md` | The folder, as in `section`, so the page can list what is in it                   |
 | `tag`         | Tag pages    | `name`, `slug`, `url`, `count` and `posts`                                          |
 
 ## The page
@@ -38,7 +39,7 @@ and what was worked out from its body:
 | `type`        | The type of content, such as `post`                                |
 | `html`        | The body as HTML, printed without escaping                         |
 | `excerpt`     | The [excerpt](https://gensane.dev/docs/reference/site/content/) as HTML, printed without escaping        |
-| `toc`         | The table of contents: each heading's `id`, `text`, `level` and `children` |
+| `toc`         | The table of contents: each heading's `id`, `text`, `level` and `children`; empty with `toc: false` |
 | `readingTime` | In minutes                                                         |
 | `upcoming`    | Talks only: `true` when the talk's date is after the day of the build, `false` otherwise, and when the day isn't known |
 
