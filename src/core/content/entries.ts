@@ -19,6 +19,13 @@ interface EntryDetails {
   readonly excerpt: string;
   /** In minutes. */
   readonly readingTime: number;
+  /** Code blocks in a language the highlighter didn't color, such as ```elixir, where they are written. */
+  readonly plainCode: readonly PlainCode[];
+}
+
+export interface PlainCode {
+  readonly language: string;
+  readonly span: SourceSpan;
 }
 
 /** One content file, read and checked. Its `type` decides which `fields` it has. */

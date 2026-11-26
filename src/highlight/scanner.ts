@@ -19,6 +19,10 @@ export interface LanguageSpec {
   readonly commentsStartWords?: boolean;
   /** CSS: `@media` is a keyword, a unit belongs to its number, and `#fff` is a number. */
   readonly css?: boolean;
+  /** YAML: a quote right after a letter is an apostrophe, as in `Ada's`, not the start of a string. */
+  readonly apostrophes?: boolean;
+  /** SQL: `select`, `Select` and `SELECT` are the same keyword; the set has them in lowercase. */
+  readonly keywordsInAnyCase?: boolean;
   readonly keywords: ReadonlySet<string>;
 }
 
@@ -86,7 +90,7 @@ export function scan(code: string, spec: LanguageSpec): Token[] {
       ? ['"""', "'''"].find((quote) => code.startsWith(quote, at))
       : undefined;
     const quote = triple ?? spec.quotes.find((open) => code[at] === open);
-    if (quote !== undefined) {
+    if (quote !== undefined && !(spec.apostrophes && isWordCharacter(before))) {
       take("string", stringEnd(code, at, quote));
       continue;
     }
@@ -114,7 +118,8 @@ export function scan(code: string, spec: LanguageSpec): Token[] {
     }
     const word = isWordCharacter(before) ? undefined : matchAt(WORD, code, at);
     if (word !== undefined) {
-      take(spec.keywords.has(word) ? "keyword" : "plain", at + word.length);
+      const key = spec.keywordsInAnyCase ? word.toLowerCase() : word;
+      take(spec.keywords.has(key) ? "keyword" : "plain", at + word.length);
       continue;
     }
     take("plain", at + 1);

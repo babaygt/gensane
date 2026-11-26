@@ -9,6 +9,7 @@ export class CheckCommand extends SiteCommand {
   readonly summary = "Check the site for problems, without writing anything";
   readonly options = { drafts: DRAFTS_OPTION } as const;
   protected readonly whenStopped = "";
+  protected override readonly showsCheckWarnings = true;
 
   protected async finish(site: BuiltSite): Promise<string> {
     return `Checked ${count(pagesOf(site), "page")}`;

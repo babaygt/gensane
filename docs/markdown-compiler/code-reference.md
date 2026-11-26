@@ -252,3 +252,11 @@ Builds the table of contents.
 | ------------------------------------------------------------------------ | --------------------------------- |
 | [`buildTableOfContents`](../../src/markdown/output/table-of-contents.ts) | Nests top-level headings by level |
 | [`TableOfContentsEntry`](../../src/markdown/output/table-of-contents.ts) | One entry of the result           |
+
+### [`src/markdown/output/plain-code.ts`](../../src/markdown/output/plain-code.ts)
+
+Finds the code no highlighter colored, for the warning of `gensane check`.
+
+| Name                                                             | Purpose                                                      |
+| ---------------------------------------------------------------- | ------------------------------------------------------------ |
+| [`plainCodeBlocks`](../../src/markdown/output/plain-code.ts)     | The code blocks still plain, in quotes, lists and notes too  |

@@ -14,6 +14,7 @@ import { checkLinks } from "../links/check-links.ts";
 import { inFileOrder, problem, startOf } from "../problems.ts";
 import { compareStrings } from "../site/order.ts";
 import { type Route, TEMPLATES } from "../site/routes.ts";
+import { isDraft } from "../site/collections.ts";
 import { buildSiteGraph } from "../site/site-graph.ts";
 import { siteAddressOf } from "../feeds/site-address.ts";
 import { withBasePath } from "./base-path.ts";
@@ -23,6 +24,7 @@ import { FAVICON_PATH, OWN_FAVICONS, faviconSvg, initialOf } from "../theme/favi
 import { THEME_CSS_PATH, themeCss } from "../theme/theme-css.ts";
 import { type ThemeSettings, themeOf } from "../theme/theme-settings.ts";
 import { outputPath } from "./output-paths.ts";
+import { uncoloredCode } from "./uncolored-code.ts";
 import { type TemplateData, TemplateVariables } from "./page-data.ts";
 
 export interface SiteConfig {
@@ -99,11 +101,12 @@ function withoutRepeats(diagnostics: readonly Diagnostic[]): Diagnostic[] {
 function finish(
   files: readonly OutputFile[],
   diagnostics: readonly Diagnostic[],
+  checkWarnings: readonly Diagnostic[] = [],
 ): Result<BuiltSite, readonly Diagnostic[]> {
   const problems = inFileOrder(withoutRepeats(diagnostics));
   if (hasErrors(problems)) return err(problems);
   const sorted = files.toSorted((first, second) => compareStrings(first.path, second.path));
-  return ok({ files: sorted, warnings: problems, checkWarnings: [] });
+  return ok({ files: sorted, warnings: problems, checkWarnings });
 }
 
 export function buildSite(input: SiteInput): Result<BuiltSite, readonly Diagnostic[]> {
@@ -216,5 +219,8 @@ export function buildSite(input: SiteInput): Result<BuiltSite, readonly Diagnost
   const served = allFiles.map((file) =>
     file.path.endsWith(".html") ? { ...file, content: withBasePath(file.content, path) } : file,
   );
-  return finish(served, [...found, ...links]);
+  // A site that turns colors off has chosen plain code.
+  const built = loaded.value.entries.filter((entry) => config.drafts === true || !isDraft(entry));
+  const plain = config.markdown?.highlight === false ? [] : uncoloredCode(built);
+  return finish(served, [...found, ...links], plain);
 }
