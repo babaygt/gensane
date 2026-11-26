@@ -275,6 +275,22 @@ describe("gensane check", () => {
     expect(run.output).toBe("Found 1 error and 0 warnings.");
   });
 
+  it("also warns about code gensane doesn't color, which build doesn't", async () => {
+    const files = {
+      "site/content/blog/hello.md": "---\ntitle: Hello\ndate: 2026-11-17\n---\n```zig\nx\n```\n",
+    };
+    const check = await gensane(["check"], { files, config: WITH_ADDRESS });
+    expect(check.code).toBe(ExitCode.success);
+    expect(check.errors.split("\n").slice(0, 2)).toEqual([
+      'warning[GS419]: gensane doesn\'t color code in "zig" (1 block; this is the first)',
+      "  ┌─ content/blog/hello.md:5:1",
+    ]);
+    expect(check.output).toBe("Checked 5 pages in 0 ms, with 1 warning.");
+    const build = await gensane(["build"], { files, config: WITH_ADDRESS });
+    expect(build.errors).toBe("");
+    expect(build.output).toContain("with no warnings.");
+  });
+
   it("doesn't take --out", async () => {
     const run = await gensane(["check", "--out", "x"]);
     expect(run.code).toBe(ExitCode.usage);

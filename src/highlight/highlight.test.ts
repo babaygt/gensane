@@ -44,6 +44,21 @@ describe("highlight", () => {
       "func main() { r := '\\n'; s := `raw` }",
       `${k("func")} main() { r := ${s("'\\n'")}; s := ${s("`raw`")} }`,
     ],
+    [
+      "sql",
+      "SELECT name, 'it''s' FROM users -- all\nWHERE id = 42 /* x */",
+      `${k("SELECT")} name, ${s("'it''s'")} ${k("FROM")} users ${c("-- all")}\n${k("WHERE")} id = ${n("42")} ${c("/* x */")}`,
+    ],
+    [
+      "yaml",
+      "title: Ada's notes # a comment\ndraft: true\ntags: ['a', \"b\"]\ncount: 3",
+      `title: Ada's notes ${c("# a comment")}\ndraft: ${k("true")}\ntags: [${s("'a'")}, ${s('"b"')}]\ncount: ${n("3")}`,
+    ],
+    [
+      "dockerfile",
+      'FROM node:22 AS build\n# deps\nRUN npm ci && echo "done"\nCOPY . .',
+      `${k("FROM")} node:${n("22")} ${k("AS")} build\n${c("# deps")}\n${k("RUN")} npm ci &amp;&amp; echo ${s('"done"')}\n${k("COPY")} . .`,
+    ],
   ])("colors %s", (language, code, html) => {
     expect(highlight(code, language)).toBe(html);
   });
@@ -63,6 +78,34 @@ describe("highlight", () => {
   it("knows a language by any of its names, in any case", () => {
     expect(highlight("let", "TypeScript")).toBe(k("let"));
     expect(highlight("let", "tsx")).toBe(k("let"));
+    for (const name of ["sql", "PostgreSQL", "postgres", "pgsql", "mysql", "sqlite"])
+      expect(highlight("SELECT", name)).toBe(k("SELECT"));
+    for (const name of ["yaml", "yml"]) expect(highlight("true", name)).toBe(k("true"));
+    for (const name of ["dockerfile", "Dockerfile", "docker"])
+      expect(highlight("FROM", name)).toBe(k("FROM"));
+  });
+
+  it("knows SQL's keywords in any case, as SQL does", () => {
+    expect(highlight("select * From t", "sql")).toBe(`${k("select")} * ${k("From")} t`);
+  });
+
+  it("knows Postgres's words for a query plan, and the types of columns", () => {
+    expect(highlight("EXPLAIN ANALYZE SELECT 1", "sql")).toBe(
+      `${k("EXPLAIN")} ${k("ANALYZE")} ${k("SELECT")} ${n("1")}`,
+    );
+    expect(highlight("CREATE TABLE t (id bigint, body text, at timestamptz)", "sql")).toBe(
+      `${k("CREATE")} ${k("TABLE")} t (id ${k("bigint")}, body ${k("text")}, at ${k("timestamptz")})`,
+    );
+  });
+
+  it("knows a Dockerfile's instructions only in capitals, so the commands in them stay plain", () => {
+    expect(highlight("RUN git add . && cp from to", "dockerfile")).toBe(
+      `${k("RUN")} git add . &amp;&amp; cp from to`,
+    );
+  });
+
+  it("takes an apostrophe in YAML's words for text, and a quote that starts a value for a string", () => {
+    expect(highlight("note: it's 'quoted'", "yaml")).toBe(`note: it's ${s("'quoted'")}`);
   });
 
   it.each([undefined, "", "brainfuck", "constructor", "toString", "__proto__"])(

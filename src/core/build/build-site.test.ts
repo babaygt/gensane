@@ -367,6 +367,87 @@ describe("a folder's own page", () => {
   });
 });
 
+/** A fenced code block in a language. */
+const fence = (language: string, indent = "") =>
+  `${indent}\`\`\`${language}\n${indent}x\n${indent}\`\`\`\n`;
+
+function checkWarningsOf(input: Partial<SiteInput>) {
+  const config = { site: { url: "https://example.com" }, ...input.config };
+  // The post's HTML is printed, so its footnote has somewhere to lead.
+  const templates = { ...plainTheme, "post.html": "{{ page.html }}" };
+  const result = buildSite({ content: {}, templates, ...input, config });
+  if (!result.ok) throw new Error(result.error.map((problem) => problem.message).join("\n"));
+  return result.value;
+}
+
+describe("code gensane doesn't color", () => {
+  const content = {
+    "blog/a.md": post(
+      "2026-01-01",
+      "",
+      `Intro.\n\n${fence("elixir")}\n- An item:\n\n${fence("zig", "  ")}`,
+    ),
+    "blog/b.md": post(
+      "2026-01-02",
+      "",
+      `${fence("Elixir")}\n> ${fence("elixir").trimEnd().replaceAll("\n", "\n> ")}\n\nSee[^1].\n\n[^1]: A note.\n\n${fence("zig", "    ")}`,
+    ),
+  };
+
+  it("is a warning for check, one for each language, at its first block, with how many there are", () => {
+    expect(checkWarningsOf({ content }).checkWarnings).toMatchObject([
+      {
+        code: "GS419",
+        severity: "warning",
+        message: 'gensane doesn\'t color code in "elixir" (3 blocks; this is the first)',
+        hint: 'color it with your own markdown.highlight in the config, or write "text" after the backticks',
+        span: { file: "content/blog/a.md", start: { line: 7, column: 1 } },
+      },
+      {
+        code: "GS419",
+        message: 'gensane doesn\'t color code in "zig" (2 blocks; this is the first)',
+        span: { file: "content/blog/a.md", start: { line: 13, column: 3 } },
+      },
+    ]);
+  });
+
+  it("says one block when there is one", () => {
+    const one = { "blog/a.md": post("2026-01-01", "", fence("zig")) };
+    expect(checkWarningsOf({ content: one }).checkWarnings.map(({ message }) => message)).toEqual([
+      'gensane doesn\'t color code in "zig" (1 block; this is the first)',
+    ]);
+  });
+
+  it("isn't a warning of the build", () => {
+    expect(checkWarningsOf({ content }).warnings).toEqual([]);
+  });
+
+  it.each(["text", "txt", "plain", "plaintext", "console", "mermaid", "TEXT", ""])(
+    "leaves out code meant to stay plain, such as %j",
+    (language) => {
+      const plain = { "blog/a.md": post("2026-01-01", "", fence(language)) };
+      expect(checkWarningsOf({ content: plain }).checkWarnings).toEqual([]);
+    },
+  );
+
+  it("leaves out code gensane colors", () => {
+    const colored = { "blog/a.md": post("2026-01-01", "", fence("sql") + fence("ts")) };
+    expect(checkWarningsOf({ content: colored }).checkWarnings).toEqual([]);
+  });
+
+  it("asks the site's own highlighter, and says nothing when the config turns colors off", () => {
+    const everything = { markdown: { highlight: (code: string) => code } };
+    expect(checkWarningsOf({ content, config: everything }).checkWarnings).toEqual([]);
+    const off = { markdown: { highlight: false as const } };
+    expect(checkWarningsOf({ content, config: off }).checkWarnings).toEqual([]);
+  });
+
+  it("leaves out drafts that aren't built", () => {
+    const draft = { "blog/a.md": post("2026-01-01", "draft: true\n", fence("zig")) };
+    expect(checkWarningsOf({ content: draft }).checkWarnings).toEqual([]);
+  });
+});
+
 describe("problems", () => {
   it("names a template that the site needs and the theme doesn't have, once", () => {
     const { "post.html": _, ...withoutPost } = plainTheme;
