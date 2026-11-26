@@ -81,6 +81,8 @@ export interface BuiltSite {
   /** Sorted by path. */
   readonly files: readonly OutputFile[];
   readonly warnings: readonly Diagnostic[];
+  /** Warnings only `gensane check` shows: worth knowing, but too loud for every build. */
+  readonly checkWarnings: readonly Diagnostic[];
 }
 
 /** A mistake in a template is the same on every page that uses it, so it is reported once. */
@@ -101,7 +103,7 @@ function finish(
   const problems = inFileOrder(withoutRepeats(diagnostics));
   if (hasErrors(problems)) return err(problems);
   const sorted = files.toSorted((first, second) => compareStrings(first.path, second.path));
-  return ok({ files: sorted, warnings: problems });
+  return ok({ files: sorted, warnings: problems, checkWarnings: [] });
 }
 
 export function buildSite(input: SiteInput): Result<BuiltSite, readonly Diagnostic[]> {
