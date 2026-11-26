@@ -104,6 +104,19 @@ describe("highlight", () => {
     );
   });
 
+  it("starts a comment in YAML and a Dockerfile only at the start of a word, so an address keeps its #", () => {
+    expect(highlight("url: https://a.b/#top # a note", "yaml")).toBe(
+      `url: https://a.b/#top ${c("# a note")}`,
+    );
+    expect(highlight("RUN curl https://a.b/#top", "dockerfile")).toBe(
+      `${k("RUN")} curl https://a.b/#top`,
+    );
+  });
+
+  it("leaves a name in double quotes plain in SQL, since it names a column, not text", () => {
+    expect(highlight('SELECT "user" FROM t', "sql")).toBe(`${k("SELECT")} "user" ${k("FROM")} t`);
+  });
+
   it("takes an apostrophe in YAML's words for text, and a quote that starts a value for a string", () => {
     expect(highlight("note: it's 'quoted'", "yaml")).toBe(`note: it's ${s("'quoted'")}`);
   });
