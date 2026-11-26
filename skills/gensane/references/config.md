@@ -99,6 +99,20 @@ read each page as the text it was written in, without the HTML around it. It is 
 The list has the site's title and description, then its pages, each [section](https://gensane.dev/docs/reference/site/pages/#sections) in reading order, its
 posts and its projects, each with its description. Drafts are never in it. With `site.url`, the links are full addresses.
 
+### `nav`
+
+The menu at the top of every page, in this order, instead of the one gensane makes. Without `nav`, the menu has the blog, the
+projects, the talks and the about page, for the ones the site has; `nav` is for a menu with pages of your own, or in another order.
+
+Each item has a `title` and a `url`:
+
+- **A page of the site** starts with `/` and is the page's address, as in the browser: `/uses/` for `content/pages/uses.md`. `/uses`
+  is read as `/uses/`. Any page works, such as `/tags/` or a page in a [section](https://gensane.dev/docs/reference/site/pages/#sections).
+- **Another site** starts with `https://`, `http://` or `mailto:`. It isn't checked, as links to other sites never are.
+
+An item is marked on its own page and on the pages below it, so "Writing" is marked on every post too. A page of the site that
+doesn't exist is an error, with the closest address as a hint.
+
 ## While serving
 
 [`gensane dev`](https://gensane.dev/docs/reference/commands/dev/) runs the config again when it changes. Files the config imports aren't run again until `gensane dev` is

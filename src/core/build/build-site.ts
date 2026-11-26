@@ -153,6 +153,7 @@ export function buildSite(input: SiteInput): Result<BuiltSite, readonly Diagnost
     favicon:
       ownFavicon === undefined ? madeFavicon.map(({ path }) => `/${path}`)[0] : `/${ownFavicon}`,
     today: config.today,
+    nav: config.nav,
   });
   const files: OutputFile[] = [];
   const problems: Diagnostic[] = [...warnings];
@@ -202,6 +203,10 @@ export function buildSite(input: SiteInput): Result<BuiltSite, readonly Diagnost
     files: new Map(allFiles.map((file) => [file.path, file.content])),
     publicFiles: input.publicFiles ?? [],
     themeAssets: input.themeAssets ?? [],
+    navigation: {
+      file: config.configFile ?? "gensane.config.ts",
+      urls: variables.menuUrls,
+    },
   });
   // Links are checked as they are written; the path of the site is added to the finished pages only.
   const path =

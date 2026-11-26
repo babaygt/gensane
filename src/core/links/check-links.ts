@@ -28,6 +28,8 @@ export interface LinkCheckInput {
   readonly publicFiles: readonly string[];
   /** The files of the theme's `assets/` folder, by their path in the site, such as `assets/style.css`. */
   readonly themeAssets: readonly string[];
+  /** The addresses of the menu from the config, and the config file, where a wrong one is reported. */
+  readonly navigation?: { readonly file: string; readonly urls: readonly string[] };
 }
 
 /** Links, images, and the stylesheets, scripts and media a template loads. */
@@ -110,6 +112,11 @@ class LinkChecker {
     }
     for (const [name, source] of Object.entries(this.#input.templates))
       this.#checkTemplate(name, source);
+    const navigation = this.#input.navigation;
+    if (navigation !== undefined) {
+      for (const url of navigation.urls)
+        this.#checkLink(url, undefined, () => startOf(navigation.file));
+    }
     return this.#problems;
   }
 

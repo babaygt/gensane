@@ -402,6 +402,84 @@ Built 6 pages into dist in 8 ms, with no warnings.
 I build compilers and the tests that keep them honest.
 ```
 
+### `nav`
+
+The menu at the top of every page, in this order, instead of the one gensane makes. Without `nav`, the menu has the blog, the
+projects, the talks and the about page, for the ones the site has; `nav` is for a menu with pages of your own, or in another order.
+
+<!-- runs -->
+```ts gensane.config.ts
+import { defineConfig } from "@gensane/cli";
+
+export default defineConfig({
+  site: { title: "Ada's notes", url: "https://ada.dev" },
+  nav: [
+    { title: "Writing", url: "/blog/" },
+    { title: "Uses", url: "/uses" },
+    { title: "About", url: "/about/" },
+    { title: "CV", url: "https://ada.dev/cv.pdf" },
+  ],
+});
+```
+
+```markdown content/blog/2026-11-17-hello.md
+---
+title: Hello
+date: 2026-11-17
+---
+The first post.
+```
+
+```markdown content/pages/uses.md
+---
+title: Uses
+---
+What I work with.
+```
+
+```markdown content/pages/about.md
+---
+title: About
+---
+Who I am.
+```
+
+```console
+$ gensane check
+Checked 7 pages in 9 ms, with no warnings.
+```
+
+Each item has a `title` and a `url`:
+
+- **A page of the site** starts with `/` and is the page's address, as in the browser: `/uses/` for `content/pages/uses.md`. `/uses`
+  is read as `/uses/`. Any page works, such as `/tags/` or a page in a [section](../core/site.md#sections).
+- **Another site** starts with `https://`, `http://` or `mailto:`. It isn't checked, as links to other sites never are.
+
+An item is marked on its own page and on the pages below it, so "Writing" is marked on every post too. A page of the site that
+doesn't exist is an error, with the closest address as a hint:
+
+<!-- continues -->
+```ts gensane.config.ts
+import { defineConfig } from "@gensane/cli";
+
+export default defineConfig({
+  site: { title: "Ada's notes", url: "https://ada.dev" },
+  nav: [{ title: "Uses", url: "/usse/" }],
+});
+```
+
+```console
+$ gensane check
+error[GS413]: "/usse/" doesn't lead to a page or a file of the site
+  ┌─ gensane.config.ts
+  │
+  = hint: did you mean "/uses/"?
+
+Found 1 error and 0 warnings.
+$ echo $?
+1
+```
+
 ## While serving
 
 [`gensane dev`](dev.md) runs the config again when it changes. Files the config imports aren't run again until `gensane dev` is

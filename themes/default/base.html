@@ -20,7 +20,7 @@
 <a class="site-title" href="/">{{ site.title | default("Home") }}</a>
 {% if navigation %}<nav class="site-menu" aria-label="Main">
 <ul>
-{% for item in navigation %}<li><a href="{{ item.url }}"{% if page.url == item.url %} aria-current="page"{% endif %}>{{ item.title }}</a></li>
+{% for item in navigation %}<li><a href="{{ item.url }}"{% if item.current %} aria-current="{{ item.current }}"{% endif %}>{{ item.title }}</a></li>
 {% endfor %}</ul>
 </nav>
 {% endif %}<div class="site-tools">

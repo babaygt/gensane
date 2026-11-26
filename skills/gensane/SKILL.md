@@ -140,6 +140,8 @@ export default defineConfig({
 - Profiles shown as icons: `github`, `gitlab`, `codeberg`, `mastodon` (the whole address), `bluesky`, `linkedin`, `email`.
 - `theme`: `palette` (`default`, `paper`, `nord`, `solarized`, `gruvbox`, `midnight`), `colorScheme`, `accent`, `font`, `width`,
   `blog.layout` (`list` or `grid`), `blog.cover`, `home.sections`, `toc`.
+- `nav`: the menu, a list of `{ title, url }`; `/uses/` for a page of the site (checked like a link), `https://` for another site.
+  Without it, the menu has the blog, projects, talks and about pages the site has.
 - Other settings: `perPage`, `markdown`, `filters`, and `llms` (writes `llms.txt`).
 
 [references/config.md](references/config.md) has every setting and its values.
