@@ -70,7 +70,10 @@ describe.each(pages)("docs/core/$name", ({ path, text }) => {
     "reports $code for $content",
     (example) => {
       const result = run(example);
-      const problems = result.ok ? result.value.warnings : result.error;
+      // Some warnings are only for `gensane check`; the page explains them as well.
+      const problems = result.ok
+        ? [...result.value.warnings, ...result.value.checkWarnings]
+        : result.error;
       const problem = problems.find((found) => found.code === example.code);
       expect(problem && describeProblem(problem)).toBe(example.problem);
     },

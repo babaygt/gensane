@@ -18,8 +18,15 @@ The whole build, from text to files.
 | [`buildSite`](../../src/core/build/build-site.ts)      | Runs every step, and stops at the first step with errors    |
 | [`SiteConfig`](../../src/core/build/build-site.ts)     | The settings of a site                                      |
 | [`SiteInput`](../../src/core/build/build-site.ts)      | The content, the templates, the config and the public files |
-| [`BuiltSite`](../../src/core/build/build-site.ts)      | The files to write, sorted by path, and the warnings        |
+| [`BuiltSite`](../../src/core/build/build-site.ts)      | The files to write, sorted by path, the warnings, and those only `check` shows |
 | [`withoutRepeats`](../../src/core/build/build-site.ts) | Reports a mistake that repeats on many pages once           |
+
+### [`src/core/build/uncolored-code.ts`](../../src/core/build/uncolored-code.ts)
+
+| Name                                                        | Purpose                                                             |
+| ----------------------------------------------------------- | ------------------------------------------------------------------- |
+| [`uncoloredCode`](../../src/core/build/uncolored-code.ts)   | One warning for each language gensane doesn't color, at its first block |
+| [`MEANT_PLAIN`](../../src/core/build/uncolored-code.ts)     | `text`, `console` and the other names that ask for plain code       |
 
 ### [`src/core/build/base-path.ts`](../../src/core/build/base-path.ts)
 
@@ -54,6 +61,7 @@ Content files to entries.
 | [`ContentLoader`](../../src/core/content/load-content.ts) | Reads every file, in the order of their paths                         |
 | [`#loadFile`](../../src/core/content/load-content.ts)     | The type, the frontmatter, the body, the slug and the URL of one file |
 | [`moveBy`](../../src/core/content/load-content.ts)        | Moves body warnings below the frontmatter                             |
+| [`moveSpan`](../../src/core/content/load-content.ts)      | Moves a place in the body below the frontmatter                       |
 | [`#checkDate`](../../src/core/content/load-content.ts)    | Warns about a file name date that isn't the post's day                |
 | [`#checkUrls`](../../src/core/content/load-content.ts)    | Two files with one URL                                                |
 
@@ -132,6 +140,7 @@ Entries to routes.
 | Name                                                 | Purpose                                     |
 | ---------------------------------------------------- | ------------------------------------------- |
 | [`collect`](../../src/core/site/collections.ts)      | Drafts, and the order of each list          |
+| [`isDraft`](../../src/core/site/collections.ts)      | Whether an entry is a draft                 |
 | [`TagCollector`](../../src/core/site/collections.ts) | Groups posts by tag, and chooses a spelling |
 
 ### [`src/core/site/order.ts`](../../src/core/site/order.ts)

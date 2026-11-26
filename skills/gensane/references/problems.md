@@ -392,8 +392,8 @@ The message and the hint come from the filter.
 From [https://gensane.dev/docs/reference/site/problems/](https://gensane.dev/docs/reference/site/problems/).
 
 Every problem has a stable code, a message, a hint and a position in a file
-([`Diagnostic`](https://github.com/babaygt/gensane/blob/main/src/diagnostics/diagnostic.ts)). GS402, GS406, GS409, GS411, GS414 and GS417 are warnings, and the site is still built. All
-the others are errors. Problems from the other modules, such as frontmatter and templates, have their own pages.
+([`Diagnostic`](https://github.com/babaygt/gensane/blob/main/src/diagnostics/diagnostic.ts)). GS402, GS406, GS409, GS411, GS414, GS417 and GS419 are warnings, and the site is still built; GS419 is
+shown by `gensane check` only. All the others are errors. Problems from the other modules, such as frontmatter and templates, have their own pages.
 [Markdown](https://gensane.dev/docs/internals/markdown-compiler/diagnostics/), [frontmatter](https://gensane.dev/docs/internals/frontmatter/diagnostics/) and [templates](https://gensane.dev/docs/internals/template/diagnostics/).
 
 | Code  | Step             | Meaning                                                       |
@@ -415,6 +415,8 @@ the others are errors. Problems from the other modules, such as frontmatter and 
 | GS415 | Links            | A public file would replace a file the site writes            |
 | GS416 | Links            | A file of the theme would clash with another file of the site |
 | GS417 | Content          | A field has a name the build uses for something else (warning) |
+| GS418 | Content          | A folder in `pages/` has a name that can't be part of a URL    |
+| GS419 | Content          | Code in a language gensane doesn't color (`check` only, warning) |
 
 ### Content
 
@@ -500,3 +502,10 @@ address of the page, so templates would never see the field. Rename it. A projec
 
 A folder in `pages/` has a name that can't be part of a URL, which only allows lowercase letters, digits and single dashes. Pages in
 folders are at the folders' path, so rename the folder.
+
+#### GS419
+
+A warning that only `gensane check` shows: code is in a language gensane doesn't [color](https://gensane.dev/docs/reference/content/colors-in-code/), so it stays plain.
+It comes once for each language, at its first block, with how many blocks there are. A site that wants it colored sets its own
+`markdown.highlight`; code meant to stay plain can say `text`. With `markdown.highlight: false` it never comes, since the site has
+chosen plain code.

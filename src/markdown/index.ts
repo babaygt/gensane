@@ -45,6 +45,7 @@ export { DiagnosticCodes } from "./diagnostic-codes.ts";
 export type { Highlighter } from "./passes/highlight-code.ts";
 export { escapeHtml, renderHtml } from "./output/render-html.ts";
 export { type TableOfContentsEntry, buildTableOfContents } from "./output/table-of-contents.ts";
+export { plainCodeBlocks } from "./output/plain-code.ts";
 
 export type ParseResult = BlockParseResult;
 

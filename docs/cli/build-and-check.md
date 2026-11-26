@@ -54,6 +54,41 @@ sitemap.xml
 
 The line at the end counts pages, the `.html` files; the feed, the sitemap and the copied files aren't counted.
 
+## Code gensane doesn't color
+
+`gensane check` also says when code is in a language gensane [doesn't color](../highlight/README.md), once for each language, at
+its first block. `gensane build` doesn't: the site is fine, and a site may use such a language on purpose.
+
+<!-- runs -->
+```markdown content/blog/phoenix.md
+---
+title: Phoenix
+date: 2026-11-17
+---
+~~~elixir
+IO.puts("hello")
+~~~
+```
+
+```ts gensane.config.ts
+export default { site: { url: "https://example.com" } };
+```
+
+```console
+$ gensane check
+warning[GS419]: gensane doesn't color code in "elixir" (1 block; this is the first)
+  ┌─ content/blog/phoenix.md:5:1
+  │
+5 │ ~~~elixir
+  │ ^^^^^^^^^
+  │
+  = hint: color it with your own markdown.highlight in the config, or write "text" after the backticks
+
+Checked 5 pages in 11 ms, with 1 warning.
+```
+
+Code written as `text`, `txt`, `plain`, `plaintext`, `console` or `mermaid` is meant to stay plain, so it isn't mentioned.
+
 ## When the site has errors
 
 Every problem in every file is printed, with its line of source and a mark under the mistake, and nothing is written. The exit code is

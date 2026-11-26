@@ -20,4 +20,5 @@ export const CoreCodes = {
   themeFileClash: "GS416",
   hiddenField: "GS417",
   invalidFolder: "GS418",
+  uncoloredCode: "GS419",
 } as const satisfies Record<string, DiagnosticCode>;

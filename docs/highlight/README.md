@@ -13,8 +13,12 @@ It knows the languages a developer's blog uses most, by any of these names after
 | Python                  | `py`, `python`                                             |
 | Rust                    | `rs`, `rust`                                               |
 | Go                      | `go`, `golang`                                             |
+| SQL                     | `sql`, `pgsql`, `postgres`, `postgresql`, `mysql`, `sqlite` |
+| YAML                    | `yaml`, `yml`                                              |
+| Dockerfile              | `dockerfile`, `docker`                                     |
 
-A block in any other language, or without one, stays as it is.
+A block in any other language, or without one, stays as it is, and [`gensane check`](../cli/build-and-check.md#code-gensane-doesnt-color)
+says so once for each language.
 
 ## What it colors
 
@@ -30,7 +34,10 @@ fit the site and are readable in light and dark:
 
 It reads code the way the language does in the parts that matter for color: a `#` starts a comment in shell only at the start of a
 word, an apostrophe in HTML text is just text, a Rust lifetime such as `'a` is not a string, and only a backtick string or a block
-comment goes on after the end of a line.
+comment goes on after the end of a line. SQL's keywords, its column types such as `bigint` among them, count in any case, as SQL
+reads them, and a name in double quotes stays plain; a Dockerfile's instructions only in
+capitals, so `from` and `add` in its shell commands stay plain; and in YAML, the apostrophe of `Ada's notes` is text, while a quote
+that starts a value starts a string.
 
 ## Using another highlighter, or none
 

@@ -23,6 +23,7 @@ import {
   type MarkdownOptions,
   buildTableOfContents,
   parseMarkdown,
+  plainCodeBlocks,
   renderHtml,
 } from "../../markdown/index.ts";
 import { CoreCodes } from "../diagnostic-codes.ts";
@@ -103,14 +104,17 @@ function spanOfField(data: MapValue, key: string): SourceSpan | undefined {
 }
 
 /** The Markdown compiler counts from the start of the body, which always starts a line. */
-function moveBy(diagnostic: Diagnostic, bodyStart: SourcePosition): Diagnostic {
+function moveSpan(span: SourceSpan, bodyStart: SourcePosition): SourceSpan {
   const move = (position: SourcePosition): SourcePosition => ({
     ...position,
     line: position.line + bodyStart.line - 1,
     offset: position.offset + bodyStart.offset,
   });
-  const { span } = diagnostic;
-  return { ...diagnostic, span: { ...span, start: move(span.start), end: move(span.end) } };
+  return { ...span, start: move(span.start), end: move(span.end) };
+}
+
+function moveBy(diagnostic: Diagnostic, bodyStart: SourcePosition): Diagnostic {
+  return { ...diagnostic, span: moveSpan(diagnostic.span, bodyStart) };
 }
 
 /** TypeScript can't connect a type of content with its fields through a generic, so they are joined here. */
@@ -242,6 +246,9 @@ class ContentLoader {
         "toc" in fields && !fields.toc ? [] : buildTableOfContents(markdown.document),
       excerpt: excerptOf(markdown.document),
       readingTime: readingTimeOf(html),
+      plainCode: plainCodeBlocks(markdown.document).flatMap(({ language, span }) =>
+        language === undefined ? [] : [{ language, span: moveSpan(span, bodyStart) }],
+      ),
     };
     return {
       entry: entryOf(type, fields, details),

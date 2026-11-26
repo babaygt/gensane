@@ -35,7 +35,7 @@ function ofType<Type extends ContentType>(
   return entries.filter((entry): entry is EntryOf<Type> => entry.type === type);
 }
 
-function isDraft(entry: ContentEntry): boolean {
+export function isDraft(entry: ContentEntry): boolean {
   return "draft" in entry.fields && entry.fields.draft;
 }
 

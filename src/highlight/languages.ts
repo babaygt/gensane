@@ -70,8 +70,56 @@ const go: LanguageSpec = {
     map nil package range return select struct switch true type var`),
 };
 
+const sql: LanguageSpec = {
+  lineComments: ["--"],
+  blockComments: [["/*", "*/"]],
+  // A double quote names a table or a column, so only single quotes start text.
+  quotes: ["'"],
+  keywordsInAnyCase: true,
+  keywords: words(`
+    add all alter and as asc begin between by cascade case check column commit constraint create cross default
+    delete desc distinct drop else end exists false foreign from full function grant group having if in index
+    inner insert into is join key left like limit not null offset on or order outer primary references
+    replace returning returns revoke right rollback select set table then transaction trigger true union unique
+    update using values view when where with
+    analyze concurrently explain filter lateral materialized over partition recursive vacuum window
+    bigint bigserial boolean char date decimal int integer interval json jsonb numeric real serial smallint
+    text time timestamp timestamptz uuid varchar`),
+};
+
+const yaml: LanguageSpec = {
+  lineComments: ["#"],
+  blockComments: [],
+  quotes: ['"', "'"],
+  commentsStartWords: true,
+  apostrophes: true,
+  keywords: words("true false null"),
+};
+
+/** Its instructions are written in capitals, so the same words in its shell commands stay plain. */
+const dockerfile: LanguageSpec = {
+  lineComments: ["#"],
+  blockComments: [],
+  quotes: ['"', "'"],
+  commentsStartWords: true,
+  keywords: words(`
+    ADD ARG AS CMD COPY ENTRYPOINT ENV EXPOSE FROM HEALTHCHECK LABEL MAINTAINER ONBUILD RUN SHELL STOPSIGNAL
+    USER VOLUME WORKDIR`),
+};
+
 /** HTML has a scanner of its own; the others share one, with these tables. */
-export const SPECS = { javascript, json, css, shell, python, rust, go } as const;
+export const SPECS = {
+  javascript,
+  json,
+  css,
+  shell,
+  python,
+  rust,
+  go,
+  sql,
+  yaml,
+  dockerfile,
+} as const;
 
 /** Every name a code block may use, such as ```ts, for each language. */
 export const LANGUAGE_NAMES: Readonly<Record<string, keyof typeof SPECS | "html">> = {
@@ -100,4 +148,14 @@ export const LANGUAGE_NAMES: Readonly<Record<string, keyof typeof SPECS | "html"
   rust: "rust",
   go: "go",
   golang: "go",
+  sql: "sql",
+  pgsql: "sql",
+  postgres: "sql",
+  postgresql: "sql",
+  mysql: "sql",
+  sqlite: "sql",
+  yaml: "yaml",
+  yml: "yaml",
+  dockerfile: "dockerfile",
+  docker: "dockerfile",
 };

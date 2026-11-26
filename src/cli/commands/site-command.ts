@@ -15,6 +15,8 @@ export const DRAFTS_OPTION: OptionSpec = { type: "boolean", description: "Includ
 export abstract class SiteCommand extends Command {
   /** Said after the problems when the site has errors, such as ", so nothing was written". */
   protected abstract readonly whenStopped: string;
+  /** Whether it also shows the warnings only worth seeing when checking, such as code gensane doesn't color. */
+  protected readonly showsCheckWarnings: boolean = false;
 
   /** A mistake in the arguments, found before any work, if there is one. */
   protected checkArguments(_values: OptionValues, _environment: Environment): string | undefined {
@@ -48,15 +50,19 @@ export abstract class SiteCommand extends Command {
       terminal.write(`Found ${countProblems(build.problems)} in the config${this.whenStopped}.`);
       return ExitCode.problems;
     }
-    printProblems(build.problems, build.files, terminal);
     if (build.kind === "failed") {
+      printProblems(build.problems, build.files, terminal);
       terminal.write(`Found ${countProblems(build.problems)}${this.whenStopped}.`);
       return ExitCode.problems;
     }
+    const warnings = this.showsCheckWarnings
+      ? [...build.problems, ...build.site.checkWarnings]
+      : build.problems;
+    printProblems(warnings, build.files, terminal);
 
     const done = await this.finish(build.site, build.files, values, environment);
     const time = clock.now().getTime() - started;
-    terminal.write(`${done} in ${time} ms, with ${countWarnings(build.problems)}.`);
+    terminal.write(`${done} in ${time} ms, with ${countWarnings(warnings)}.`);
     return ExitCode.success;
   }
 }
