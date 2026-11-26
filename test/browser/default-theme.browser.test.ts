@@ -54,6 +54,8 @@ const files: Record<string, string> = {
   "content/projects/kettle.md":
     "---\ntitle: Kettle\ndescription: A kettle with a picture\ncover: /cover.svg\nstack: [Steel]\n---\n",
   "content/pages/tasks.md": "---\ntitle: Tasks\n---\n- [x] Done\n- [ ] Next\n",
+  "content/pages/notes/index.md": "---\ntitle: Notes\n---\nWhat I keep.\n",
+  "content/pages/notes/reading.md": "---\ntitle: Reading list\n---\nBooks.\n",
   "public/cover.svg":
     '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 9"><rect width="16" height="9"/></svg>\n',
   "content/talks/meetup.md": "---\ntitle: A meetup talk\nevent: Meetup\ndate: 2026-10-01\n---\n",
@@ -326,6 +328,14 @@ describe("in a real browser", { timeout: 30_000 }, () => {
     ]);
     expect(onPost).toBe(onBlog);
     expect(onTalks).not.toBe(onBlog);
+  });
+
+  it("shows the folder a page is in right above its title, not a heading's space away", async () => {
+    const page = await open("/notes/reading/");
+    const [folder, title] = await boxesOf(page, "article > p.meta, article > h1");
+    // The space above a heading is 2.5rem, 40 pixels: the folder belongs to the title, so it is closer.
+    expect((title?.y ?? 0) - ((folder?.y ?? 0) + (folder?.height ?? 0))).toBeLessThan(20);
+    await page.context().close();
   });
 
   it("gives each kind of callout its own color and icon", async () => {
