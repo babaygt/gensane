@@ -635,6 +635,19 @@ describe("navigation and the feed", () => {
     );
   });
 
+  it("leaves a file, a part of a page and a query as they are written", () => {
+    const content = { "pages/about.md": "---\ntitle: About\n---\n## Contact\n" };
+    const nav = [
+      { title: "CV", url: "/cv.pdf" },
+      { title: "Contact", url: "/about/#contact" },
+      { title: "About", url: "/about?from=menu" },
+    ];
+    const site = built({ content, templates, config: { nav }, publicFiles: ["cv.pdf"] });
+    expect(fileOf(site, "index.html")).toBe(
+      "CV /cv.pdf;Contact /about/#contact;About /about?from=menu; no feed",
+    );
+  });
+
   it("marks the item of the page, and of the pages below it, but never another site", () => {
     const current = "{% for item in navigation %}{{ item.title }}:{{ item.current }};{% endfor %}";
     const nav = [

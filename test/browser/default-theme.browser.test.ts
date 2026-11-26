@@ -119,6 +119,16 @@ async function open(path: string): Promise<Page> {
   return page;
 }
 
+/** The color of the menu's link to the blog, on a page. */
+async function blogLinkColorOn(path: string): Promise<string> {
+  const page = await open(path);
+  const color = await page.evaluate<string>(
+    `getComputedStyle(document.querySelector('.site-menu a[href="/blog/"]')).color`,
+  );
+  await page.context().close();
+  return color;
+}
+
 /** Where the elements are on the page, in order. */
 async function boxesOf(page: Page, selector: string) {
   return Promise.all(
@@ -306,6 +316,16 @@ describe("in a real browser", { timeout: 30_000 }, () => {
     expect(task?.bullet).toBe("none");
     expect(task?.box).toBeLessThan(task?.item ?? 0);
     await page.context().close();
+  });
+
+  it("shows the blog in the menu as the current page on a post too", async () => {
+    const [onBlog, onPost, onTalks] = await Promise.all([
+      blogLinkColorOn("/blog/"),
+      blogLinkColorOn("/blog/compilers/"),
+      blogLinkColorOn("/talks/"),
+    ]);
+    expect(onPost).toBe(onBlog);
+    expect(onTalks).not.toBe(onBlog);
   });
 
   it("gives each kind of callout its own color and icon", async () => {
