@@ -130,6 +130,32 @@ describe("the page variable", () => {
   });
 
   it.each([
+    [
+      "blog/a/index.html",
+      "post.html",
+      "blog/a.md",
+      post("2026-01-01", "toc: false\n", "## A\n## B\n"),
+    ],
+    [
+      "uses/index.html",
+      "page.html",
+      "pages/uses.md",
+      "---\ntitle: Uses\ntoc: false\n---\n## A\n## B\n",
+    ],
+  ])(
+    "gives %s no table of contents when its frontmatter says toc: false",
+    (path, name, file, text) => {
+      expect(render(path, name, "{{ page.toc | length }}", { [file]: text })).toBe("0");
+      expect(problemsOf({ content: { [file]: text } })).toEqual([]);
+    },
+  );
+
+  it("keeps the table of contents when the frontmatter says toc: true", () => {
+    const content = { "pages/uses.md": "---\ntitle: Uses\ntoc: true\n---\n## A\n## B\n" };
+    expect(render("uses/index.html", "page.html", "{{ page.toc | length }}", content)).toBe("2");
+  });
+
+  it.each([
     ["2026-11-25", "Later=true;Today=false;Earlier=false;"],
     [undefined, "Later=false;Today=false;Earlier=false;"],
   ])("marks the talks after the day of the build, %s, as upcoming", (today, shown) => {
@@ -297,6 +323,46 @@ describe("the other variables", () => {
     expect(built({ content }).files.map((file) => file.path)).not.toContain("blog/a/index.html");
     expect(built({ content, config: { drafts: true } }).files.map((file) => file.path)).toContain(
       "blog/a/index.html",
+    );
+  });
+});
+
+describe("a folder's own page", () => {
+  const content = {
+    "pages/notes/index.md": "---\ntitle: Notes\n---\n",
+    "pages/notes/reading.md": "---\ntitle: Reading list\ndescription: Books\norder: 1\n---\n",
+    "pages/notes/tools/index.md": "---\ntitle: Tools\ndescription: What I use\n---\n",
+    "pages/notes/tools/editor.md": "---\ntitle: Editor\n---\n",
+    "pages/notes/old/a.md": "---\ntitle: Old one\n---\n",
+    "pages/now.md": "---\ntitle: Now\n---\n",
+  };
+  const items =
+    "{% for item in folder.items %}{{ item.title }}{% if item.url %} {{ item.url }}{% endif %}{% if item.description %} ({{ item.description }}){% endif %}{% if item.items %} [{% for inner in item.items %}{{ inner.title }}{% endfor %}]{% endif %};{% endfor %}";
+
+  it("gets the folder: the title, address and description of each page and folder in it", () => {
+    expect(render("notes/index.html", "page.html", items, content)).toBe(
+      "Reading list /notes/reading/ (Books);Old [Old one];Tools /notes/tools/ (What I use) [Editor];",
+    );
+  });
+
+  it("gets its own folder, not the section, in a folder inside a section", () => {
+    expect(render("notes/tools/index.html", "page.html", items, content)).toBe(
+      "Editor /notes/tools/editor/;",
+    );
+  });
+
+  it.each(["notes/reading/index.html", "notes/tools/editor/index.html", "now/index.html"])(
+    "is the only page that gets one, not %s",
+    (path) => {
+      const template = "{% if folder %}a folder{% else %}none{% endif %}";
+      expect(render(path, "page.html", template, content)).toBe("none");
+    },
+  );
+
+  it("gives the section's tree the descriptions too", () => {
+    const template = "{% for item in section.items %}{{ item.description }};{% endfor %}";
+    expect(render("notes/reading/index.html", "page.html", template, content)).toBe(
+      "Books;;What I use;",
     );
   });
 });

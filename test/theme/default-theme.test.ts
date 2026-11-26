@@ -262,14 +262,25 @@ describe("the theme settings", () => {
     expect(home).not.toContain("I write about");
   });
 
-  it("shows a table of contents on a post with at least 3 headings, unless it is turned off", async () => {
-    expect(pageOf(await build(), "blog/hello/index.html")).toContain(
-      '<nav class="toc" aria-label="Contents">',
-    );
-    expect(pageOf(await build(), "blog/again/index.html")).not.toContain('class="toc"');
-    expect(pageOf(await build({ toc: false }), "blog/hello/index.html")).not.toContain(
-      'class="toc"',
-    );
+  it("shows a table of contents on a post or a page with at least 3 headings, unless it is turned off", async () => {
+    const built = await build();
+    for (const path of ["blog/hello/index.html", "docs/start/index.html"])
+      expect(pageOf(built, path)).toContain('<nav class="toc" aria-label="Contents">');
+    for (const path of ["blog/again/index.html", "now/index.html"])
+      expect(pageOf(built, path)).not.toContain('class="toc"');
+    const off = await build({ toc: false });
+    for (const path of ["blog/hello/index.html", "docs/start/index.html"])
+      expect(pageOf(off, path)).not.toContain('class="toc"');
+  });
+
+  it("leaves out the table of contents of a post or a page whose frontmatter says toc: false", async () => {
+    const headings = "## One\n\n## Two\n\n## Three\n";
+    const built = await build({}, false, SITE, undefined, {
+      "blog/2026-11-20-short.md": post("Short", "2026-11-20", headings, "toc: false\n"),
+      "pages/uses.md": `---\ntitle: Uses\ntoc: false\n---\n${headings}`,
+    });
+    expect(pageOf(built, "blog/short/index.html")).not.toContain('class="toc"');
+    expect(pageOf(built, "uses/index.html")).not.toContain('class="toc"');
   });
 
   it("uses the font of the settings", async () => {
@@ -561,11 +572,84 @@ describe("the parts of a page", () => {
   });
 });
 
+/** What a page shows before its title. */
+function aboveTitle(page: string): string {
+  return page.slice(page.indexOf("<article"), page.indexOf("<h1"));
+}
+
+/** What a page shows after its text. */
+function afterText(page: string): string {
+  return page.slice(page.lastIndexOf("</div>\n", page.indexOf("</article>")));
+}
+
 describe("pages in folders", () => {
-  it("are plain pages in the default theme, which has no documentation layout", async () => {
-    const start = pageOf(await build(), "docs/start/index.html");
-    expect(start).toContain("<h1>Start</h1>");
-    expect(start).not.toContain("docs-sidebar");
+  it("show the folder they are in above their title, as a link back", async () => {
+    const built = await build();
+    expect(aboveTitle(pageOf(built, "docs/start/index.html"))).toContain(
+      '<p class="meta"><a href="/docs/">Docs</a></p>',
+    );
+    expect(aboveTitle(pageOf(built, "docs/guides/search/index.html"))).toContain(
+      '<a href="/docs/guides/">Guides</a>',
+    );
+    expect(aboveTitle(pageOf(built, "docs/guides/index.html"))).toContain(
+      '<a href="/docs/">Docs</a>',
+    );
+  });
+
+  it("show the folder without a link when it has no page of its own", async () => {
+    const above = aboveTitle(pageOf(await build(), "docs/reference/cli/init/index.html"));
+    expect(above).toContain('<p class="meta">Cli</p>');
+    expect(above).not.toContain("<a ");
+  });
+
+  it("show nothing above the title of a section's own page, or of a page in no folder", async () => {
+    const built = await build();
+    for (const path of ["docs/index.html", "now/index.html"])
+      expect(aboveTitle(pageOf(built, path))).toBe("<article>\n");
+  });
+
+  it("end with the pages before and after them in the section", async () => {
+    const built = await build();
+    const start = afterText(pageOf(built, "docs/start/index.html"));
+    expect(start).toContain('<nav class="neighbours" aria-label="More pages">');
+    expect(start).toContain(
+      '<a class="neighbour" href="/docs/" rel="prev"><span class="meta">← Previous</span>Docs</a>',
+    );
+    expect(start).toContain(
+      '<a class="neighbour neighbour-next" href="/docs/guides/" rel="next"><span class="meta">Next →</span>Guides</a>',
+    );
+    const first = afterText(pageOf(built, "docs/index.html"));
+    expect(first).not.toContain('rel="prev"');
+    expect(first).toContain('rel="next"');
+    expect(pageOf(built, "now/index.html")).not.toContain('class="neighbours"');
+  });
+
+  it("list what is in a folder on the folder's own page, after its text", async () => {
+    const built = await build();
+    const docs = afterText(pageOf(built, "docs/index.html"));
+    expect(docs).toContain('<h2><a href="/docs/start/">Start</a></h2>');
+    expect(docs).toContain('<h2><a href="/docs/guides/">Guides</a></h2>');
+    // A folder with no page of its own can't be opened, so what is in it is listed under it.
+    expect(docs).toContain("<h2>Reference</h2>\n<ul>\n<li>Cli</li>");
+    expect(docs.indexOf("Start</a>")).toBeLessThan(docs.indexOf("Guides</a>"));
+    // Start is only in the links to the pages before and after.
+    const guides = afterText(pageOf(built, "docs/guides/index.html")).split(
+      '<nav class="neighbours"',
+    )[0];
+    expect(guides).toContain('<h2><a href="/docs/guides/search/">Search guide</a></h2>');
+    expect(guides).not.toContain("Start</a>");
+    for (const path of ["docs/start/index.html", "now/index.html"])
+      expect(afterText(pageOf(built, path))).not.toContain('<ul class="posts">');
+  });
+
+  it("show the description of what a folder lists", async () => {
+    const built = await build({}, false, SITE, undefined, {
+      "pages/notes/index.md": "---\ntitle: Notes\n---\n",
+      "pages/notes/reading.md": "---\ntitle: Reading list\ndescription: Books I liked\n---\n",
+    });
+    expect(afterText(pageOf(built, "notes/index.html"))).toContain(
+      '<h2><a href="/notes/reading/">Reading list</a></h2>\n<p class="meta">Books I liked</p>',
+    );
   });
 
   it("builds with a base.html of the site's own, which has only the blocks title and content", async () => {
