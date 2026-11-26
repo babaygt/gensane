@@ -631,6 +631,8 @@ describe("pages in folders", () => {
     expect(docs).toContain('<h2><a href="/docs/guides/">Guides</a></h2>');
     // A folder with no page of its own can't be opened, so what is in it is listed under it.
     expect(docs).toContain("<h2>Reference</h2>\n<ul>\n<li>Cli</li>");
+    // A folder with a page of its own lists what is in it there, not here.
+    expect(docs).toContain('<h2><a href="/docs/guides/">Guides</a></h2>\n</li>');
     expect(docs.indexOf("Start</a>")).toBeLessThan(docs.indexOf("Guides</a>"));
     // Start is only in the links to the pages before and after.
     const guides = afterText(pageOf(built, "docs/guides/index.html")).split(
@@ -640,6 +642,18 @@ describe("pages in folders", () => {
     expect(guides).not.toContain("Start</a>");
     for (const path of ["docs/start/index.html", "now/index.html"])
       expect(afterText(pageOf(built, path))).not.toContain('<ul class="posts">');
+  });
+
+  it("link to the pages in a folder that has no page of its own, and list nothing for a folder with nothing in it", async () => {
+    const built = await build({}, false, SITE, undefined, {
+      "pages/notes/index.md": "---\ntitle: Notes\n---\n",
+      "pages/notes/old/first.md": "---\ntitle: First\n---\n",
+      "pages/empty/index.md": "---\ntitle: Empty\n---\nNothing yet.\n",
+    });
+    expect(afterText(pageOf(built, "notes/index.html"))).toContain(
+      '<h2>Old</h2>\n<ul>\n<li><a href="/notes/old/first/">First</a></li>',
+    );
+    expect(afterText(pageOf(built, "empty/index.html"))).not.toContain("<ul");
   });
 
   it("show the description of what a folder lists", async () => {
