@@ -99,7 +99,7 @@ describe("settings it doesn't know", () => {
         code: ConfigCodes.unknownSetting,
         severity: "error",
         message: '"colours" is not a setting',
-        hint: "the settings are site, perPage, markdown, filters, theme and llms",
+        hint: "the settings are site, perPage, markdown, filters, theme, llms and nav",
       },
     ]);
   });
@@ -325,6 +325,63 @@ describe("markdown.highlight", () => {
   it("refuses anything else", () => {
     expect(messagesOf({ markdown: { highlight: "shiki" } })).toEqual([
       '"markdown.highlight" must be a function, or false, but "shiki" is text',
+    ]);
+  });
+});
+
+describe("the menu", () => {
+  it("accepts pages of the site and addresses of other sites", () => {
+    const nav = [
+      { title: "Blog", url: "/blog/" },
+      { title: "Uses", url: "/uses" },
+      { title: "CV", url: "https://example.com/cv.pdf" },
+      { title: "Old site", url: "http://example.org" },
+      { title: "Mail", url: "mailto:ada@example.com" },
+    ];
+    expect(problemsOf({ nav })).toEqual([]);
+  });
+
+  const START = 'an address that starts with "/", "https://", "http://" or "mailto:"';
+  it.each([
+    [
+      "/uses/",
+      '"nav" must be a list, but "/uses/" is text',
+      'write a list, such as [{ title: "Uses", url: "/uses/" }]',
+    ],
+    [
+      ["/uses/"],
+      '"nav[0]" must be a group of settings, but "/uses/" is text',
+      'write { title: "Uses", url: "/uses/" }',
+    ],
+    [
+      [{ url: "/uses/" }],
+      '"nav[0].title" must be text, but it is missing',
+      "write the text in quotes",
+    ],
+    [
+      [{ title: "Uses", url: "uses/" }],
+      `"nav[0].url" must be ${START}, but "uses/" is text`,
+      'start it with "/" for a page of this site, such as "/uses/"',
+    ],
+    [
+      [{ title: "Uses" }],
+      `"nav[0].url" must be ${START}, but it is missing`,
+      'start it with "/" for a page of this site, such as "/uses/"',
+    ],
+  ])("reports nav %j", (nav, message, hint) => {
+    expect(problemsOf({ nav })).toEqual([
+      { code: ConfigCodes.wrongValue, severity: "error", message, hint },
+    ]);
+  });
+
+  it("reports a setting an item doesn't have", () => {
+    expect(problemsOf({ nav: [{ title: "Uses", url: "/uses/", target: "_blank" }] })).toEqual([
+      {
+        code: ConfigCodes.unknownSetting,
+        severity: "error",
+        message: '"nav[0].target" is not a setting',
+        hint: "the settings of an item of nav are title and url",
+      },
     ]);
   });
 });

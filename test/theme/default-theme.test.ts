@@ -8,7 +8,12 @@ import { gzipSync } from "node:zlib";
 import { afterAll, describe, expect, it } from "vitest";
 import { readSiteFolder, runCli } from "../../src/cli/index.ts";
 import { checkConfig } from "../../src/config/index.ts";
-import { type BuiltSite, type ThemeSettings, buildSite } from "../../src/core/index.ts";
+import {
+  type BuiltSite,
+  type SiteConfig,
+  type ThemeSettings,
+  buildSite,
+} from "../../src/core/index.ts";
 import {
   ManualWatcher,
   MemoryTerminal,
@@ -112,6 +117,7 @@ async function build(
   siteSettings: Record<string, unknown> = SITE,
   today?: string,
   moreContent: Record<string, string> = {},
+  nav?: SiteConfig["nav"],
 ): Promise<BuiltSite> {
   const read = await readSiteFolder(new NodeFileSystem(), site, defaultTheme);
   const built = buildSite({
@@ -121,6 +127,7 @@ async function build(
       theme,
       drafts,
       ...(today === undefined ? {} : { today }),
+      ...(nav === undefined ? {} : { nav }),
     },
     content: { ...read.content, ...moreContent },
     templates: read.templates,
@@ -331,6 +338,29 @@ describe("the theme settings", () => {
     expect(pageOf(await build(), "talks/index.html")).toContain(
       '<a href="/talks/" aria-current="page">Talks</a>',
     );
+  });
+
+  it("marks the blog in the menu on a post too", async () => {
+    expect(pageOf(await build(), "blog/hello/index.html")).toContain(
+      '<a href="/blog/" aria-current="true">Blog</a>',
+    );
+  });
+
+  it("shows the menu of the config, and still leads from the home page to every list", async () => {
+    const nav = [
+      { title: "Writing", url: "/blog/" },
+      { title: "Now", url: "/now/" },
+      { title: "GitHub", url: "https://github.com/babaygt" },
+    ];
+    const home = pageOf(await build({}, false, SITE, undefined, {}, nav), "index.html");
+    const menu = home.slice(home.indexOf('<nav class="site-menu"'), home.indexOf("</nav>"));
+    expect(
+      [...menu.matchAll(/<a href="([^"]+)">([^<]+)</g)].map(([, url, title]) => `${title} ${url}`),
+    ).toEqual(["Writing /blog/", "Now /now/", "GitHub https://github.com/babaygt"]);
+    expect(home).toContain('<p class="more"><a href="/blog/">All posts →</a></p>');
+    expect(home).toContain('<p class="more"><a href="/projects/">All projects →</a></p>');
+    expect(home).toContain('<p class="more"><a href="/talks/">All talks →</a></p>');
+    expect(await htmlProblems(home)).toEqual([]);
   });
 });
 
