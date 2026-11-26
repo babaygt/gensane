@@ -101,3 +101,13 @@ export function foldersAbove(section: SectionFolder, page: Page): readonly Secti
   }
   return isIndex(page) ? path.slice(0, -1) : path;
 }
+
+/** The folder whose own page this is, its `index.md`; none for any other page. */
+export function folderOwnedBy(folder: SectionFolder, page: Page): SectionFolder | undefined {
+  if (folder.page === page) return folder;
+  for (const item of folder.items) {
+    const found = item.kind === "folder" ? folderOwnedBy(item, page) : undefined;
+    if (found !== undefined) return found;
+  }
+  return undefined;
+}

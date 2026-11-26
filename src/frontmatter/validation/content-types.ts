@@ -60,6 +60,8 @@ const post = object({
   cover: optional(text()),
   /** What the cover shows, for screen readers. Without it, the cover is only decoration. */
   coverAlt: optional(text()),
+  /** `false` leaves this post without a table of contents. */
+  toc: withDefault(boolean(), true),
 });
 
 const page = object({
@@ -67,6 +69,8 @@ const page = object({
   slug: optional(text()),
   description: optional(text()),
   draft: withDefault(boolean(), false),
+  /** `false` leaves this page without a table of contents. */
+  toc: withDefault(boolean(), true),
   /** Where the page comes in its section: lower first, then by title. */
   order: optional(integer()),
 });

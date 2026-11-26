@@ -82,7 +82,7 @@ The settings of the default theme. Every one has a default, and changes somethin
 | `blog.layout`   | `list`, `grid`                                                 | `list`    |
 | `blog.cover`    | `true` shows a post's cover at the top of its page too; `false` only on its card | `true` |
 | `home.sections` | `intro`, `recent-posts`, `featured-projects`, `talks`, in the order you list them | all four |
-| `toc`           | `true` for a table of contents on posts with at least 3 headings, or `false` | `true` |
+| `toc`           | `true` for a table of contents on posts and pages with at least 3 headings, or `false` | `true` |
 
 Every palette has a light and a dark side, and all its text colors are readable on its backgrounds. An `accent` of your own that isn't
 gets a [warning](https://gensane.dev/docs/reference/commands/problems/#gs507). Colors, the font and the width are written into `assets/settings.css` as CSS custom properties,

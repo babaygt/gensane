@@ -237,7 +237,9 @@ class ContentLoader {
       extra,
       html,
       markdown: body,
-      tableOfContents: buildTableOfContents(markdown.document),
+      // `toc: false` in the frontmatter turns it off for this one.
+      tableOfContents:
+        "toc" in fields && !fields.toc ? [] : buildTableOfContents(markdown.document),
       excerpt: excerptOf(markdown.document),
       readingTime: readingTimeOf(html),
     };

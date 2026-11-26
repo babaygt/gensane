@@ -166,9 +166,10 @@ Checked 5 pages in 9 ms, with no warnings.
 
 Without a `cover`, a card shows only its text.
 
-## Contents on long posts
+## Contents on long posts and pages
 
-A post with at least three headings gets a table of contents at the top. `toc: false` leaves it out on every post.
+A post or a page with at least three headings gets a table of contents at the top. `toc: false` leaves it out on every
+post and page; `toc: false` in the [frontmatter](../frontmatter/content-types.md#post) of one leaves it out on that one.
 
 [The config](../cli/config.md#theme) lists every setting of the theme, and [Changing one part of the theme](change-the-theme.md)
 goes further than settings can.

@@ -1,13 +1,18 @@
 /** Turns entries and routes into the variables that templates see. */
 import { SafeHtml } from "../../template/index.ts";
 import type { ContentDate } from "../../frontmatter/index.ts";
-import type { ContentEntry } from "../content/entries.ts";
+import type { ContentEntry, EntryOf } from "../content/entries.ts";
 import type { NavItem } from "./build-site.ts";
 import type { Collections } from "../site/collections.ts";
 import type { Theme } from "../theme/theme-settings.ts";
 import { compareDates } from "../site/order.ts";
 import type { Pagination, Route, RouteKind, Tag } from "../site/routes.ts";
-import { type SectionFolder, type SectionItem, foldersAbove } from "../site/sections.ts";
+import {
+  type SectionFolder,
+  type SectionItem,
+  folderOwnedBy,
+  foldersAbove,
+} from "../site/sections.ts";
 
 export type TemplateData = Readonly<Record<string, unknown>>;
 
@@ -144,7 +149,14 @@ export class TemplateVariables {
               url: folder.page?.url,
             }))
           : undefined,
+      folder: route.kind === "page" ? this.#folder(route.section, route.page) : undefined,
     };
+  }
+
+  /** On a folder's own page, the folder, so the page can list what is in it. */
+  #folder(section: SectionFolder | undefined, page: EntryOf<"page">): TemplateData | undefined {
+    const own = section === undefined ? undefined : folderOwnedBy(section, page);
+    return own === undefined ? undefined : this.#section(own, page);
   }
 
   #pageOf(route: Route): TemplateData {
@@ -160,6 +172,7 @@ export class TemplateVariables {
         return {
           title: entry.page.fields.title,
           url: entry.page.url,
+          description: entry.page.fields.description,
           current: entry.page === current,
         };
       }
@@ -167,6 +180,7 @@ export class TemplateVariables {
       return {
         title: entry.title,
         url: entry.page?.url,
+        description: entry.page?.fields.description,
         current: entry.page === current,
         open:
           entry.page === current ||
