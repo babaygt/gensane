@@ -228,6 +228,41 @@ describe(
       await context.close();
     });
 
+    it("leaves focus where the reader is after a first answer, not on Cookie settings", async () => {
+      const { context } = await visitor();
+      const page = await open(context, "/long/");
+      await page.getByRole("button", { name: "Allow" }).focus();
+      await page.keyboard.press("Enter");
+      expect(await page.evaluate("document.activeElement.textContent")).not.toBe("Cookie settings");
+      await context.close();
+    });
+
+    it("keeps the page where it was after an answer from Cookie settings, though the button is far below", async () => {
+      const { context } = await visitor();
+      const page = await context.newPage();
+      await page.setViewportSize({ width: 1000, height: 400 });
+      await page.goto(`${address}/long/`);
+      await page.getByRole("button", { name: "Allow" }).click();
+      await page.getByRole("button", { name: "Cookie settings" }).click();
+      await page.evaluate("window.scrollTo(0, 0)");
+      await page.getByRole("button", { name: "No thanks" }).click();
+      expect(await page.evaluate("window.scrollY")).toBe(0);
+      expect(await page.evaluate("document.activeElement.textContent")).toBe("Cookie settings");
+      await context.close();
+    });
+
+    it("keeps its space below at the very end of the page, after the footer", async () => {
+      const { context } = await visitor();
+      const page = await context.newPage();
+      await page.setViewportSize({ width: 1000, height: 400 });
+      await page.goto(`${address}/long/`);
+      await expect.poll(() => page.locator(".consent").isVisible()).toBe(true);
+      await page.evaluate("window.scrollTo(0, document.documentElement.scrollHeight)");
+      const box = await page.locator(".consent").boundingBox();
+      expect(400 - (box?.y ?? 0) - (box?.height ?? 0)).toBeGreaterThanOrEqual(12);
+      await context.close();
+    });
+
     it("had no JavaScript errors on any page", () => {
       expect(errors).toEqual([]);
     });
