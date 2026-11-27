@@ -123,11 +123,18 @@ own snippet gives the site:
 | `google`     | The measurement ID of the site's data stream in Google Analytics, such as `G-ABC123DEF4` | Yes |
 | `plausible`  | The name of the script in the snippet Plausible gives the site, such as `pa-AbC123` | No |
 | `cloudflare` | The token in the snippet of Cloudflare's Web Analytics: 32 letters and digits       | No |
+| `consent`    | `false` to load Google Analytics on every page without asking first. Defaults to `true` |    |
 
 An ID that doesn't look like one of the service's is a [warning](https://gensane.dev/docs/reference/commands/problems/#gs508): the site still builds, but the visits aren't
-counted. Google Analytics sets cookies, and in the EU a site needs the visitor's consent before it does; gensane doesn't ask for it.
-Plausible and Cloudflare set none. A site served by Cloudflare can also turn Web Analytics on in Cloudflare's dashboard, with no
-setting here.
+counted. Plausible and Cloudflare set no cookies, and are added as they are. A site served by Cloudflare can also turn Web Analytics
+on in Cloudflare's dashboard, with no setting here.
+
+Google Analytics sets cookies, and in the EU a site needs the visitor's consent before it does. So, with `google`, every page asks
+at the bottom of the window, "This site would like to count visits with Google Analytics, which sets cookies.", with **Allow** and
+**No thanks**, and loads nothing from Google until a visitor allows it. The browser keeps the answer, so the bar shows once, and
+**Cookie settings** in the footer opens it again: a visitor who says no after allowing stops Google on the page, and its cookies are
+removed. Without JavaScript nothing is asked and nothing is loaded. gensane can't know where a site's visitors are, so asking is
+the default; a site whose visitors don't need it writes `consent: false`.
 
 For any other service, or anything else for `<head>`, such as a font or a `<meta>` that proves the site is yours, write it in
 [`head.html`](https://gensane.dev/docs/reference/commands/site-folder/#headhtml).

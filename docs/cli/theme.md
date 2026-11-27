@@ -10,7 +10,8 @@ changed with the [`theme` settings](config.md#theme), and any part of it can be 
   between light and dark (a moon or a sun) when the site follows the reader's system, and a footer with the profiles, the year and
   the feed. Its icon in the browser's tab is the first letter of the title in the accent color, unless `public/` has a
   `favicon.svg`, `favicon.png` or `favicon.ico`. The scripts of [`analytics`](config.md#analytics) and the site's own
-  [`head.html`](folders.md#headhtml) go at the end of the head.
+  [`head.html`](folders.md#headhtml) go at the end of the head; with Google Analytics, a bar at the bottom asks first, and the
+  footer has **Cookie settings**.
 - **The home page:** the author's name, picture (`site.author.avatar`) and profile links, then the parts of the settings.
 - **Posts:** the date, the reading time, the tags, a table of contents when the post has at least 3 headings, and at the end the
   tags again with the older and the newer post. Code blocks get their language as a label and a copy button.
@@ -108,9 +109,12 @@ Arguments:
 | `partials/toc.html`             | The table of contents of a post or a page                                  |
 | `partials/period.html`          | When a job or a study started and ended                                    |
 | `partials/analytics.html`       | The snippets of the services in `analytics`, in the head of every page     |
+| `partials/consent.html`         | The bar that asks before Google Analytics counts a visit                   |
 | `assets/style.css`              | The styles, which use the custom properties of `assets/settings.css`      |
 | `assets/theme.js`               | The switch between light and dark, and the label and copy button of code   |
 | `assets/search.js`              | Search: finds the words typed in `search-index.json`                        |
+| `assets/consent.js`             | Shows the bar of `partials/consent.html`, keeps the answer, and loads Google after **Allow** |
+| `assets/consent.css`            | The styles of the bar, only on sites that ask                              |
 | `assets/callout-note.svg`       | The icon of a note callout, used as a mask so it takes the callout's color |
 | `assets/callout-tip.svg`        | The icon of a tip callout                                                  |
 | `assets/callout-important.svg`  | The icon of an important callout                                           |

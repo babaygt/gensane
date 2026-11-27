@@ -36,7 +36,7 @@
 </main>
 <footer class="site-footer">
 {% include "partials/profiles.html" %}
-<p>{% if today %}© {{ today | date("yyyy") }} {% endif %}{% if site.author.name %}{{ site.author.name }}{% elif site.author %}{{ site.author }}{% elif site.title %}{{ site.title }}{% endif %}{% if feed %} · <a href="{{ feed }}">Feed</a>{% endif %} · Made with <a href="https://github.com/babaygt/gensane">gensane</a></p>
+<p>{% if today %}© {{ today | date("yyyy") }} {% endif %}{% if site.author.name %}{{ site.author.name }}{% elif site.author %}{{ site.author }}{% elif site.title %}{{ site.title }}{% endif %}{% if feed %} · <a href="{{ feed }}">Feed</a>{% endif %} · Made with <a href="https://github.com/babaygt/gensane">gensane</a>{% if analytics.consent %}<span hidden> · <button class="consent-settings" type="button">Cookie settings</button></span>{% endif %}</p>
 </footer>
-</body>
+{% if analytics.consent %}{% include "partials/consent.html" %}{% endif %}</body>
 </html>

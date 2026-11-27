@@ -364,16 +364,19 @@ class ConfigCheck {
   /** A wrong ID still builds, so it is a warning: the site works, only the visits aren't counted. */
   analytics(value: unknown): void {
     if (!this.group("analytics", value)) return;
-    const services = Object.keys(ANALYTICS);
+    const settings = [...Object.keys(ANALYTICS), "consent"];
     for (const [name, setting] of Object.entries(value)) {
       const path = `analytics.${name}`;
       const service = ANALYTICS[name];
-      if (service === undefined) {
+      if (name === "consent") {
+        if (typeof setting !== "boolean")
+          this.wrongValue(path, "true or false", setting, "write true or false");
+      } else if (service === undefined) {
         this.unknownSetting(
           path,
           name,
-          services,
-          `the settings of analytics are ${listed(services)}`,
+          settings,
+          `the settings of analytics are ${listed(settings)}`,
         );
       } else if (typeof setting !== "string") {
         this.wrongValue(path, "text", setting, "write the text in quotes");
