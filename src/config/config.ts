@@ -1,4 +1,4 @@
-import type { NavItem, ThemeSettings } from "../core/index.ts";
+import type { Analytics, NavItem, ThemeSettings } from "../core/index.ts";
 import type { MarkdownOptions } from "../markdown/index.ts";
 import type { TemplateFilter } from "../template/index.ts";
 
@@ -20,6 +20,8 @@ export interface GensaneConfig {
    * with `https://`. Without it, the menu has the blog, projects, talks and about pages the site has.
    */
   readonly nav?: readonly NavItem[];
+  /** The services that count visits: `google`, `plausible` and `cloudflare`, each added to every page. */
+  readonly analytics?: Analytics;
 }
 
 export interface SiteSettings {
