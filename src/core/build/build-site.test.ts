@@ -754,6 +754,27 @@ describe("analytics and the site's own head", () => {
     expect(fileOf(site, "about/index.html")).toBe("off");
   });
 
+  it.each([
+    [{ google: "G-ABC123" }, "asks"],
+    [{ google: "G-ABC123", consent: true }, "asks"],
+    [{ google: "G-ABC123", consent: false }, "doesn't ask"],
+    [{ plausible: "pa-x", cloudflare: "abc", consent: true }, "doesn't ask"],
+    [undefined, "doesn't ask"],
+  ])(
+    "tells templates whether to ask before Google counts a visit, with %j: it %s",
+    (analytics, asks) => {
+      const site = built({
+        content,
+        templates: {
+          ...plainTheme,
+          "about.html": "{% if analytics.consent %}asks{% else %}doesn't ask{% endif %}",
+        },
+        ...(analytics === undefined ? {} : { config: { analytics } }),
+      });
+      expect(fileOf(site, "about/index.html")).toBe(asks);
+    },
+  );
+
   it("gives templates the site's own head as it is, unescaped", () => {
     const head = '<meta name="x" content="a&amp;b">';
     const site = built({ content, templates, head });

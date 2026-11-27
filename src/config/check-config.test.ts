@@ -476,8 +476,21 @@ describe("analytics", () => {
       },
     ]);
     expect(problemsOf({ analytics: { umami: "x" } })[0]?.hint).toBe(
-      "the settings of analytics are google, plausible and cloudflare",
+      "the settings of analytics are google, plausible, cloudflare and consent",
     );
+  });
+
+  it("takes consent as true or false", () => {
+    for (const consent of [true, false])
+      expect(problemsOf({ analytics: { google: "G-ABC123DEF4", consent } })).toEqual([]);
+    expect(problemsOf({ analytics: { consent: "no" } })).toEqual([
+      {
+        code: ConfigCodes.wrongValue,
+        severity: "error",
+        message: '"analytics.consent" must be true or false, but "no" is text',
+        hint: "write true or false",
+      },
+    ]);
   });
 });
 

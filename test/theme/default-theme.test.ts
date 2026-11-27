@@ -20,6 +20,7 @@ import {
   NodeFileSystem,
   ScriptedPrompter,
 } from "../../src/ports/index.ts";
+import { domainsOf, googleCookies, startOf } from "../../themes/default/assets/consent.js";
 import { languageOf, nextScheme, shownScheme } from "../../themes/default/assets/theme.js";
 import { accessibilityProblems, htmlProblems } from "../support/page-checks.ts";
 
@@ -234,6 +235,8 @@ describe("the default theme", () => {
       ["style.css", 12],
       ["theme.js", 4],
       ["search.js", 4],
+      ["consent.css", 2],
+      ["consent.js", 5],
     ] as const) {
       const source = await readFile(join(assets, file));
       expect(gzipSync(source).length).toBeLessThan(3 * 1024);
@@ -607,6 +610,7 @@ describe("analytics and the site's own head", () => {
     google: "G-ABC123DEF4",
     plausible: "pa-AbC123",
     cloudflare: "0123456789abcdef0123456789abcdef",
+    consent: false,
   };
 
   it("adds the snippet of each service to the head of every page", async () => {
@@ -640,9 +644,14 @@ describe("analytics and the site's own head", () => {
 
   it("escapes an ID that isn't one, so it can't end its attribute", async () => {
     const id = `G-1"><script>alert(1)</script>`;
-    const head = headOf(pageOf(await buildWith({ google: id, cloudflare: id }), "index.html"));
+    const head = headOf(
+      pageOf(await buildWith({ google: id, cloudflare: id, consent: false }), "index.html"),
+    );
     expect(head).not.toContain("<script>alert(1)");
     expect(head).toContain('data-id="G-1&quot;&gt;&lt;script&gt;');
+    const asking = pageOf(await buildWith({ google: id }), "index.html");
+    expect(asking).not.toContain("<script>alert(1)");
+    expect(asking).toContain('data-google="G-1&quot;&gt;&lt;script&gt;');
   });
 
   it("adds the site's own head.html at the end of the head of every page, as it is", async () => {
@@ -652,6 +661,77 @@ describe("analytics and the site's own head", () => {
       expect(headOf(content)).toMatch(
         /cloudflareinsights[^\n]*\n<meta name="google-site-verification" content="abc">\n<\/head>$/,
       );
+  });
+});
+
+describe("asking before Google Analytics counts a visit", () => {
+  it("loads only the bar's script and styles by default, not Google's, on every page", async () => {
+    const built = await buildWith({ google: "G-ABC123DEF4" });
+    for (const { content } of pagesOf(built)) {
+      expect(content).not.toContain("googletagmanager");
+      expect(headOf(content)).toContain(
+        '<link rel="stylesheet" href="/assets/consent.css">\n<script type="module" src="/assets/consent.js"></script>\n</head>',
+      );
+      expect(content).toMatch(
+        /<\/footer>\n<section class="consent" aria-label="Cookies" data-google="G-ABC123DEF4" hidden>\n[^]*<\/section>\n<\/body>/,
+      );
+    }
+  });
+
+  it("asks with two buttons that look the same, and adds Cookie settings to the footer, hidden until the script runs", async () => {
+    const home = pageOf(await buildWith({ google: "G-ABC123DEF4" }), "index.html");
+    expect(home).toContain(
+      '<p class="consent-choices"><button type="button" data-consent="yes">Allow</button> <button type="button" data-consent="no">No thanks</button></p>',
+    );
+    expect(footerOf(await buildWith({ google: "G-ABC123DEF4" }))).toContain(
+      '<span hidden> · <button class="consent-settings" type="button">Cookie settings</button></span></p>',
+    );
+  });
+
+  it("keeps a page valid and accessible with the bar", async () => {
+    const home = pageOf(await buildWith({ google: "G-ABC123DEF4" }), "index.html");
+    expect(await htmlProblems(home)).toEqual([]);
+    expect(accessibilityProblems(home)).toEqual([]);
+  });
+
+  it("doesn't ask with consent: false, or for Plausible and Cloudflare, which set no cookies", async () => {
+    for (const analytics of [
+      { google: "G-ABC123DEF4", consent: false },
+      { plausible: "pa-AbC123", cloudflare: "0123456789abcdef0123456789abcdef" },
+    ]) {
+      const home = pageOf(await buildWith(analytics), "index.html");
+      expect(home).not.toMatch(/consent|Cookie settings/);
+    }
+  });
+
+  it("keeps the snippets of Plausible and Cloudflare as they are next to the bar", async () => {
+    const head = headOf(
+      pageOf(await buildWith({ google: "G-ABC123DEF4", plausible: "pa-AbC123" }), "index.html"),
+    );
+    expect(head).toContain('<script async src="https://plausible.io/js/pa-AbC123.js"></script>');
+    expect(head).toContain('src="/assets/consent.js"');
+  });
+
+  it.each([
+    ["yes", "load"],
+    ["no", "leave"],
+    [null, "ask"],
+    ["maybe", "ask"],
+  ] as const)("does this with a choice kept as %j: %s", (kept, does) => {
+    expect(startOf(kept)).toBe(does);
+  });
+
+  it("finds Google's cookies among the others", () => {
+    expect(
+      googleCookies("theme=dark; _ga=GA1.1.2; _ga_ABC123=GS1; _gid=GA1; _gat=1; x_ga=1"),
+    ).toEqual(["_ga", "_ga_ABC123", "_gid"]);
+    expect(googleCookies("")).toEqual([]);
+  });
+
+  it("knows each domain a cookie of the host may be set for", () => {
+    expect(domainsOf("www.example.co")).toEqual(["www.example.co", "example.co"]);
+    expect(domainsOf("example.com")).toEqual(["example.com"]);
+    expect(domainsOf("localhost")).toEqual([]);
   });
 });
 
@@ -791,6 +871,8 @@ describe("an ejected theme", () => {
         "assets/callout-note.svg",
         "assets/callout-tip.svg",
         "assets/callout-warning.svg",
+        "assets/consent.css",
+        "assets/consent.js",
         "assets/icons.svg",
         "assets/search.js",
         "assets/style.css",
