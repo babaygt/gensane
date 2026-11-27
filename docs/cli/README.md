@@ -44,6 +44,8 @@ assets/callout-important.svg
 assets/callout-note.svg
 assets/callout-tip.svg
 assets/callout-warning.svg
+assets/consent.css
+assets/consent.js
 assets/favicon.svg
 assets/icons.svg
 assets/search.js

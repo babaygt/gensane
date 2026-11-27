@@ -105,7 +105,12 @@ export class TemplateVariables {
     head,
   }: VariableSources) {
     this.#favicon = favicon;
-    this.#analytics = { ...analytics };
+    // Templates see whether the page asks before Google counts a visit: only Google needs it, and it
+    // asks unless the config says no.
+    this.#analytics = {
+      ...analytics,
+      consent: analytics?.google !== undefined && analytics.consent !== false,
+    };
     this.#head = head === undefined ? undefined : new SafeHtml(head);
     this.#today = today === undefined ? undefined : dateOf(today);
     this.#search = routes.find((route) => route.kind === "search")?.url;

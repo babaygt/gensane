@@ -15,7 +15,7 @@ when there is nothing, so `{% if previous %}` works on every page.
 | `feed`        | Every page   | The address of the feed, `/feed.xml`, when the site has one                        |
 | `search`      | Every page   | The address of the search page, `/search/`, when the site has one                  |
 | `favicon`     | Every page   | The address of the site's icon: its own `favicon.svg`, `favicon.png` or `favicon.ico` in `public/`, or else one made from the first letter of `site.title` |
-| `analytics`   | Every page   | The IDs of [`analytics`](../cli/config.md#analytics): `google`, `plausible` and `cloudflare`, the ones the config names |
+| `analytics`   | Every page   | The IDs of [`analytics`](../cli/config.md#analytics): `google`, `plausible` and `cloudflare`, the ones the config names, and `consent`: whether to ask before Google loads, true when the config has `google` and doesn't say `consent: false` |
 | `head`        | Every page   | The site's own [`head.html`](../cli/folders.md#headhtml), as HTML that is printed as it is, when the site has one |
 | `today`       | Every page   | The day of the build, as a date for the `date` filter, such as `{{ today \| date("yyyy") }}` |
 | `pagination`  | List pages   | `items`, `current`, `total`, `previousUrl` and `nextUrl`                           |
