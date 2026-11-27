@@ -20,7 +20,12 @@ import {
   NodeFileSystem,
   ScriptedPrompter,
 } from "../../src/ports/index.ts";
-import { domainsOf, googleCookies, startOf } from "../../themes/default/assets/consent.js";
+import {
+  domainsOf,
+  googleCookies,
+  googleScript,
+  startOf,
+} from "../../themes/default/assets/consent.js";
 import { languageOf, nextScheme, shownScheme } from "../../themes/default/assets/theme.js";
 import { accessibilityProblems, htmlProblems } from "../support/page-checks.ts";
 
@@ -719,6 +724,15 @@ describe("asking before Google Analytics counts a visit", () => {
     ["maybe", "ask"],
   ] as const)("does this with a choice kept as %j: %s", (kept, does) => {
     expect(startOf(kept)).toBe(does);
+  });
+
+  it("keeps an ID that isn't one from adding anything to the address of Google's script", () => {
+    expect(googleScript("G-ABC123DEF4")).toBe(
+      "https://www.googletagmanager.com/gtag/js?id=G-ABC123DEF4",
+    );
+    expect(googleScript("G-1&l=evil#x")).toBe(
+      "https://www.googletagmanager.com/gtag/js?id=G-1%26l%3Devil%23x",
+    );
   });
 
   it("finds Google's cookies among the others", () => {
