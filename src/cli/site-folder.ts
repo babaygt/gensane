@@ -12,6 +12,8 @@ const PUBLIC = "public";
 const THEME = "theme";
 /** The folder of a theme whose files are copied into the site, at the same path. */
 const ASSETS = "assets";
+/** HTML of the site's own, added to the `<head>` of every page. */
+const HEAD = "head.html";
 
 /** A file copied into the site as it is, from `public/` or from a theme's `assets/`. */
 export interface CopiedFile {
@@ -86,10 +88,12 @@ export async function readSiteFolder(
   defaultTheme: string,
 ): Promise<SiteFiles> {
   const contentFolder = join(siteFolder, CONTENT);
-  const [contentPaths, publicPaths, theme] = await Promise.all([
+  const headFile = join(siteFolder, HEAD);
+  const [contentPaths, publicPaths, theme, hasHead] = await Promise.all([
     fileSystem.listFiles(contentFolder),
     fileSystem.listFiles(join(siteFolder, PUBLIC)),
     themeFiles(fileSystem, siteFolder, defaultTheme),
+    fileSystem.isFile(headFile),
   ]);
   const contentSources = Object.fromEntries(
     contentPaths.filter((path) => !isHidden(path)).map((path) => [path, join(contentFolder, path)]),
@@ -111,6 +115,7 @@ export async function readSiteFolder(
     ),
     publicFiles: publicPaths.filter((path) => !isSystemFile(path)),
     themeAssets,
+    ...(hasHead ? { head: await fileSystem.readText(headFile) } : {}),
   };
 }
 

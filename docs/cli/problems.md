@@ -133,7 +133,7 @@ $ gensane check
 error[GS504]: "colours" is not a setting
   ┌─ gensane.config.ts
   │
-  = hint: the settings are site, perPage, markdown, filters, theme, llms and nav
+  = hint: the settings are site, perPage, markdown, filters, theme, llms, nav and analytics
 
 Found 1 error and 0 warnings in the config.
 $ echo $?
@@ -197,6 +197,26 @@ warning[GS507]: "theme.accent" is hard to read in the light colors of the "defau
   ┌─ gensane.config.ts
   │
   = hint: choose a darker color, or leave accent out to use the palette's own
+
+Checked 2 pages in 7 ms, with 1 warning.
+```
+
+### GS508
+
+A warning: an ID in [`analytics`](config.md#analytics) doesn't look like one of the service's, so the visits probably aren't counted.
+The page still gets the snippet, in case the service has started using IDs of a new kind.
+
+<!-- runs -->
+```ts gensane.config.ts
+export default { site: { url: "https://example.com" }, analytics: { google: "UA-12345-1" } };
+```
+
+```console
+$ gensane check
+warning[GS508]: "analytics.google" doesn't look like a measurement ID of Google Analytics: "UA-12345-1"
+  ┌─ gensane.config.ts
+  │
+  = hint: IDs that start with "UA-" stopped counting in 2023; write the measurement ID of the site's data stream, which starts with "G-"
 
 Checked 2 pages in 7 ms, with 1 warning.
 ```

@@ -2,7 +2,7 @@
 import { SafeHtml } from "../../template/index.ts";
 import type { ContentDate } from "../../frontmatter/index.ts";
 import type { ContentEntry, EntryOf } from "../content/entries.ts";
-import type { NavItem } from "./build-site.ts";
+import type { Analytics, NavItem } from "./build-site.ts";
 import type { Collections } from "../site/collections.ts";
 import type { Theme } from "../theme/theme-settings.ts";
 import { compareDates } from "../site/order.ts";
@@ -44,6 +44,9 @@ export interface VariableSources {
   readonly today: string | undefined;
   /** The menu from the config, if it has one. */
   readonly nav: readonly NavItem[] | undefined;
+  readonly analytics: Analytics | undefined;
+  /** The site's own HTML for `<head>`, if it has some. */
+  readonly head: string | undefined;
 }
 
 /** `/uses` → `/uses/`, as the page's own address is written. A file, such as `/cv.pdf`, stays as it is. */
@@ -86,9 +89,24 @@ export class TemplateVariables {
   readonly #today: ContentDate | undefined;
   readonly #pages = new Map<ContentEntry, TemplateData>();
   readonly #collections: TemplateData;
+  readonly #analytics: TemplateData;
+  readonly #head: SafeHtml | undefined;
 
-  constructor({ site, theme, collections, routes, feed, favicon, today, nav }: VariableSources) {
+  constructor({
+    site,
+    theme,
+    collections,
+    routes,
+    feed,
+    favicon,
+    today,
+    nav,
+    analytics,
+    head,
+  }: VariableSources) {
     this.#favicon = favicon;
+    this.#analytics = { ...analytics };
+    this.#head = head === undefined ? undefined : new SafeHtml(head);
     this.#today = today === undefined ? undefined : dateOf(today);
     this.#search = routes.find((route) => route.kind === "search")?.url;
     this.#site = site;
@@ -127,6 +145,8 @@ export class TemplateVariables {
       feed: this.#feed,
       search: this.#search,
       favicon: this.#favicon,
+      analytics: this.#analytics,
+      head: this.#head,
       today: this.#today,
       collections: this.#collections,
       page: this.#pageOf(route),

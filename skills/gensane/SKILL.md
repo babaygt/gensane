@@ -146,6 +146,8 @@ export default defineConfig({
   `blog.layout` (`list` or `grid`), `blog.cover`, `home.sections`, `toc`.
 - `nav`: the menu, a list of `{ title, url }`; `/uses/` for a page of the site (checked like a link), `https://` for another site.
   Without it, the menu has the blog, projects, talks and about pages the site has.
+- `analytics`: `google` (`G-…`), `plausible` (`pa-…`, from Plausible's snippet) or `cloudflare` (the token), added to every page.
+  Anything else for `<head>` goes in `head.html` in the site folder, added as it is.
 - Other settings: `perPage`, `markdown`, `filters`, and `llms` (writes `llms.txt`).
 
 [references/config.md](references/config.md) has every setting and its values.
