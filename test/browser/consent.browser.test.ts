@@ -126,6 +126,30 @@ describe(
       await context.close();
     });
 
+    it("gives Google each command as the arguments of a call, which is all its script reads", async () => {
+      const { context } = await visitor();
+      const page = await open(context, "/");
+      await page.getByRole("button", { name: "Allow" }).click();
+      expect(
+        await page.evaluate(
+          "Array.from(window.dataLayer, (command) => Object.prototype.toString.call(command))",
+        ),
+      ).toEqual(["[object Arguments]", "[object Arguments]"]);
+      await context.close();
+    });
+
+    it("loads Google once when Allow is chosen again from Cookie settings", async () => {
+      const { context, outside } = await visitor();
+      const page = await open(context, "/");
+      await page.getByRole("button", { name: "Allow" }).click();
+      await page.getByRole("button", { name: "Cookie settings" }).click();
+      await page.getByRole("button", { name: "Allow" }).click();
+      await page.waitForLoadState("networkidle");
+      expect(fromGoogle(outside)).toHaveLength(1);
+      expect(await page.evaluate("window.dataLayer.length")).toBe(2);
+      await context.close();
+    });
+
     it("sends nothing after No thanks, and doesn't ask again", async () => {
       const { context, outside } = await visitor();
       const page = await open(context, "/");
