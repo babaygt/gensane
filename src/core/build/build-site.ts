@@ -66,6 +66,11 @@ export interface Analytics {
   readonly plausible?: string;
   /** The token in the snippet of Cloudflare's Web Analytics. */
   readonly cloudflare?: string;
+  /**
+   * Ask before Google Analytics counts a visit, and load it only after "Allow". Defaults to `true`;
+   * only Google needs it.
+   */
+  readonly consent?: boolean;
 }
 
 /** One item of the menu: a page of the site, such as `/uses/`, or an address on another site. */
