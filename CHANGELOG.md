@@ -2,6 +2,14 @@
 
 What changed in each version of `@gensane/cli`, newest first.
 
+## 0.3.1
+
+Two fixes to the bar that asks before Google Analytics counts a visit:
+
+- **It floats a little above the bottom of the window,** as a card with rounded corners, instead of lying on its edge.
+- **Allow and No thanks keep the page where it was.** They moved to the footer's **Cookie settings**, which scrolled the page to
+  its end.
+
 ## 0.3.0
 
 What moving a real personal website to gensane showed was missing.
