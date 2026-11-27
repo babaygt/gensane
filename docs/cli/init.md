@@ -95,7 +95,7 @@ export default defineConfig({
     "check": "gensane check"
   },
   "devDependencies": {
-    "@gensane/cli": "^0.3.0"
+    "@gensane/cli": "^0.3.1"
   }
 }
 ```
