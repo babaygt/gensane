@@ -99,7 +99,7 @@ describe("settings it doesn't know", () => {
         code: ConfigCodes.unknownSetting,
         severity: "error",
         message: '"colours" is not a setting',
-        hint: "the settings are site, perPage, markdown, filters, theme, llms and nav",
+        hint: "the settings are site, perPage, markdown, filters, theme, llms, nav and analytics",
       },
     ]);
   });
@@ -383,6 +383,95 @@ describe("the menu", () => {
         hint: "the settings of an item of nav are title and url",
       },
     ]);
+  });
+});
+
+describe("analytics", () => {
+  it("accepts the ID of each service", () => {
+    const analytics = {
+      google: "G-ABC123DEF4",
+      plausible: "pa-AbC_12-3",
+      cloudflare: "0123456789abcdef0123456789abcdef",
+    };
+    expect(checkConfig({ analytics }, FILE)).toEqual({
+      ok: true,
+      value: { config: { analytics }, warnings: [] },
+    });
+  });
+
+  const GOOGLE_HINT =
+    'write the measurement ID of the site\'s data stream, which starts with "G-", such as "G-ABC123DEF4"';
+  const PLAUSIBLE_HINT =
+    'write the name of the script in the snippet Plausible gives the site, such as "pa-AbC123"';
+  it.each([
+    ["google", "g-abc123", "a measurement ID of Google Analytics", GOOGLE_HINT],
+    [
+      "google",
+      "UA-12345-1",
+      "a measurement ID of Google Analytics",
+      'IDs that start with "UA-" stopped counting in 2023; write the measurement ID of the site\'s data stream, which starts with "G-"',
+    ],
+    ["plausible", "pa-", "the name of a Plausible script", PLAUSIBLE_HINT],
+    [
+      "plausible",
+      "example.com",
+      "the name of a Plausible script",
+      `${PLAUSIBLE_HINT}, not the domain`,
+    ],
+    [
+      "cloudflare",
+      "0123456789ABCDEF0123456789ABCDEF",
+      "a token of Cloudflare's Web Analytics",
+      "write the token in the snippet Cloudflare's Web Analytics gives the site: 32 letters and digits",
+    ],
+    [
+      "cloudflare",
+      "0123456789abcdef0123456789abcde",
+      "a token of Cloudflare's Web Analytics",
+      "write the token in the snippet Cloudflare's Web Analytics gives the site: 32 letters and digits",
+    ],
+  ])(
+    "warns when analytics.%s doesn't look like an ID of the service (%j), but still builds",
+    (service, id, what, hint) => {
+      const result = checkConfig({ analytics: { [service]: id } }, FILE);
+      expect(result.ok).toBe(true);
+      expect(problemsOf({ analytics: { [service]: id } })).toEqual([
+        {
+          code: ConfigCodes.unlikelyAnalyticsId,
+          severity: "warning",
+          message: `"analytics.${service}" doesn't look like ${what}: ${JSON.stringify(id)}`,
+          hint,
+        },
+      ]);
+    },
+  );
+
+  it("reports an ID that isn't text, and a group that isn't one", () => {
+    expect(problemsOf({ analytics: { google: 123 } })).toEqual([
+      {
+        code: ConfigCodes.wrongValue,
+        severity: "error",
+        message: '"analytics.google" must be text, but 123 is a number',
+        hint: "write the text in quotes",
+      },
+    ]);
+    expect(messagesOf({ analytics: "G-ABC123" })).toEqual([
+      '"analytics" must be a group of settings, but "G-ABC123" is text',
+    ]);
+  });
+
+  it("knows the services", () => {
+    expect(problemsOf({ analytics: { plausable: "pa-x" } })).toEqual([
+      {
+        code: ConfigCodes.unknownSetting,
+        severity: "error",
+        message: '"analytics.plausable" is not a setting',
+        hint: 'did you mean "plausible"?',
+      },
+    ]);
+    expect(problemsOf({ analytics: { umami: "x" } })[0]?.hint).toBe(
+      "the settings of analytics are google, plausible and cloudflare",
+    );
   });
 });
 

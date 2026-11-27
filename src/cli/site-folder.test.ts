@@ -75,6 +75,20 @@ describe("readSiteFolder", () => {
     expect(publicFiles).toEqual([".nojekyll", ".well-known/security.txt"]);
   });
 
+  it("reads the site's own head.html, as it is", async () => {
+    const head = '<meta name="google-site-verification" content="abc">\n';
+    const fileSystem = new MemoryFileSystem({ "site/head.html": head });
+    expect((await readSiteFolder(fileSystem, "site", DEFAULT_THEME)).head).toBe(head);
+  });
+
+  it("doesn't take a head.html in theme/ or content/ for the site's own", async () => {
+    const fileSystem = new MemoryFileSystem({
+      "site/theme/head.html": "<meta>",
+      "site/content/head.html": "<meta>",
+    });
+    expect((await readSiteFolder(fileSystem, "site", DEFAULT_THEME)).head).toBeUndefined();
+  });
+
   it("reads a site with no folders as empty", async () => {
     const site = await readSiteFolder(new MemoryFileSystem(), "site", DEFAULT_THEME);
     expect(site).toEqual({
