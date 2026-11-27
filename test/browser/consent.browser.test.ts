@@ -22,6 +22,7 @@ const files: Record<string, string> = {
   "gensane.config.mjs":
     'export default { site: { title: "Ada\'s notes" }, analytics: { google: "G-ABC123DEF4" } };\n',
   "content/pages/about.md": "---\ntitle: About\n---\nHello.\n",
+  "content/pages/long.md": `---\ntitle: A long page\n---\n${"A paragraph long enough to fill the window.\n\n".repeat(60)}`,
 };
 
 let site = "";
@@ -193,16 +194,37 @@ describe(
       await context.close();
     });
 
-    it("stays on the screen at the bottom of the window while the page scrolls", async () => {
+    it.each([390, 1000])(
+      "floats a little above the bottom of the window, clear of its sides, %i px wide",
+      async (width) => {
+        const { context } = await visitor();
+        const page = await context.newPage();
+        await page.setViewportSize({ width, height: 400 });
+        await page.goto(`${address}/long/`);
+        const bar = page.locator(".consent");
+        await expect.poll(() => bar.isVisible()).toBe(true);
+        const box = await bar.boundingBox();
+        const bottom = (box?.y ?? 0) + (box?.height ?? 0);
+        expect(400 - bottom).toBeGreaterThanOrEqual(12);
+        expect(400 - bottom).toBeLessThanOrEqual(32);
+        expect(box?.x).toBeGreaterThanOrEqual(12);
+        expect(width - (box?.x ?? 0) - (box?.width ?? 0)).toBeGreaterThanOrEqual(12);
+        expect(await page.evaluate("document.documentElement.scrollWidth")).toBeLessThanOrEqual(
+          width,
+        );
+        await context.close();
+      },
+    );
+
+    it.each(["Allow", "No thanks"])("keeps the page where it was after %s", async (name) => {
       const { context } = await visitor();
       const page = await context.newPage();
-      await page.setViewportSize({ width: 390, height: 300 });
-      await page.goto(`${address}/about/`);
-      const bar = page.locator(".consent");
-      await expect.poll(() => bar.isVisible()).toBe(true);
-      const box = await bar.boundingBox();
-      expect(Math.round((box?.y ?? 0) + (box?.height ?? 0))).toBeLessThanOrEqual(300);
-      expect(await page.evaluate("document.documentElement.scrollWidth")).toBeLessThanOrEqual(390);
+      await page.setViewportSize({ width: 1000, height: 400 });
+      await page.goto(`${address}/long/`);
+      await expect.poll(() => page.locator(".consent").isVisible()).toBe(true);
+      await page.getByRole("button", { name }).click();
+      expect(await page.locator(".consent").isVisible()).toBe(false);
+      expect(await page.evaluate("window.scrollY")).toBe(0);
       await context.close();
     });
 
