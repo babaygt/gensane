@@ -138,6 +138,26 @@ async function build(
   return built.value;
 }
 
+/** A site with analytics or a head of its own; the rest as in `build`. */
+async function buildWith(analytics: SiteConfig["analytics"], head?: string): Promise<BuiltSite> {
+  const read = await readSiteFolder(new NodeFileSystem(), site, defaultTheme);
+  const built = buildSite({
+    config: { site: SITE, ...(analytics === undefined ? {} : { analytics }) },
+    content: read.content,
+    templates: read.templates,
+    publicFiles: read.publicFiles,
+    themeAssets: read.themeAssets.map(({ path }) => path),
+    ...(head === undefined ? {} : { head }),
+  });
+  if (!built.ok) throw new Error(built.error.map(({ message }) => message).join("\n"));
+  return built.value;
+}
+
+/** What is between `<head>` and `</head>`. */
+function headOf(page: string): string {
+  return page.slice(page.indexOf("<head>"), page.indexOf("</head>") + "</head>".length);
+}
+
 /** The footer of the home page. */
 function footerOf(built: BuiltSite): string {
   const home = pageOf(built, "index.html");
@@ -581,6 +601,59 @@ function aboveTitle(page: string): string {
 function afterText(page: string): string {
   return page.slice(page.lastIndexOf("</div>\n", page.indexOf("</article>")));
 }
+
+describe("analytics and the site's own head", () => {
+  const ANALYTICS = {
+    google: "G-ABC123DEF4",
+    plausible: "pa-AbC123",
+    cloudflare: "0123456789abcdef0123456789abcdef",
+  };
+
+  it("adds the snippet of each service to the head of every page", async () => {
+    const built = await buildWith(ANALYTICS);
+    for (const { content } of pagesOf(built)) {
+      const head = headOf(content);
+      expect(head).toContain(
+        '<script async src="https://www.googletagmanager.com/gtag/js?id=G-ABC123DEF4"></script>\n<script data-id="G-ABC123DEF4">window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag("js",new Date());gtag("config",document.currentScript.dataset.id);</script>',
+      );
+      expect(head).toContain('<script async src="https://plausible.io/js/pa-AbC123.js"></script>');
+      expect(head).toContain("plausible.init()</script>");
+      expect(head).toContain(
+        `<script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token": "0123456789abcdef0123456789abcdef"}'></script>`,
+      );
+    }
+  });
+
+  it("adds only the services the config names, and none without analytics", async () => {
+    const home = headOf(pageOf(await buildWith({ plausible: "pa-AbC123" }), "index.html"));
+    expect(home).toContain("plausible.io");
+    expect(home).not.toContain("googletagmanager");
+    expect(home).not.toContain("cloudflareinsights");
+    const plain = headOf(pageOf(await buildWith(undefined), "index.html"));
+    expect(plain).not.toMatch(/googletagmanager|plausible|cloudflareinsights/);
+    expect(plain).toMatch(/<script type="module" src="\/assets\/theme.js"><\/script>\n<\/head>/);
+  });
+
+  it("keeps a page valid with every service", async () => {
+    expect(await htmlProblems(pageOf(await buildWith(ANALYTICS), "index.html"))).toEqual([]);
+  });
+
+  it("escapes an ID that isn't one, so it can't end its attribute", async () => {
+    const id = `G-1"><script>alert(1)</script>`;
+    const head = headOf(pageOf(await buildWith({ google: id, cloudflare: id }), "index.html"));
+    expect(head).not.toContain("<script>alert(1)");
+    expect(head).toContain('data-id="G-1&quot;&gt;&lt;script&gt;');
+  });
+
+  it("adds the site's own head.html at the end of the head of every page, as it is", async () => {
+    const own = '<meta name="google-site-verification" content="abc">\n';
+    const built = await buildWith(ANALYTICS, own);
+    for (const { content } of pagesOf(built))
+      expect(headOf(content)).toMatch(
+        /cloudflareinsights[^\n]*\n<meta name="google-site-verification" content="abc">\n<\/head>$/,
+      );
+  });
+});
 
 describe("pages in folders", () => {
   it("show the folder they are in above their title, as a link back", async () => {

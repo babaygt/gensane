@@ -231,6 +231,22 @@ describe("what a build takes from the config and the clock", () => {
     );
   });
 
+  it("gives the templates analytics from the config and the site's own head.html", async () => {
+    const run = await gensane(["build"], {
+      files: {
+        "site/content/blog/hello.md": HELLO,
+        "site/theme/post.html": "{{ analytics.plausible }} {{ head }}",
+        "site/head.html": '<meta name="x" content="y">',
+      },
+      config: {
+        default: { site: { url: "https://example.com" }, analytics: { plausible: "pa-x" } },
+      },
+    });
+    expect(await run.fileSystem.readText("site/dist/blog/hello/index.html")).toBe(
+      'pa-x <meta name="x" content="y">',
+    );
+  });
+
   it("points a problem with the site address at the config file the site has", async () => {
     const run = await gensane(["check"], {
       files: { "site/content/index.md": "---\ntitle: Home\n---\n" },

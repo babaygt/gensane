@@ -701,6 +701,8 @@ describe("the icon of the site", () => {
   it.each([
     [["favicon.svg"], [], "/favicon.svg"],
     [["favicon.ico"], [], "/favicon.ico"],
+    [["favicon.png"], [], "/favicon.png"],
+    [["favicon.ico", "favicon.png"], [], "/favicon.png"],
     [[], ["assets/favicon.svg"], "/assets/favicon.svg"],
   ])(
     "uses the site's or the theme's own icon (%j, %j) instead of making one",
@@ -725,6 +727,48 @@ describe("the icon of the site", () => {
       expect(fileOf(site, "assets/favicon.svg")).toBeUndefined();
     },
   );
+});
+
+describe("analytics and the site's own head", () => {
+  const content = { "pages/about.md": minimal.page };
+  const templates = {
+    ...plainTheme,
+    "about.html":
+      "{{ analytics.google }}|{{ analytics.plausible }}|{{ analytics.cloudflare }}|{{ head }}",
+  };
+
+  it("gives templates the ID of each service", () => {
+    const analytics = { google: "G-ABC123", plausible: "pa-x", cloudflare: "abc" };
+    const site = built({ content, templates, config: { analytics } });
+    expect(fileOf(site, "about/index.html")).toBe("G-ABC123|pa-x|abc|");
+  });
+
+  it("lets a template ask for a service a site without analytics doesn't have", () => {
+    const site = built({
+      content,
+      templates: {
+        ...plainTheme,
+        "about.html": "{% if analytics.google %}on{% else %}off{% endif %}",
+      },
+    });
+    expect(fileOf(site, "about/index.html")).toBe("off");
+  });
+
+  it("gives templates the site's own head as it is, unescaped", () => {
+    const head = '<meta name="x" content="a&amp;b">';
+    const site = built({ content, templates, head });
+    expect(fileOf(site, "about/index.html")).toBe(`|||${head}`);
+  });
+
+  it("adds the path of the site to the addresses in the site's own head, as on the rest of the page", () => {
+    const site = built({
+      content,
+      templates,
+      head: '<link rel="stylesheet" href="/fonts.css">',
+      config: { site: { url: "https://example.com/notes/" } },
+    });
+    expect(fileOf(site, "about/index.html")).toContain('href="/notes/fonts.css"');
+  });
 });
 
 describe("the day of the build", () => {
