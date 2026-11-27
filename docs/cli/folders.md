@@ -8,6 +8,7 @@ Gensane works on the folder it runs in. The folders have fixed names, so every s
 | `theme/`            | Your own changes to the theme: templates in the [template language](../template/README.md), and `assets/` |
 | `public/`           | Files copied into the site as they are, such as images, a favicon or `CNAME`                   |
 | `gensane.config.ts` | The [config](config.md), which is optional; `gensane.config.js` and `.mjs` work too            |
+| `head.html`         | HTML of your own for the `<head>` of every page, which is optional                             |
 | `dist/`             | The website, written by [`gensane build`](build-and-check.md)                                  |
 
 ## What is read
@@ -16,6 +17,7 @@ Gensane works on the folder it runs in. The folders have fixed names, so every s
 - **Templates:** the `.html` files in `theme/`, named by their path inside it, so `theme/partials/nav.html` is `partials/nav.html` in
   `include`. Other files in `theme/` aren't read.
 - **Public files:** every file in `public/`, copied to the same path in the site.
+- **`head.html`:** read as it is, if the site has one.
 
 Files and folders whose names start with a dot are left out of `content/` and `theme/`, because editors and the system put files such
 as `.DS_Store` and `.post.md.swp` next to the real ones. In `public/` they are kept, because hosts read some of them, such as
@@ -71,6 +73,19 @@ sitemap.xml
 ```
 
 The editor's backup isn't read, so it gives no warning that it isn't Markdown. `.nojekyll` is copied, and `.DS_Store` isn't.
+
+## `head.html`
+
+HTML of your own, which the default theme adds at the end of the `<head>` of every page, as it is: a service that counts visits and
+that [`analytics`](config.md#analytics) doesn't know, a font, or a `<meta>` that proves to a search engine that the site is yours.
+
+```html
+<meta name="google-site-verification" content="abc123">
+<link rel="stylesheet" href="/fonts/inter.css">
+```
+
+It isn't a template, so `{{` in it stays as it is, and it isn't checked. An address on the site, such as `/fonts/inter.css`, gets
+the path of the site like the rest of the page. A `base.html` of the site's own prints it with `{{ head }}`.
 
 ## The theme
 

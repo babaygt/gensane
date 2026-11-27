@@ -480,6 +480,34 @@ $ echo $?
 1
 ```
 
+### `analytics`
+
+A service that counts the visits of the site. Each is added to the `<head>` of every page by the default theme, with the name its
+own snippet gives the site:
+
+| Setting      | What to write                                                                      | Cookies |
+| ------------ | ---------------------------------------------------------------------------------- | ------- |
+| `google`     | The measurement ID of the site's data stream in Google Analytics, such as `G-ABC123DEF4` | Yes |
+| `plausible`  | The name of the script in the snippet Plausible gives the site, such as `pa-AbC123` | No |
+| `cloudflare` | The token in the snippet of Cloudflare's Web Analytics: 32 letters and digits       | No |
+
+```ts
+import { defineConfig } from "@gensane/cli";
+
+export default defineConfig({
+  site: { title: "Ada's notes", url: "https://ada.dev" },
+  analytics: { cloudflare: "0123456789abcdef0123456789abcdef" },
+});
+```
+
+An ID that doesn't look like one of the service's is a [warning](problems.md#gs508): the site still builds, but the visits aren't
+counted. Google Analytics sets cookies, and in the EU a site needs the visitor's consent before it does; gensane doesn't ask for it.
+Plausible and Cloudflare set none. A site served by Cloudflare can also turn Web Analytics on in Cloudflare's dashboard, with no
+setting here.
+
+For any other service, or anything else for `<head>`, such as a font or a `<meta>` that proves the site is yours, write it in
+[`head.html`](folders.md#headhtml).
+
 ## While serving
 
 [`gensane dev`](dev.md) runs the config again when it changes. Files the config imports aren't run again until `gensane dev` is

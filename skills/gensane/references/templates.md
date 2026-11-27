@@ -18,7 +18,9 @@ when there is nothing, so `{% if previous %}` works on every page.
 | `lists`       | Every page   | The addresses of the lists the site has, whatever the menu is: `blog`, `projects` and `talks`           |
 | `feed`        | Every page   | The address of the feed, `/feed.xml`, when the site has one                        |
 | `search`      | Every page   | The address of the search page, `/search/`, when the site has one                  |
-| `favicon`     | Every page   | The address of the site's icon: its own `favicon.svg` or `favicon.ico` in `public/`, or else one made from the first letter of `site.title` |
+| `favicon`     | Every page   | The address of the site's icon: its own `favicon.svg`, `favicon.png` or `favicon.ico` in `public/`, or else one made from the first letter of `site.title` |
+| `analytics`   | Every page   | The IDs of [`analytics`](https://gensane.dev/docs/reference/commands/config/#analytics): `google`, `plausible` and `cloudflare`, the ones the config names |
+| `head`        | Every page   | The site's own [`head.html`](https://gensane.dev/docs/reference/commands/site-folder/#headhtml), as HTML that is printed as it is, when the site has one |
 | `today`       | Every page   | The day of the build, as a date for the `date` filter, such as `{{ today \| date("yyyy") }}` |
 | `pagination`  | List pages   | `items`, `current`, `total`, `previousUrl` and `nextUrl`                           |
 | `previous`    | Posts, pages in a section | The post before this one in time, or the page before this one in its [section](https://gensane.dev/docs/reference/site/pages/#sections) |

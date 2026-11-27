@@ -12,7 +12,7 @@
 {% if feed %}<link rel="alternate" type="application/atom+xml" title="{{ site.title | default("Feed") }}" href="{{ feed }}">
 {% endif %}{% if theme.colorScheme == "auto" %}<script>try{const s=localStorage.getItem("gensane-color-scheme");if(s)document.documentElement.dataset.colorScheme=s}catch{}</script>
 {% endif %}<script type="module" src="/assets/theme.js"></script>
-</head>
+{% include "partials/analytics.html" %}{% if head %}{{ head }}{% endif %}</head>
 <body class="font-{{ theme.font }}">
 {# A capital letter, so no heading of the page can have the same id: their ids are lowercase. #}
 <a class="skip" href="#Main">Skip to content</a>

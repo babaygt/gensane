@@ -173,6 +173,8 @@ export function buildSite(input: SiteInput): Result<BuiltSite, readonly Diagnost
       ownFavicon === undefined ? madeFavicon.map(({ path }) => `/${path}`)[0] : `/${ownFavicon}`,
     today: config.today,
     nav: config.nav,
+    analytics: config.analytics,
+    head: input.head,
   });
   const files: OutputFile[] = [];
   const problems: Diagnostic[] = [...warnings];

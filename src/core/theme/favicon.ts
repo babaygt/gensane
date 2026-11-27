@@ -6,7 +6,7 @@ import type { Colors } from "./palettes.ts";
 export const FAVICON_PATH = "assets/favicon.svg";
 
 /** Icons of the site's own, in `public/`, which are used instead. */
-export const OWN_FAVICONS = ["favicon.svg", "favicon.ico"] as const;
+export const OWN_FAVICONS = ["favicon.svg", "favicon.png", "favicon.ico"] as const;
 
 /** The first letter of the title, or nothing when the title has none. */
 export function initialOf(title: string): string | undefined {

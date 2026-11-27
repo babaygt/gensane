@@ -37,7 +37,7 @@ function siteConfigOf(
   { config, file }: LoadedConfig,
   { drafts, servedAtRoot }: BuildOptions,
 ): SiteConfig {
-  const { site, perPage, markdown, filters, theme, llms, nav } = config;
+  const { site, perPage, markdown, filters, theme, llms, nav, analytics } = config;
   return {
     drafts,
     servedAtRoot: servedAtRoot ?? false,
@@ -49,6 +49,7 @@ function siteConfigOf(
     ...(theme === undefined ? {} : { theme }),
     ...(llms === undefined ? {} : { llms }),
     ...(nav === undefined ? {} : { nav }),
+    ...(analytics === undefined ? {} : { analytics }),
   };
 }
 
@@ -65,6 +66,7 @@ export async function buildFolder(
     templates: files.templates,
     publicFiles: files.publicFiles,
     themeAssets: files.themeAssets.map(({ path }) => path),
+    ...(files.head === undefined ? {} : { head: files.head }),
   });
   const problems = [...loaded.value.warnings, ...(built.ok ? built.value.warnings : built.error)];
   return built.ok

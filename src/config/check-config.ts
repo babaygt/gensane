@@ -19,7 +19,7 @@ export interface CheckedConfig {
   readonly warnings: readonly Diagnostic[];
 }
 
-const SETTINGS = ["site", "perPage", "markdown", "filters", "theme", "llms", "nav"];
+const SETTINGS = ["site", "perPage", "markdown", "filters", "theme", "llms", "nav", "analytics"];
 const NAV_ITEM_SETTINGS = ["title", "url"];
 /** A page of the site, or an address on another site; a relative address has no page to start from. */
 const NAV_URL = /^(?:\/|https:\/\/|http:\/\/|mailto:)/;
@@ -28,6 +28,37 @@ const SITE_SETTINGS = ["title", "url", "description", "author"];
 const PROFILES = ["github", "gitlab", "codeberg", "mastodon", "bluesky", "linkedin", "email"];
 const MARKDOWN_SETTINGS = ["rawHtml", "headingIds", "highlight"];
 const FILTER_NAME = /^[A-Za-z_]\w*$/;
+
+/** What each service's snippet names the site with, and what to write when it doesn't look like it. */
+const ANALYTICS: Readonly<
+  Record<
+    string,
+    { readonly looks: RegExp; readonly what: string; readonly hint: (value: string) => string }
+  >
+> = {
+  google: {
+    looks: /^G-[A-Z0-9]+$/,
+    what: "a measurement ID of Google Analytics",
+    hint: (value) =>
+      value.startsWith("UA-")
+        ? 'IDs that start with "UA-" stopped counting in 2023; write the measurement ID of the site\'s data stream, which starts with "G-"'
+        : 'write the measurement ID of the site\'s data stream, which starts with "G-", such as "G-ABC123DEF4"',
+  },
+  plausible: {
+    looks: /^pa-[\w-]+$/,
+    what: "the name of a Plausible script",
+    hint: (value) =>
+      value.includes(".")
+        ? 'write the name of the script in the snippet Plausible gives the site, such as "pa-AbC123", not the domain'
+        : 'write the name of the script in the snippet Plausible gives the site, such as "pa-AbC123"',
+  },
+  cloudflare: {
+    looks: /^[0-9a-f]{32}$/,
+    what: "a token of Cloudflare's Web Analytics",
+    hint: () =>
+      "write the token in the snippet Cloudflare's Web Analytics gives the site: 32 letters and digits",
+  },
+};
 const EXPORT_HINT = "end the config with `export default defineConfig({ ... })`";
 
 type Group = Readonly<Record<string, unknown>>;
@@ -330,6 +361,33 @@ class ConfigCheck {
     });
   }
 
+  /** A wrong ID still builds, so it is a warning: the site works, only the visits aren't counted. */
+  analytics(value: unknown): void {
+    if (!this.group("analytics", value)) return;
+    const services = Object.keys(ANALYTICS);
+    for (const [name, setting] of Object.entries(value)) {
+      const path = `analytics.${name}`;
+      const service = ANALYTICS[name];
+      if (service === undefined) {
+        this.unknownSetting(
+          path,
+          name,
+          services,
+          `the settings of analytics are ${listed(services)}`,
+        );
+      } else if (typeof setting !== "string") {
+        this.wrongValue(path, "text", setting, "write the text in quotes");
+      } else if (!service.looks.test(setting)) {
+        this.report(
+          ConfigCodes.unlikelyAnalyticsId,
+          `${JSON.stringify(path)} doesn't look like ${service.what}: ${JSON.stringify(setting)}`,
+          service.hint(setting),
+          "warning",
+        );
+      }
+    }
+  }
+
   filters(value: unknown): void {
     if (!this.group("filters", value)) return;
     for (const [name, filter] of Object.entries(value)) {
@@ -372,6 +430,7 @@ export function checkConfig(
     else if (name === "theme") check.theme(setting);
     else if (name === "llms") check.trueOrFalse("llms", setting);
     else if (name === "nav") check.nav(setting);
+    else if (name === "analytics") check.analytics(setting);
     else check.unknownSetting(name, name, SETTINGS, `the settings are ${listed(SETTINGS)}`);
   }
   if (hasErrors(check.problems)) return err(check.problems);

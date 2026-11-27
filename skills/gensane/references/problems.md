@@ -60,6 +60,11 @@ settings of `site` are fine; they are for the templates.
 A warning: an `accent` of your own replaces the palette's accent, and it is hard to read on the palette's background. Text needs a
 contrast of at least 4.5 to 1 ([WCAG AA](https://www.w3.org/TR/WCAG21/#contrast-minimum)).
 
+#### GS508
+
+A warning: an ID in [`analytics`](https://gensane.dev/docs/reference/commands/config/#analytics) doesn't look like one of the service's, so the visits probably aren't counted.
+The page still gets the snippet, in case the service has started using IDs of a new kind.
+
 ## Frontmatter (GS2xx)
 
 From [https://gensane.dev/docs/internals/frontmatter/diagnostics/](https://gensane.dev/docs/internals/frontmatter/diagnostics/).

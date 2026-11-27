@@ -1,0 +1,6 @@
+{# The snippets of the services in analytics. Each value is written in an attribute, where it is escaped, and the scripts read it from there. #}{% if analytics.google %}<script async src="https://www.googletagmanager.com/gtag/js?id={{ analytics.google }}"></script>
+<script data-id="{{ analytics.google }}">window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag("js",new Date());gtag("config",document.currentScript.dataset.id);</script>
+{% endif %}{% if analytics.plausible %}<script async src="https://plausible.io/js/{{ analytics.plausible }}.js"></script>
+<script>window.plausible=window.plausible||function(){(plausible.q=plausible.q||[]).push(arguments)},plausible.init=plausible.init||function(i){plausible.o=i||{}};plausible.init()</script>
+{% endif %}{% if analytics.cloudflare %}<script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token": "{{ analytics.cloudflare }}"}'></script>
+{% endif %}
