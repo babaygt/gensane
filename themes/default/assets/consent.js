@@ -98,10 +98,14 @@ function startBar(bar) {
   const settings = document.querySelector(".consent-settings");
   if (!(allow instanceof HTMLButtonElement) || !(refuse instanceof HTMLButtonElement)) return;
   let loaded = false;
+  let fromSettings = false;
+  // Focus goes back to Cookie settings only when the bar was opened from it, and the page stays where
+  // the reader left it: the button is at the bottom of the page.
   const close = () => {
     const hadFocus = bar.contains(document.activeElement);
     bar.hidden = true;
-    if (hadFocus && settings instanceof HTMLButtonElement) settings.focus();
+    if (hadFocus && fromSettings && settings instanceof HTMLButtonElement)
+      settings.focus({ preventScroll: true });
   };
   allow.addEventListener("click", () => {
     keep("yes");
@@ -117,6 +121,7 @@ function startBar(bar) {
   if (settings instanceof HTMLButtonElement) {
     settings.addEventListener("click", () => {
       bar.hidden = false;
+      fromSettings = true;
       allow.focus();
     });
     if (settings.parentElement !== null) settings.parentElement.hidden = false;

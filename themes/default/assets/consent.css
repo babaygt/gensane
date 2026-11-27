@@ -1,9 +1,13 @@
-/* The bar that asks before Google Analytics counts a visit, for sites that ask: at the bottom of the window,
-   and after the footer at the end of the page. Colors come from settings.css. */
+/* The bar that asks before Google Analytics counts a visit, for sites that ask: a card a little above the
+   bottom of the window, and after the footer at the end of the page. Colors come from settings.css. */
 
 .consent {
   position: sticky;
-  bottom: 0;
+  bottom: 1rem;
+  width: min(100% - 2rem, var(--width) - 2.5rem);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: 0 0.5rem 1.5rem rgb(0 0 0 / 0.2);
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -11,7 +15,6 @@
   gap: 0.5rem 1.5rem;
   padding-block: 0.75rem;
   background: var(--surface);
-  border-top: 1px solid var(--border);
   font-size: 0.9375rem;
 }
 
