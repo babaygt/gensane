@@ -2,6 +2,37 @@
 
 What changed in each version of `@gensane/cli`, newest first.
 
+## 0.3.0
+
+What moving a real personal website to gensane showed was missing.
+
+### Changes to check when updating
+
+- **Lists and cards show a post's `description`** when it has one, instead of its first paragraph, and the cards of a grid line
+  up, each as tall as the tallest in its row.
+- **A project's or a post's `cover` is also shown on its own page,** after the header, and `coverAlt` describes it.
+- **A talk after the day of the build is labeled "Upcoming",** and the home page shows the soonest one next to the latest talk
+  given.
+- **A page in a section shows its folder above its title, and the pages before and after it** at the end; a page with 3 headings or
+  more gets a table of contents, as posts do (`toc: false` turns it off).
+- **`public/favicon.png` is the site's icon,** like `favicon.svg` and `favicon.ico`, instead of the first letter of the title.
+- **The LinkedIn profile has LinkedIn's icon,** not a briefcase.
+- **`gensane check` says which code stays plain**, once for each language (GS419).
+
+### New
+
+- **Analytics:** `analytics.google`, `analytics.plausible` and `analytics.cloudflare`, added to every page. With Google, each
+  page asks the visitor first and loads Google only after "Allow"; **Cookie settings** in the footer takes it back
+  ([the config](docs/cli/config.md#analytics)).
+- **`head.html`** in the site folder is added to the end of every page's `<head>`, for anything else
+  ([The site folder](docs/cli/folders.md#headhtml)).
+- **A menu of your own:** `nav` in the config, with any page of the site or an address on another site; the current section is
+  marked ([the config](docs/cli/config.md#nav)).
+- **Colors for SQL, YAML and Dockerfile** code ([Colors in code](docs/highlight/README.md)).
+- **A year alone** as the start or end of a job or a study, such as `start: 2018`, and a `note` shown next to it
+  ([The about page](docs/guides/about-page.md)).
+- **Task lists** (`- [ ] item`) show a checkbox without a bullet.
+
 ## 0.2.0
 
 ### Changes to check when updating
