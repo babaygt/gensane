@@ -23,6 +23,7 @@ export {
   buildSiteGraph,
 } from "./site/site-graph.ts";
 export {
+  type Analytics,
   type BuiltSite,
   type NavItem,
   type OutputFile,

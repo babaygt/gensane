@@ -32,6 +32,8 @@ export interface SiteFiles {
   readonly publicFiles: readonly string[];
   /** The files of the theme's `assets/` folder, which go to `/assets/` in the site. */
   readonly themeAssets: readonly CopiedFile[];
+  /** The site's own `head.html`, when it has one. */
+  readonly head?: string;
 }
 
 /** Editors and the system leave files such as `.DS_Store` and `.post.md.swp` next to the real ones. */

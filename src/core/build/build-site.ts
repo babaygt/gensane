@@ -54,6 +54,18 @@ export interface SiteConfig {
   readonly today?: string;
   /** The menu, in this order, instead of the one made from the pages the site has. */
   readonly nav?: readonly NavItem[];
+  /** The services that count visits, which the default theme adds to every page. */
+  readonly analytics?: Analytics;
+}
+
+/** The services that count visits, each by what its own snippet names the site with. */
+export interface Analytics {
+  /** The measurement ID of Google Analytics, such as `G-ABC123DEF4`. */
+  readonly google?: string;
+  /** The name of the site's script in Plausible's snippet, such as `pa-AbC123`. */
+  readonly plausible?: string;
+  /** The token in the snippet of Cloudflare's Web Analytics. */
+  readonly cloudflare?: string;
 }
 
 /** One item of the menu: a page of the site, such as `/uses/`, or an address on another site. */
@@ -72,6 +84,8 @@ export interface SiteInput {
   readonly publicFiles?: readonly string[];
   /** The paths in the site of the files in the theme's `assets/` folder, which are copied as they are. */
   readonly themeAssets?: readonly string[];
+  /** The site's own `head.html`, added to the `<head>` of every page as it is. */
+  readonly head?: string;
 }
 
 export interface OutputFile {
