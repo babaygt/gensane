@@ -446,6 +446,12 @@ describe("analytics", () => {
     },
   );
 
+  it("warns about an ID with something after it, such as a space pasted with it", () => {
+    expect(problemsOf({ analytics: { google: "G-ABC123DEF4 " } })[0]?.message).toBe(
+      '"analytics.google" doesn\'t look like a measurement ID of Google Analytics: "G-ABC123DEF4 "',
+    );
+  });
+
   it("reports an ID that isn't text, and a group that isn't one", () => {
     expect(problemsOf({ analytics: { google: 123 } })).toEqual([
       {
